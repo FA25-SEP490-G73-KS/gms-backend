@@ -85,7 +85,7 @@
 - employee_id (ref -> Employee.employee_id)
 - customer_id (ref -> Customer.customer_id)
 - vehicle_id (ref -> Vehicle.vehicle_id)
-- status (chờ báo giá/duyệt/sửa/hoàn thành/...)
+- status (chờ báo giá/duyệt/không duyệt/đang sửa/Chờ thanh toán/Chờ công nợ/hoàn thành/Hủy)
 - notes
 - created_at
 - delivery_at
@@ -118,7 +118,7 @@
 - search quotation by keywork(status, created_at)
 
 
-## 7. Entity: QuotationItem
+## 7. Entity: PriceQuotationItem
 - quotation_item_id (PK)
 - quotation_id (ref -> Quotation.quotation_id)
 - part_id (ref -> Part.part_id, nullable)
@@ -130,7 +130,7 @@
 - account_id (ID người cập nhật)
 - update_status (xác nhận/chờ/sửa lại)
 
-## 7.1 API: QuotationItem
+## 7.1 API: PriceQuotationItem
 - create an quotation_item
 - update an quotation_item
 - delete an quotation_item
@@ -141,7 +141,7 @@
 
 ## 8. Entity: Part
 - part_id (PK)
-- name
+- part_name
 - supplier
 - cost_price
 - sell_price
