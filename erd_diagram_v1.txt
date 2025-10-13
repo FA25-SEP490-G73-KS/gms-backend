@@ -1,0 +1,311 @@
+@startuml
+!theme plain
+
+' =========================
+' CUSTOMER & VEHICLE
+' =========================
+entity "Customer" as Customer {
+  *customer_id : INTEGER
+  --
+  full_name : STRING
+  phone : STRING
+  zalo_id : STRING
+  address : STRING
+  customer_type : STRING
+  loyalty_level : STRING
+}
+
+entity "Vehicle" as Vehicle {
+  *vehicle_id : INTEGER
+  --
+  customer_id : INTEGER
+  license_plate : STRING
+  brand : STRING
+  model : STRING
+  year : INTEGER
+  vin : STRING
+}
+
+Customer ||--|{ Vehicle : "sở hữu"
+
+
+' =========================
+' APPOINTMENT & SERVICE
+' =========================
+entity "Appointment" as Appointment {
+  *appointment_id : INTEGER
+  --
+  customer_id : INTEGER
+  vehicle_id : INTEGER
+  service_type : STRING
+  appointment_date : DATE
+  status : STRING
+  description : STRING
+  image_url : STRING
+  created_at : DATE
+}
+
+entity "ServiceTicket" as ServiceTicket {
+  *service_ticket_id : INTEGER
+  --
+  appointment_id : INTEGER
+  customer_id : INTEGER
+  vehicle_id : INTEGER
+  employee_id : INTEGER
+  status : STRING
+  notes : STRING
+  created_at : DATE
+  delivery_at : DATE
+}
+
+Customer ||--o{ Appointment : "đặt lịch"
+Vehicle ||--o{ Appointment : "được hẹn"
+Appointment |o--|| ServiceTicket : "chuyển thành"
+Customer ||--|{ ServiceTicket
+Vehicle ||--|{ ServiceTicket
+
+
+' =========================
+' QUOTATION (BÁO GIÁ)
+' =========================
+entity "PriceQuotation" as PriceQuotation {
+  *price_quotation_id : INTEGER
+  --
+  service_ticket_id : INTEGER
+  total_amount : FLOAT
+  status : STRING
+  created_at : DATE
+}
+
+entity "PriceQuotationItem" as PriceQuotationItem {
+  *price_quotation_item_id : INTEGER
+  --
+  price_quotation_id : INTEGER
+  part_id : INTEGER
+  description : STRING
+  quantity : INTEGER
+  total_price : FLOAT
+  part_status : STRING
+  update_at : DATE
+  account_id : INTEGER
+  update_status : STRING
+}
+
+ServiceTicket ||--|| PriceQuotation : "có báo giá"
+PriceQuotation ||--|{ PriceQuotationItem : "gồm"
+
+
+' =========================
+' INVENTORY (KHO)
+' =========================
+entity "Category" as Category {
+  *category_id : INTEGER
+  --
+  category_name : STRING
+  brand : STRING
+}
+
+entity "Part" as Part {
+  *part_id : INTEGER
+  --
+  category_id : INTEGER
+  part_name : STRING
+  supplier : STRING
+  cost_price : FLOAT
+  sell_price : FLOAT
+  quantity_in_stock : INTEGER
+  status : STRING
+  reorder_level : INTEGER
+  last_updated : DATE
+}
+
+Category ||--o{ Part : "chứa"
+
+entity "InventoryTransaction" as InventoryTransaction {
+  *inventory_transaction_id : INTEGER
+  --
+  part_id : INTEGER
+  type : STRING
+  quantity : INTEGER
+  service_ticket_id : INTEGER
+  purchase_request_id : INTEGER
+  created_at : DATE
+}
+
+entity "PurchaseRequest" as PurchaseRequest {
+  *purchase_request_id : INTEGER
+  --
+  price_quotation_id : INTEGER
+  part_id : INTEGER
+  supplier : STRING
+  expected_date : DATE
+  status : STRING
+  created_at : DATE
+}
+
+Part ||--|{ InventoryTransaction : "thay đổi"
+Part ||--|{ PurchaseRequest : "yêu cầu mua"
+PriceQuotation ||--o{ PurchaseRequest : "order"
+Part||--|| PriceQuotationItem 
+
+
+' =========================
+' PAYMENT & DEBT
+' =========================
+entity "Payment" as Payment {
+  *payment_id : INTEGER
+  --
+  ticket_id : INTEGER
+  payment_method : STRING
+  amount : FLOAT
+  payment_date : DATE
+  status : STRING
+  reference_code : STRING
+}
+
+entity "Debt" as Debt {
+  *debt_id : INTEGER
+  --
+  customer_id : INTEGER
+  service_ticket_id : INTEGER
+  amount_due : FLOAT
+  due_date : DATE
+  paid_amount : FLOAT
+  status : STRING
+  updated_at : DATE
+}
+
+ServiceTicket ||--o{ Payment : "thanh toán"
+ServiceTicket ||--o{ Debt : "công nợ"
+Customer ||--o{ Debt : "phát sinh nợ"
+
+
+' =========================
+' EMPLOYEE, ACCOUNT & HR
+' =========================
+entity "Employee" as Employee {
+  *employee_id : INTEGER
+  --
+  full_name : STRING
+  position : STRING
+  phone : STRING
+  salary_base : FLOAT
+  paid_amount : FLOAT
+  hire_date : DATE
+  status : STRING
+}
+
+entity "Account" as Account {
+  *account_id : INTEGER
+  --
+  phone : STRING
+  role_id : INTEGER
+  password : STRING
+}
+
+entity "Role" as Role {
+  *role_id : INTEGER
+  --
+  role_name : STRING
+}
+
+Employee ||--o| Account : "có (một số)"
+Role ||--o{ Account : "phân quyền"
+
+
+entity "Assignment" as Assignment {
+  *assignment_id : INTEGER
+  --
+  service_ticket_id : INTEGER
+  employee_id : INTEGER
+  start_time : DATE
+  end_time : DATE
+  note : STRING
+}
+
+entity "Attendance" as Attendance {
+  *attendance_id : INTEGER
+  --
+  employee_id : INTEGER
+  date : DATE
+  is_present_am : BOOLEAN
+  is_present_pm : BOOLEAN
+  note : STRING
+  recorded_by : INTEGER
+  recorded_at : DATE
+}
+
+entity "Payroll" as Payroll {
+  *payroll_id : INTEGER
+  --
+  employee_id : INTEGER
+  month : INTEGER
+  year : INTEGER
+  total_salary : FLOAT
+  advance_deduction : FLOAT
+  warranty_deduction : FLOAT
+  salary_bonus : FLOAT
+  net_salary : FLOAT
+  created_at : DATE
+  status : STRING
+}
+
+Employee ||--o{ Assignment
+ServiceTicket ||--|{ Assignment
+Employee ||--|{ Attendance
+Employee ||--|{ Payroll
+
+
+' =========================
+' EXPENSE & FINANCE
+' =========================
+entity "Expense" as Expense {
+  *expense_id : INTEGER
+  --
+  type : STRING
+  description : STRING
+  amount : FLOAT
+  employee_id : INTEGER
+  expense_date : DATE
+  created_at : DATE
+}
+
+Employee ||--o{ Expense : "ghi chi phí"
+
+
+' =========================
+' WARRANTY
+' =========================
+entity "Warranty" as Warranty {
+  *warranty_id : INTEGER
+  --
+  service_ticket_id : INTEGER
+  customer_id : INTEGER
+  type : STRING
+  cost_dn : FLOAT
+  cost_tech : FLOAT
+  cost_customer : FLOAT
+  approved_by : INTEGER
+  supplier_status : STRING
+  status : STRING
+  created_at : DATE
+  approved_at : DATE
+  description : STRING
+  attachment_url : STRING
+}
+
+entity "WarrantyItem" as WarrantyItem {
+  *warranty_item_id : INTEGER
+  --
+  warranty_id : INTEGER
+  part_id : INTEGER
+  description : STRING
+  cost : FLOAT
+  note : STRING
+}
+
+Warranty ||--|{ WarrantyItem
+Customer ||--o{ Warranty
+ServiceTicket ||--o{ Warranty
+Employee ||--|{ Warranty : "duyệt / chịu trách nhiệm"
+@enduml

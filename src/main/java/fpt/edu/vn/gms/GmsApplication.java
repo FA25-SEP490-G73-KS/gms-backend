@@ -10,8 +10,6 @@ public class GmsApplication {
 		SpringApplication.run(GmsApplication.class, args);
 	}
 
-	@Override
-	public int hashCode() {
-		return super.hashCode();
-	}
+
+	
 }
