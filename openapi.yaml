@@ -1,128 +1,25 @@
 openapi: 3.1.0
 info:
-  title: User Management API
+  title: GMS Backend API
+  description: >-
+    OpenAPI specification generated from REQUIREMENTS.md.
+    - All query APIs support pagination and sorting via `page`, `size`, and `sort` parameters.
+    - Database: MySQL (informational; not impacting API schema).
+    - 3-layer architecture (controller, service, repository) and interface-based services (informational).
   version: 1.0.0
-  description: API for managing users with pagination, sorting, and search functionality.
-
 servers:
-  - url: http://localhost:8080/api
+  - url: /api
+    description: Base API path
+
+tags:
+  - name: Authentication
+  - name: Accounts
+  - name: Appointments
 
 paths:
-  /users:
-    get:
-      summary: List all users
-      parameters:
-        - name: page
-          in: query
-          description: Page number for pagination
-          required: false
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          description: Number of items per page
-          required: false
-          schema:
-            type: integer
-            default: 10
-        - name: sort
-          in: query
-          description: Sorting criteria
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: A list of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-
-    post:
-      summary: Create a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '201':
-          description: User created successfully
-
-  /users/{id}:
-    get:
-      summary: Find a user by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: User details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-
-    put:
-      summary: Update an existing user
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: User updated successfully
-
-    delete:
-      summary: Delete a user
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: User deleted successfully
-
-  /users/search:
-    get:
-      summary: Search users by keyword
-      parameters:
-        - name: keyword
-          in: query
-          description: Search keyword (name or email)
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Search results
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-
   /auth/login:
     post:
+      tags: [Authentication]
       summary: Login
       requestBody:
         required: true
@@ -130,100 +27,466 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value: { phone: "0912345678", password: "secretPass" }
       responses:
         '200':
-          description: Login successful
+          description: Login success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Invalid credentials
-
-  /auth/register:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials or bad request
+  /auth/forgot-password:
     post:
-      summary: Register a new user
+      tags: [Authentication]
+      summary: Forgot password
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              type: object
+              properties:
+                phone:
+                  type: string
+                  description: Phone number (10 digits)
+                  pattern: '^\d{10}$'
+              required: [phone]
       responses:
-        '201':
-          description: Registration successful
+        '200':
+          description: Password reset initiated
+        '404':
+          description: Account not found
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: List all accounts
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: Paged list of accounts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                $ref: '#/components/schemas/PageAccountResponse'
+    post:
+      tags: [Accounts]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
         '400':
-          description: Invalid registration data
+          description: Validation error
+
+  /accounts/search:
+    get:
+      tags: [Accounts]
+      summary: Search accounts by phone keyword
+      parameters:
+        - name: phone
+          in: query
+          description: Phone keyword to search by (partial match)
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: Paged search result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAccountResponse'
+
+  /accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      summary: Find an account by ID
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: Account not found
+    put:
+      tags: [Accounts]
+      summary: Update an account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Validation error
+        '404':
+          description: Account not found
+    delete:
+      tags: [Accounts]
+      summary: Delete an account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Account not found
+
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: List all appointments
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: Paged list of appointments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAppointmentResponse'
+
+  /appointments/{appointmentId}/date:
+    patch:
+      tags: [Appointments]
+      summary: Update appointment date
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                appointmentDate:
+                  type: string
+                  format: date-time
+              required: [appointmentDate]
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '404':
+          description: Appointment not found
+
+  /appointments/{appointmentId}/status:
+    patch:
+      tags: [Appointments]
+      summary: Update appointment status (cannot set to Quá hạn)
+      description: Setting status to 'Quá hạn' (Overdue) via this API is not allowed.
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Xác nhận, Đã đến, Đã hủy]
+              required: [status]
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '400':
+          description: Invalid status (e.g., Quá hạn)
+        '404':
+          description: Appointment not found
 
 components:
+  parameters:
+    page:
+      name: page
+      in: query
+      description: Page number (0-based)
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    size:
+      name: size
+      in: query
+      description: Page size
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 20
+    sort:
+      name: sort
+      in: query
+      description: Sort by property, e.g., 'createdAt,desc'. Multiple allowed.
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+
   schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-          minLength: 8
-        role:
-          type: string
-          enum:
-            - manager
-            - service_advisor
-            - accountant
-            - warehouse_staff
-        status:
-          type: string
-          enum:
-            - active
-            - inactive
+    # Authentication
     LoginRequest:
       type: object
-      required:
-        - email
-        - password
       properties:
-        email:
+        phone:
           type: string
+          description: Phone number (10 digits)
+          pattern: '^\d{10}$'
         password:
           type: string
           minLength: 8
-
-    RegisterRequest:
-      type: object
-      required:
-        - name
-        - email
-        - password
-        - role
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-          minLength: 8
-        role:
-          type: string
-          enum:
-            - manager
-            - service_advisor
-            - accountant
-            - warehouse_staff
-
-    AuthResponse:
+      required: [phone, password]
+    LoginResponse:
       type: object
       properties:
         token:
           type: string
-        user:
-          $ref: '#/components/schemas/User'
+        account:
+          $ref: '#/components/schemas/AccountResponse'
+
+    # Core entities
+    Role:
+      type: object
+      properties:
+        roleId:
+          type: integer
+          format: int64
+        roleName:
+          type: string
+          enum: [Service Advisor, Accountant, Manager, Warehouse Staff]
+      required: [roleId, roleName]
+
+    Account:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        phone:
+          type: string
+          description: References Employee.phone; must be 10 digits
+          pattern: '^\d{10}$'
+        roleId:
+          type: integer
+          format: int64
+      required: [accountId, phone, roleId]
+
+    AccountCreateRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          pattern: '^\d{10}$'
+        roleId:
+          type: integer
+          format: int64
+        password:
+          type: string
+          minLength: 8
+      required: [phone, roleId, password]
+
+    AccountUpdateRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          pattern: '^\d{10}$'
+        roleId:
+          type: integer
+          format: int64
+        password:
+          type: string
+          minLength: 8
+      description: Supply only fields to update. Password change is optional.
+
+    AccountResponse:
+      allOf:
+        - $ref: '#/components/schemas/Account'
+      description: Does not include password.
+
+    Customer:
+      type: object
+      properties:
+        customerId:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        phone:
+          type: string
+          pattern: '^\d{10}$'
+        zaloId:
+          type: string
+        address:
+          type: string
+        customerType:
+          type: string
+          enum: [cá nhân, doanh nghiệp]
+        loyaltyLevel:
+          type: string
+          enum: [VIP, VVIP, Normal]
+      required: [customerId, fullName, phone]
+
+    Vehicle:
+      type: object
+      properties:
+        vehicleId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        licensePlate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        vin:
+          type: string
+      required: [vehicleId, customerId, licensePlate]
+
+    Appointment:
+      type: object
+      properties:
+        appointmentId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        serviceType:
+          type: string
+          enum: [Sơn, Thay thế phụ tùng, Bảo dưỡng]
+        appointmentDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Xác nhận, Đã đến, Quá hạn, Đã hủy]
+        description:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+      required: [appointmentId, customerId, serviceType, appointmentDate, status]
+
+    AppointmentResponse:
+      allOf:
+        - $ref: '#/components/schemas/Appointment'
+
+    # Pagination wrappers
+    PageMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+      required: [page, size, totalElements, totalPages]
+
+    PageAccountResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountResponse'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    PageAppointmentResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentResponse'
+        page:
+          $ref: '#/components/schemas/PageMeta'
