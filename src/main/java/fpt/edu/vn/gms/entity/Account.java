@@ -16,7 +16,7 @@ public class Account {
     @Column(name = "account_id")
     private Long accountId;
 
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", length = 20, unique = true)
     private String phone; // note: referenced to Employee.phone in docs
 
     @ManyToOne(optional = false)

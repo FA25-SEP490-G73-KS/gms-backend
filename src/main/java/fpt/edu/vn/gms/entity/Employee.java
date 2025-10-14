@@ -25,7 +25,7 @@ public class Employee {
     @Column(name = "position", length = 50)
     private String position;
 
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", length = 20, unique = true)
     private String phone;
 
     @Column(name = "salary_base", precision = 18, scale = 2)
