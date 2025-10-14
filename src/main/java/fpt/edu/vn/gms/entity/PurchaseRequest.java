@@ -19,8 +19,8 @@ public class PurchaseRequest {
     private Long purchaseRequestId;
 
     @ManyToOne
-    @JoinColumn(name = "quotation_id", referencedColumnName = "quotation_id")
-    private PriceQuotation pricequotation;
+    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
+    private PriceQuotation priceQuotation;
 
     @ManyToOne
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")

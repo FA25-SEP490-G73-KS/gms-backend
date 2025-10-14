@@ -17,11 +17,11 @@ public class PriceQuotationItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "price_quotation_item_id")
-    private Long quotationItemId;
+    private Long priceQuotationItemId;
 
     @ManyToOne
     @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
-    private PriceQuotation pricequotation;
+    private PriceQuotation priceQuotation;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")
