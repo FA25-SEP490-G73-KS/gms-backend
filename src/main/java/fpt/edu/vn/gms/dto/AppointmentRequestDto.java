@@ -1,0 +1,21 @@
+package fpt.edu.vn.gms.dto;
+
+import fpt.edu.vn.gms.common.ServiceType;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AppointmentRequestDto {
+    private String customerName;
+    private String phoneNumber; // optional
+    private String licensePlate;
+    private LocalDate appointmentDate;
+    private Integer timeSlotIndex; // 1-4
+    private ServiceType serviceType;
+    private String note;
+}

@@ -19,7 +19,7 @@ public class PurchaseRequest {
     private Long purchaseRequestId;
 
     @ManyToOne
-    @JoinColumn(name = "quotation_id", referencedColumnName = "quotation_id")
+    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
     private PriceQuotation pricequotation;
 
     @ManyToOne
