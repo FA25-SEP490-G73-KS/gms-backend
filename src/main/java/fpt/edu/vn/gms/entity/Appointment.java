@@ -44,5 +44,6 @@ public class Appointment {
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
     @Lob
+    @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
 }
