@@ -58,6 +58,7 @@
 - vin 
 
 ## API: Appointment
-- update appointment_date Appointment
-- update Status Appointment (Trừ trạng thái Quá hạn)
+- create appointment 
+- customer update appointment status: (Xác nhận) -> (Hủy lịch hẹn)
+- service advisor update appoint status: (Xác nhận) -> (Đã đến)
 - list all Appointment

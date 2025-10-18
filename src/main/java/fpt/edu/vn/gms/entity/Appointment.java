@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ServiceType;
+import fpt.edu.vn.gms.common.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -11,36 +13,37 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Appointment")
+@Table(name = "appointment")
 public class Appointment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "appointment_id")
     private Long appointmentId;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @ManyToOne
-    @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @Column(name = "service_type", length = 100)
-    private String serviceType;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "time_slot_id")
+    private TimeSlot timeSlot;
 
-    @Column(name = "appointment_date")
-    private LocalDateTime appointmentDate;
+    @Column(nullable = false)
+    private LocalDate appointmentDate;
 
-    @Column(name = "status", length = 30)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ServiceType serviceType;
 
-    @Column(name = "description", columnDefinition = "nvarchar(max)")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentStatus status = AppointmentStatus.PENDING;
+
+    @Lob
+    @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
-
-    @Column(name = "image_url", length = 300)
-    private String imageUrl;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 }
