@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,10 +24,10 @@ public class TimeSlot {
     private String label; // "08:00-10:00"
 
     @Column(nullable = false)
-    private String startTime;
+    private LocalTime startTime;
 
     @Column(nullable = false)
-    private String endTime;
+    private LocalTime endTime;
 
     @Column(nullable = false)
     private int maxCapacity = 3;

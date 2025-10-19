@@ -12,10 +12,10 @@ import java.time.LocalDate;
 @Builder
 public class AppointmentRequestDto {
     private String customerName;
-    private String phoneNumber; // optional
+    private String phoneNumber;
     private String licensePlate;
     private LocalDate appointmentDate;
-    private Integer timeSlotIndex; // 1-4
+    private Integer timeSlotIndex;
     private ServiceType serviceType;
     private String note;
 }

@@ -41,7 +41,7 @@ public class Appointment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AppointmentStatus status = AppointmentStatus.PENDING;
+    private AppointmentStatus status = AppointmentStatus.CONFIRMED;
 
     @Lob
     private String description;
