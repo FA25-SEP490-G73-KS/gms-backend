@@ -8,12 +8,18 @@ import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.TimeSlot;
 import fpt.edu.vn.gms.entity.Vehicle;
+import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.AppointmentRepository;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.TimeSlotRepository;
 import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,6 +42,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             return TimeSlotDto.builder()
                     .timeSlotId(slot.getTimeSlotId())
                     .label(slot.getLabel())
+                    .startTime(slot.getStartTime())
+                    .endTime(slot.getEndTime())
                     .booked(booked)
                     .maxCapacity(slot.getMaxCapacity())
                     .available(booked < slot.getMaxCapacity())
@@ -50,6 +58,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseGet(() -> {
                     Customer customer = Customer.builder()
                             .fullName(dto.getCustomerName())
+                            .phone(dto.getPhoneNumber())
                             .build();
                     customer = customerRepo.save(customer);
 
@@ -80,7 +89,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDate(dto.getAppointmentDate())
                 .serviceType(dto.getServiceType())
                 .description(dto.getNote())
-                .status(AppointmentStatus.PENDING)
+                .status(AppointmentStatus.CONFIRMED)
                 .build();
 
         Appointment saved = appointmentRepo.save(appointment);
@@ -95,5 +104,39 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .status(saved.getStatus())
                 .note(saved.getDescription())
                 .build();
+    }
+
+    @Override
+    public Page<AppointmentResponseDto> getAllAppointments(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("appointmentDate").descending());
+        return appointmentRepo.findAll(pageable)
+                .map(AppointmentMapper::toDto);
+    }
+
+    @Override
+    public AppointmentResponseDto getAppointmentById(Long id) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+
+        return AppointmentMapper.toDto(appointment);
+    }
+
+    @Override
+    public AppointmentResponseDto updateStatus(Long id, AppointmentStatus status) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+
+        if (status == AppointmentStatus.OVERDUE) {
+            throw new IllegalArgumentException("OVERDUE is handled automatically by system");
+        }
+
+        // Validate allowed transitions (simple example)
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot change status of a cancelled appointment");
+        }
+
+        appointment.setStatus(status);
+        appointmentRepo.save(appointment);
+        return AppointmentMapper.toDto(appointment);
     }
 }

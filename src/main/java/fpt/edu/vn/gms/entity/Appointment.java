@@ -4,8 +4,10 @@ import fpt.edu.vn.gms.common.ServiceType;
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -41,9 +43,16 @@ public class Appointment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AppointmentStatus status = AppointmentStatus.PENDING;
+    private AppointmentStatus status = AppointmentStatus.CONFIRMED;
 
+    // đánh dấu field trong entity là kiểu dữ liệu lớn
     @Lob
     @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
+
+    // NEW: createdAt - set once when inserting
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
 }
