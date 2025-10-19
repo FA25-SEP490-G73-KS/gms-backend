@@ -31,6 +31,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
     /**
      * Tạo mới phiếu dịch vụ cùng lúc với tạo Customer và Vehicle
+     *
      * @param serviceTicketDtoRequest
      * @return
      */
@@ -78,7 +79,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .build();
         vehicle = vehicleRepository.save(vehicle);
 
-        
+
         // Tạo ServiceTicket
         LocalDateTime now = LocalDateTime.now();
         ServiceTicket st = new ServiceTicket();
@@ -118,12 +119,37 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
      * Chỉ cập nhật các trường có giá trị (khác null) trong DTO.
      */
     @Override
-     public ServiceTicketDto update(Long id, ServiceTicketDto dto) {
-         ServiceTicket existing = serviceTicketRepository.findById(id)
-                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
-         ServiceTicket saved = serviceTicketRepository.save(existing);
-         return ServiceTicketMapper.mapToServiceTicketDto(saved);
+    public ServiceTicketDto update(Long id, ServiceTicketDto dto) {
+        ServiceTicket existing = serviceTicketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
+        // Cập nhật các trường nếu có trong dto
+        if (dto.getAppointmentId() != null) {
+            Appointment appointment = appointmentRepository.findById(Math.toIntExact(dto.getAppointmentId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Appointment không tồn tại với id: " + dto.getAppointmentId()));
+            existing.setAppointment(appointment);
+        }
+        if (dto.getCustomerId() != null) {
+            Customer customer = customerRepository.findById(Math.toIntExact(dto.getCustomerId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer không tồn tại với id: " + dto.getCustomerId()));
+            existing.setCustomer(customer);
+        }
+        if (dto.getVehicleId() != null) {
+            Vehicle vehicle = vehicleRepository.findById(Math.toIntExact(dto.getVehicleId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Vehicle không tồn tại với id: " + dto.getVehicleId()));
+            existing.setVehicle(vehicle);
+        }
+        if (dto.getNotes() != null) {
+            existing.setNotes(dto.getNotes());
+        }
+        if (dto.getStatus() != null) {
+            existing.setStatus(dto.getStatus());
+        }
+        if (dto.getDeliveryAt() != null) {
+            existing.setDeliveryAt(dto.getDeliveryAt());
+        }
+        ServiceTicket saved = serviceTicketRepository.save(existing);
+        return ServiceTicketMapper.mapToServiceTicketDto(saved);
 
 
-     }
+    }
 }
