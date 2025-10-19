@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.*;
 public class ServiceTicketController {
     private final ServiceTicketService service;
 
+
     /**
-     * Tạo mới phiếu dịch vụ.
+     *  tạo phiếu cho khách mới (chưa có trong hệ thống), đồng thời tạo Customer và Vehicle.
+     * appointmentId = null, createdAt = now, deliveryAt = null, notes = null, status = CHO_BAO_GIA.
      */
-    @PostMapping
-    public ResponseEntity<ServiceTicketDto> create(@RequestBody ServiceTicketDto dto) {
-        ServiceTicketDto created = service.create(dto);
+    @PostMapping("/new-service-tickets")
+    public ResponseEntity<ServiceTicketDto> createForNewCustomer(@RequestBody ServiceTicketDto req) {
+        ServiceTicketDto created = service.createNewServiceTicket(req);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
