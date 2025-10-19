@@ -2,6 +2,8 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,5 +27,31 @@ public class ServiceTicketController {
         ServiceTicketDto created = service.createNewServiceTicket(req);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
+
+    /**
+     * Lấy chi tiết phiếu dịch vụ theo ID.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ServiceTicketDto> getById(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(service.getById(id));
+    }
+
+    /**
+     * Lấy danh sách phiếu dịch vụ có phân trang.
+     */
+    @GetMapping
+    public ResponseEntity<Page<ServiceTicketDto>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(service.getAll(pageable));
+    }
+
+    /**
+     * Cập nhật phiếu dịch vụ theo ID.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ServiceTicketDto> update(@PathVariable("id") Long id, @RequestBody ServiceTicketDto dto) {
+        return ResponseEntity.ok(service.update(id, dto));
+    }
+
+
 
 }
