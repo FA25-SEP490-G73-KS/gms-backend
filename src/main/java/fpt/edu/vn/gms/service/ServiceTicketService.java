@@ -9,9 +9,17 @@ import org.springframework.data.domain.Pageable;
  * Cung cấp các thao tác CRUD cơ bản và tìm kiếm có phân trang/sắp xếp.
  */
 public interface ServiceTicketService {
+    /**
+     * Tạo mới một phiếu dịch vụ.
+     *
+     * @param dto dữ liệu phiếu dịch vụ cần tạo
+     * @return phiếu dịch vụ đã tạo (kèm ID)
+     */
+    ServiceTicketDto create(ServiceTicketDto dto);
 
     /**
      * Tạo mới một phiếu dịch vụ.
+     *
      * @param req dữ liệu phiếu dịch vụ cần tạo
      * @return phiếu dịch vụ đã tạo
      */
@@ -19,6 +27,7 @@ public interface ServiceTicketService {
 
     /**
      * Lấy chi tiết phiếu dịch vụ theo ID.
+     *
      * @param id mã phiếu dịch vụ
      * @return thông tin phiếu dịch vụ
      */
@@ -26,6 +35,7 @@ public interface ServiceTicketService {
 
     /**
      * Lấy danh sách phiếu dịch vụ có phân trang.
+     *
      * @param pageable thông tin phân trang và sắp xếp
      * @return trang dữ liệu các phiếu dịch vụ
      */
@@ -34,12 +44,12 @@ public interface ServiceTicketService {
     /**
      * Cập nhật phiếu dịch vụ theo ID.
      * Chỉ các trường có giá trị (khác null) trong DTO mới được áp dụng cập nhật.
-     * @param id mã phiếu dịch vụ cần cập nhật
+     *
+     * @param id  mã phiếu dịch vụ cần cập nhật
      * @param dto dữ liệu cập nhật
      * @return phiếu dịch vụ sau khi cập nhật
      */
     ServiceTicketDto update(Long id, ServiceTicketDto dto);
-
 
 
 }

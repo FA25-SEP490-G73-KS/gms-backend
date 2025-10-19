@@ -17,6 +17,14 @@ import org.springframework.web.bind.annotation.*;
 public class ServiceTicketController {
     private final ServiceTicketService service;
 
+    /**
+     * Tạo mới phiếu dịch vụ.
+     */
+    @PostMapping
+    public ResponseEntity<ServiceTicketDto> create(@RequestBody ServiceTicketDto dto) {
+        ServiceTicketDto created = service.create(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
 
     /**
      *  tạo phiếu cho khách mới (chưa có trong hệ thống), đồng thời tạo Customer và Vehicle.

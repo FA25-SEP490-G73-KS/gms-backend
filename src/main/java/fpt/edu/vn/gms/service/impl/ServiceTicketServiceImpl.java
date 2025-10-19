@@ -28,7 +28,18 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final AssignmentRepository AssignmentRepository;
-
+    /**
+     * Tạo mới phiếu dịch vụ từ DTO. Nếu chưa có createdAt thì tự động gán thời điểm hiện tại.
+     */
+    @Override
+    public ServiceTicketDto create(ServiceTicketDto dto) {
+        ServiceTicket entity = ServiceTicketMapper.mapToServiceTicket(dto);
+        if (entity.getCreatedAt() == null) {
+            entity.setCreatedAt(LocalDateTime.now());
+        }
+        ServiceTicket saved = serviceTicketRepository.save(entity);
+        return ServiceTicketMapper.mapToServiceTicketDto(saved);
+    }
     /**
      * Tạo mới phiếu dịch vụ cùng lúc với tạo Customer và Vehicle
      *
