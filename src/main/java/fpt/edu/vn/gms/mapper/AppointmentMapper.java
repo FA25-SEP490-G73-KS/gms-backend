@@ -19,6 +19,7 @@ public class AppointmentMapper {
                 .serviceType(appointment.getServiceType())
                 .status(appointment.getStatus())
                 .note(appointment.getDescription())
+                .createdAt(appointment.getCreatedAt()) // NEW
                 .build();
     }
 }

@@ -15,6 +15,11 @@ import fpt.edu.vn.gms.repository.TimeSlotRepository;
 import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -102,10 +107,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<AppointmentResponseDto> getAllAppointments() {
-        return appointmentRepo.findAll().stream()
-                .map(AppointmentMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<AppointmentResponseDto> getAllAppointments(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("appointmentDate").descending());
+        return appointmentRepo.findAll(pageable)
+                .map(AppointmentMapper::toDto);
     }
 
     @Override

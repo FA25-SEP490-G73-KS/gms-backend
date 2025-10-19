@@ -6,6 +6,9 @@ import fpt.edu.vn.gms.dto.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.TimeSlotDto;
 import fpt.edu.vn.gms.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
+
+
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +35,11 @@ public class AppointmentController {
 
     // Get all appointment
     @GetMapping
-    public ResponseEntity<List<AppointmentResponseDto>> getAllAppointments() {
-        return ResponseEntity.ok(service.getAllAppointments());
+    public ResponseEntity<Page<AppointmentResponseDto>> getAllAppointments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+        return ResponseEntity.ok(service.getAllAppointments(page, size));
     }
 
     // Get appointment by appointmentId

@@ -4,8 +4,7 @@ import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.dto.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.TimeSlotDto;
-import fpt.edu.vn.gms.entity.Appointment;
-import fpt.edu.vn.gms.entity.Vehicle;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,10 +12,11 @@ import java.util.List;
 public interface AppointmentService {
 
     List<TimeSlotDto> getTimeSlotsByDate(LocalDate date);
+
     AppointmentResponseDto createAppointment(AppointmentRequestDto dto);
 
     // Get all appointment
-    List<AppointmentResponseDto> getAllAppointments();
+    Page<AppointmentResponseDto> getAllAppointments(int page, int size);
 
     // Get appointment by id
     AppointmentResponseDto getAppointmentById(Long id);
