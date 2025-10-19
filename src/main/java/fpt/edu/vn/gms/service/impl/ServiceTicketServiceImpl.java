@@ -121,17 +121,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
      public ServiceTicketDto update(Long id, ServiceTicketDto dto) {
          ServiceTicket existing = serviceTicketRepository.findById(id)
                  .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
-
-         // Gộp (merge) các trường từ DTO vào entity hiện có (chỉ những trường cho phép cập nhật)
-         ServiceTicket patch = ServiceTicketMapper.mapToServiceTicket(dto);
-         if (patch.getAppointment() != null) existing.setAppointment(patch.getAppointment());
-         if (patch.getCustomer() != null) existing.setCustomer(patch.getCustomer());
-         if (patch.getVehicle() != null) existing.setVehicle(patch.getVehicle());
-         if (patch.getStatus() != null) existing.setStatus(patch.getStatus());
-         if (patch.getNotes() != null) existing.setNotes(patch.getNotes());
-         if (patch.getCreatedAt() != null) existing.setCreatedAt(patch.getCreatedAt());
-         if (patch.getDeliveryAt() != null) existing.setDeliveryAt(patch.getDeliveryAt());
-
          ServiceTicket saved = serviceTicketRepository.save(existing);
          return ServiceTicketMapper.mapToServiceTicketDto(saved);
 
