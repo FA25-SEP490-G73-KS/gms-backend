@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,9 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "ServiceTicket")
+/**
+ * Thực thể Phiếu Dịch Vụ, ánh xạ tới bảng ServiceTicket.
+ */
 public class ServiceTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +34,9 @@ public class ServiceTicket {
     @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id")
     private Vehicle vehicle;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private ServiceTicketStatus status;
 
     @Column(name = "notes", columnDefinition = "char(255)")
     private String notes;
