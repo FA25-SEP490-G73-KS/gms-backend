@@ -69,8 +69,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                             .phone(normalizedPhone)
                             .zaloId(serviceTicketDtoRequest.getZaloId())
                             .address(serviceTicketDtoRequest.getAddress())
-                            .customerType(String.valueOf(serviceTicketDtoRequest.getCustomerType()))
-                            .loyaltyLevel(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel()))
+                            .customerType(serviceTicketDtoRequest.getCustomerType())
+                            .loyaltyLevel(serviceTicketDtoRequest.getLoyaltyLevel())
                             .build();
                     return customerRepository.save(c);
                 });
@@ -131,12 +131,12 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
         // Cập nhật các trường nếu có trong dto
         if (dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById(Math.toIntExact(dto.getAppointmentId()))
+            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Appointment không tồn tại với id: " + dto.getAppointmentId()));
             existing.setAppointment(appointment);
         }
         if (dto.getCustomerId() != null) {
-            Customer customer = customerRepository.findById(dto.getCustomerId())
+            Customer customer = customerRepository.findById(Math.toIntExact(dto.getCustomerId()))
                     .orElseThrow(() -> new ResourceNotFoundException("Customer không tồn tại với id: " + dto.getCustomerId()));
             existing.setCustomer(customer);
         }

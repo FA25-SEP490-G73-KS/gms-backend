@@ -21,7 +21,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerDto getCustumerByCustomerId(Long customerId) {
-        return customerRepository.findById(customerId)
+        return customerRepository.findById(Math.toIntExact(customerId))
                 .map(CustomerMapper::mapToCustomerDto)
                 .orElse(null);
     }
