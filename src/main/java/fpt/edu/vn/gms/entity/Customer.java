@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.CustomerType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,9 +30,11 @@ public class Customer {
     @Column(name = "address", length = 200)
     private String address;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "customer_type", length = 30)
-    private String customerType;
+    private CustomerType customerType;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "loyalty_level", length = 30)
-    private String loyaltyLevel;
+    private CustomerLoyaltyLevel loyaltyLevel;
 }

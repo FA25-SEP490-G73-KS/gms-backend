@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class AppointmentResponseDto {
     private Long appointmentId;
     private String customerName;
+    private String customerPhone;
     private String licensePlate;
     private LocalDate appointmentDate;
     private String timeSlotLabel;

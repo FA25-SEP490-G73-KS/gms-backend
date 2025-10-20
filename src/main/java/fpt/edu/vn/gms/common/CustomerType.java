@@ -12,4 +12,5 @@ public enum CustomerType {
     CustomerType(String displayName) {
         this.displayName = displayName;
     }
+
 }

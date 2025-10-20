@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
+import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.dto.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.TimeSlotDto;
@@ -53,20 +54,27 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     public AppointmentResponseDto createAppointment(AppointmentRequestDto dto) {
 
-        // Check vehicle
-        Vehicle vehicle = vehicleRepo.findByLicensePlate(dto.getLicensePlate())
+        // Check customer theo số điện thoại
+        Customer customer = customerRepo.findByPhone(dto.getPhoneNumber())
                 .orElseGet(() -> {
-                    Customer customer = Customer.builder()
+                    // Nếu chưa có thì tạo mới customer
+                    Customer newCustomer = Customer.builder()
                             .fullName(dto.getCustomerName())
                             .phone(dto.getPhoneNumber())
+                            .loyaltyLevel(CustomerLoyaltyLevel.NORMAL)
                             .build();
-                    customer = customerRepo.save(customer);
+                    return customerRepo.save(newCustomer);
+                });
 
-                    Vehicle v = Vehicle.builder()
+        // Check vehicle theo license plate
+        Vehicle vehicle = vehicleRepo.findByLicensePlate(dto.getLicensePlate())
+                .orElseGet(() -> {
+                    // Nếu xe chưa tồn tại thì tạo mới, gán customer vào
+                    Vehicle newVehicle = Vehicle.builder()
                             .licensePlate(dto.getLicensePlate())
-                            .customer(customer)
+                            .customer(customer) // gán đúng customer đã tìm
                             .build();
-                    return vehicleRepo.save(v);
+                    return vehicleRepo.save(newVehicle);
                 });
 
         // Find slot by index
@@ -94,16 +102,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment saved = appointmentRepo.save(appointment);
 
-        return AppointmentResponseDto.builder()
-                .appointmentId(saved.getAppointmentId())
-                .customerName(vehicle.getCustomer().getFullName())
-                .licensePlate(vehicle.getLicensePlate())
-                .appointmentDate(saved.getAppointmentDate())
-                .timeSlotLabel(slot.getLabel())
-                .serviceType(saved.getServiceType())
-                .status(saved.getStatus())
-                .note(saved.getDescription())
-                .build();
+        return AppointmentMapper.toDto(saved);
     }
 
     @Override
