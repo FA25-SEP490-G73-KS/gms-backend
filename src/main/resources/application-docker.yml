@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://mysql:3306/gms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: demo
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  main:
+    allow-bean-definition-overriding: true
+
+sms:
+  viettel:
+    api-url: https://viettel-sms-api.vn/send
+    user-id: YOUR_USER_ID
+    service-id: YOUR_SERVICE_ID
+    sender: YOUR_BRAND_NAME
+
+server:
+  port: 8080
