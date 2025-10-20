@@ -9,29 +9,29 @@ import org.springframework.data.domain.Pageable;
  * Cung cấp các thao tác CRUD cơ bản và tìm kiếm có phân trang/sắp xếp.
  */
 public interface ServiceTicketService {
-    /**
-     * Tạo mới một phiếu dịch vụ.
-     *
-     * @param dto dữ liệu phiếu dịch vụ cần tạo
-     * @return phiếu dịch vụ đã tạo (kèm ID)
-     */
-    ServiceTicketDto create(ServiceTicketDto dto);
+//    /**
+//     * Tạo mới một phiếu dịch vụ.
+//     *
+//     * @param dto dữ liệu phiếu dịch vụ cần tạo
+//     * @return phiếu dịch vụ đã tạo (kèm ID)
+//     */
+//    ServiceTicketDto create(ServiceTicketDto dto);
 
     /**
-     * Tạo mới một phiếu dịch vụ.
-     *
+     * Tạo mới phiếu dịch vụ cho khách mới với khả năng truyền employeeId của Service Advisor đang đăng nhập.
      * @param req dữ liệu phiếu dịch vụ cần tạo
+     * @param employeeIdOfServiceAdvisor employee_id của Service Advisor đang đăng nhập (lấy từ header hoặc context); có thể null
      * @return phiếu dịch vụ đã tạo
      */
-    ServiceTicketDto createNewServiceTicket(ServiceTicketDto req);
+    ServiceTicketDto createServiceTicket(ServiceTicketDto req, Long employeeIdOfServiceAdvisor);
 
     /**
      * Lấy chi tiết phiếu dịch vụ theo ID.
      *
-     * @param id mã phiếu dịch vụ
+     * @param serviceTicketId mã phiếu dịch vụ
      * @return thông tin phiếu dịch vụ
      */
-    ServiceTicketDto getById(Long id);
+    ServiceTicketDto getServiceTicketByServiceTicketId(Long serviceTicketId);
 
     /**
      * Lấy danh sách phiếu dịch vụ có phân trang.
@@ -39,17 +39,16 @@ public interface ServiceTicketService {
      * @param pageable thông tin phân trang và sắp xếp
      * @return trang dữ liệu các phiếu dịch vụ
      */
-    Page<ServiceTicketDto> getAll(Pageable pageable);
+    Page<ServiceTicketDto> getAllServiceTicket(Pageable pageable);
 
     /**
      * Cập nhật phiếu dịch vụ theo ID.
-     * Chỉ các trường có giá trị (khác null) trong DTO mới được áp dụng cập nhật.
      *
-     * @param id  mã phiếu dịch vụ cần cập nhật
+     * @param serviceTicketId  mã phiếu dịch vụ cần cập nhật
      * @param dto dữ liệu cập nhật
      * @return phiếu dịch vụ sau khi cập nhật
      */
-    ServiceTicketDto update(Long id, ServiceTicketDto dto);
+    ServiceTicketDto updateServiceTicket(Long serviceTicketId, ServiceTicketDto dto);
 
 
 }

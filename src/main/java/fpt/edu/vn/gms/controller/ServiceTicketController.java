@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.controller;
+import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
+import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,51 +17,43 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/service-tickets")
 @RequiredArgsConstructor
 public class ServiceTicketController {
-    private final ServiceTicketService service;
+    private final ServiceTicketService serviceTicketService;
 
-    /**
-     * Tạo mới phiếu dịch vụ.
-     */
-    @PostMapping
-    public ResponseEntity<ServiceTicketDto> create(@RequestBody ServiceTicketDto dto) {
-        ServiceTicketDto created = service.create(dto);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
-    }
 
     /**
      *  tạo phiếu cho khách mới (chưa có trong hệ thống), đồng thời tạo Customer và Vehicle.
      * appointmentId = null, createdAt = now, deliveryAt = null, notes = null, status = CHO_BAO_GIA.
      */
     @PostMapping("/new-service-tickets")
-    public ResponseEntity<ServiceTicketDto> createForNewCustomer(@RequestBody ServiceTicketDto req) {
-        ServiceTicketDto created = service.createNewServiceTicket(req);
+    public ResponseEntity<ServiceTicketDto> createServiceTicket(
+            @RequestBody ServiceTicketDto req,
+            @RequestHeader(value = "X-Employee-Id", required = false) Long employeeIdOfServiceAdvisor
+    ) {
+        ServiceTicketDto created = serviceTicketService.createServiceTicket(req, employeeIdOfServiceAdvisor);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     /**
      * Lấy chi tiết phiếu dịch vụ theo ID.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<ServiceTicketDto> getById(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(service.getById(id));
+    @GetMapping("/{serviceTicketId}")
+    public ResponseEntity<ServiceTicketDto> getById(@PathVariable("id") Long employeeIdOfServiceAvidor) {
+        return ResponseEntity.ok(serviceTicketService.getServiceTicketByServiceTicketId(employeeIdOfServiceAvidor));
     }
 
     /**
      * Lấy danh sách phiếu dịch vụ có phân trang.
      */
     @GetMapping
-    public ResponseEntity<Page<ServiceTicketDto>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(service.getAll(pageable));
+    public ResponseEntity<Page<ServiceTicketDto>> getAllServiceTicket(Pageable pageable) {
+        return ResponseEntity.ok(serviceTicketService.getAllServiceTicket(pageable));
     }
 
     /**
      * Cập nhật phiếu dịch vụ theo ID.
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<ServiceTicketDto> update(@PathVariable("id") Long id, @RequestBody ServiceTicketDto dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+    @PutMapping("/update-service-ticket/{serviceTicketId}")
+    public ResponseEntity<ServiceTicketDto> update(@PathVariable("serviceTicketId") Long serviceTicketId, @RequestBody ServiceTicketDto dto) {
+        return ResponseEntity.ok(serviceTicketService.updateServiceTicket(serviceTicketId, dto));
     }
-
-
-
 }

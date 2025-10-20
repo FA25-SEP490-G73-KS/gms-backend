@@ -40,10 +40,4 @@ public class ServiceTicketDto {
     private Integer year;
     private String vin;
 
-    //Assignment fields
-    private Long assignmentId;
-    private Long employeeId;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private String note;
 }
