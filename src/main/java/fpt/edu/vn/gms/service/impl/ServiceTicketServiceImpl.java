@@ -28,30 +28,22 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final AssignmentRepository AssignmentRepository;
-    /**
-     * Tạo mới phiếu dịch vụ từ DTO. Nếu chưa có createdAt thì tự động gán thời điểm hiện tại.
-     */
+
+//    /**
+//     * Tạo mới phiếu dịch vụ từ DTO. Nếu chưa có createdAt thì tự động gán thời điểm hiện tại.
+//     */
+//    @Override
+//    public ServiceTicketDto create(ServiceTicketDto dto) {
+//        ServiceTicket entity = ServiceTicketMapper.mapToServiceTicket(dto);
+//        if (entity.getCreatedAt() == null) {
+//            entity.setCreatedAt(LocalDateTime.now());
+//        }
+//        ServiceTicket saved = serviceTicketRepository.save(entity);
+//        return ServiceTicketMapper.mapToServiceTicketDto(saved);
+//    }
+
     @Override
-    public ServiceTicketDto create(ServiceTicketDto dto) {
-        ServiceTicket entity = ServiceTicketMapper.mapToServiceTicket(dto);
-        if (entity.getCreatedAt() == null) {
-            entity.setCreatedAt(LocalDateTime.now());
-        }
-        ServiceTicket saved = serviceTicketRepository.save(entity);
-        return ServiceTicketMapper.mapToServiceTicketDto(saved);
-    }
-    /**
-     * Tạo mới phiếu dịch vụ cùng lúc với tạo Customer và Vehicle
-     *
-     * @param serviceTicketDtoRequest
-     * @return
-     */
-    @Override
-    public ServiceTicketDto createNewServiceTicket(ServiceTicketDto serviceTicketDtoRequest) {
-        // Validate minimal required fields
-        if (serviceTicketDtoRequest == null) {
-            throw new IllegalArgumentException("Thiếu dữ liệu yêu cầu");
-        }
+    public ServiceTicketDto createServiceTicket(ServiceTicketDto serviceTicketDtoRequest, Long employeeIdOfServiceAvidor) {
         if (serviceTicketDtoRequest.getFullName() == null || serviceTicketDtoRequest.getFullName().isBlank()) {
             throw new IllegalArgumentException("fullName là bắt buộc");
         }
@@ -68,30 +60,36 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         }
         String normalizedPhone = serviceTicketDtoRequest.getPhone().replaceAll("\\s+", "");
 
-        // Tạo Customer
-        Customer customer = Customer.builder()
-                .fullName(serviceTicketDtoRequest.getFullName())
-                .phone(normalizedPhone)
-                .zaloId(serviceTicketDtoRequest.getZaloId()) // để null nếu không có
-                .address(serviceTicketDtoRequest.getAddress()) // để null nếu không có
-                .customerType(String.valueOf(serviceTicketDtoRequest.getCustomerType()))
-                .loyaltyLevel(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel()))
-                .build();
-        customer = customerRepository.save(customer);
+        //nếu như tồn tại custumer cùng với tất cả những vehicle liên quan tới customer thì ko cần tạo nữa. ngược lại thì vẫn tạo như bình thường
+        // Tìm hoặc tạo Customer theo số điện thoại (coi phone là duy nhất)
+        Customer customer = customerRepository.findByPhone(normalizedPhone)
+                .orElseGet(() -> {
+                    Customer c = Customer.builder()
+                            .fullName(serviceTicketDtoRequest.getFullName())
+                            .phone(normalizedPhone)
+                            .zaloId(serviceTicketDtoRequest.getZaloId())
+                            .address(serviceTicketDtoRequest.getAddress())
+                            .customerType(String.valueOf(serviceTicketDtoRequest.getCustomerType()))
+                            .loyaltyLevel(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel()))
+                            .build();
+                    return customerRepository.save(c);
+                });
 
-        // Tạo Vehicle
-        Vehicle vehicle = Vehicle.builder()
-                .customer(customer)
-                .licensePlate(serviceTicketDtoRequest.getLicensePlate())
-                .brand(serviceTicketDtoRequest.getBrand())
-                .model(serviceTicketDtoRequest.getModel())
-                .year(serviceTicketDtoRequest.getYear())
-                .vin(serviceTicketDtoRequest.getVin())
-                .build();
-        vehicle = vehicleRepository.save(vehicle);
+        // Tìm hoặc tạo Vehicle theo biển số. Nếu đã tồn tại thì dùng lại và ưu tiên customer của vehicle đó
+        Vehicle vehicle = vehicleRepository.findByLicensePlate(serviceTicketDtoRequest.getLicensePlate())
+                .orElseGet(() -> {
+                    Vehicle v = Vehicle.builder()
+                            .customer(customer)
+                            .licensePlate(serviceTicketDtoRequest.getLicensePlate())
+                            .brand(serviceTicketDtoRequest.getBrand())
+                            .model(serviceTicketDtoRequest.getModel())
+                            .year(serviceTicketDtoRequest.getYear())
+                            .vin(serviceTicketDtoRequest.getVin())
+                            .build();
+                    return vehicleRepository.save(v);
+                });
 
-
-        // Tạo ServiceTicket
+        // Tạo ServiceTicket trước, sau đó mới tạo Assignment gắn với ServiceTicket
         LocalDateTime now = LocalDateTime.now();
         ServiceTicket st = new ServiceTicket();
         st.setAppointment(null);
@@ -103,25 +101,23 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         st.setStatus(ServiceTicketStatus.CHO_BAO_GIA);
         ServiceTicket saved = serviceTicketRepository.save(st);
         return ServiceTicketMapper.mapToServiceTicketDto(saved);
-
-
     }
 
     /**
      * Lấy phiếu dịch vụ theo ID, ném lỗi 404 nếu không tồn tại.
      */
     @Override
-    public ServiceTicketDto getById(Long id) {
-        ServiceTicket st = serviceTicketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
-        return ServiceTicketMapper.mapToServiceTicketDto(st);
+    public ServiceTicketDto getServiceTicketByServiceTicketId(Long serviceTicketId) {
+        ServiceTicket serviceTicket = serviceTicketRepository.findById(serviceTicketId)
+                .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + serviceTicketId));
+        return ServiceTicketMapper.mapToServiceTicketDto(serviceTicket);
     }
 
     /**
      * Lấy danh sách phiếu dịch vụ có phân trang.
      */
     @Override
-    public Page<ServiceTicketDto> getAll(Pageable pageable) {
+    public Page<ServiceTicketDto> getAllServiceTicket(Pageable pageable) {
         return serviceTicketRepository.findAll(pageable).map(ServiceTicketMapper::mapToServiceTicketDto);
     }
 
@@ -130,7 +126,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
      * Chỉ cập nhật các trường có giá trị (khác null) trong DTO.
      */
     @Override
-    public ServiceTicketDto update(Long id, ServiceTicketDto dto) {
+    public ServiceTicketDto updateServiceTicket(Long id, ServiceTicketDto dto) {
         ServiceTicket existing = serviceTicketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
         // Cập nhật các trường nếu có trong dto
@@ -140,7 +136,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             existing.setAppointment(appointment);
         }
         if (dto.getCustomerId() != null) {
-            Customer customer = customerRepository.findById(Math.toIntExact(dto.getCustomerId()))
+            Customer customer = customerRepository.findById(dto.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer không tồn tại với id: " + dto.getCustomerId()));
             existing.setCustomer(customer);
         }
