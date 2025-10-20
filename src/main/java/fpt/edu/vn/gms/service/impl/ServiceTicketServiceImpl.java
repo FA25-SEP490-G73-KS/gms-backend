@@ -1,8 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.entity.*;
@@ -71,8 +69,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                             .phone(normalizedPhone)
                             .zaloId(serviceTicketDtoRequest.getZaloId())
                             .address(serviceTicketDtoRequest.getAddress())
-                            .customerType(CustomerType.valueOf(String.valueOf(serviceTicketDtoRequest.getCustomerType())))
-                            .loyaltyLevel(CustomerLoyaltyLevel.valueOf(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel())))
+                            .customerType(String.valueOf(serviceTicketDtoRequest.getCustomerType()))
+                            .loyaltyLevel(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel()))
                             .build();
                     return customerRepository.save(c);
                 });
@@ -133,12 +131,12 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
         // Cập nhật các trường nếu có trong dto
         if (dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById((long) Math.toIntExact(dto.getAppointmentId()))
+            Appointment appointment = appointmentRepository.findById(Math.toIntExact(dto.getAppointmentId()))
                     .orElseThrow(() -> new ResourceNotFoundException("Appointment không tồn tại với id: " + dto.getAppointmentId()));
             existing.setAppointment(appointment);
         }
         if (dto.getCustomerId() != null) {
-            Customer customer = customerRepository.findById(Math.toIntExact(dto.getCustomerId()))
+            Customer customer = customerRepository.findById(dto.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer không tồn tại với id: " + dto.getCustomerId()));
             existing.setCustomer(customer);
         }

@@ -36,10 +36,10 @@ public class ServiceTicketMapper {
         CustomerLoyaltyLevel loyaltyLevel = null;
         if (customer != null) {
             if (customer.getCustomerType() != null) {
-                try { customerType = CustomerType.valueOf(String.valueOf(customer.getCustomerType())); } catch (IllegalArgumentException ignored) {}
+                try { customerType = CustomerType.valueOf(customer.getCustomerType()); } catch (IllegalArgumentException ignored) {}
             }
             if (customer.getLoyaltyLevel() != null) {
-                try { loyaltyLevel = CustomerLoyaltyLevel.valueOf(String.valueOf(customer.getLoyaltyLevel())); } catch (IllegalArgumentException ignored) {}
+                try { loyaltyLevel = CustomerLoyaltyLevel.valueOf(customer.getLoyaltyLevel()); } catch (IllegalArgumentException ignored) {}
             }
         }
         return ServiceTicketDto.builder()
