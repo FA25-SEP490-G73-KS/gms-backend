@@ -13,6 +13,7 @@ public class AppointmentMapper {
         return AppointmentResponseDto.builder()
                 .appointmentId(appointment.getAppointmentId())
                 .customerName(appointment.getCustomer() != null ? appointment.getCustomer().getFullName() : null)
+                .customerPhone(appointment.getCustomer() != null ? appointment.getCustomer().getPhone() : null)
                 .licensePlate(appointment.getVehicle() != null ? appointment.getVehicle().getLicensePlate() : null)
                 .appointmentDate(appointment.getAppointmentDate())
                 .timeSlotLabel(appointment.getTimeSlot() != null ? appointment.getTimeSlot().getLabel() : null)
