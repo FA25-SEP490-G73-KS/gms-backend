@@ -19,11 +19,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * Lây danh sách nhân viên với phân trang
-     * @param pageable
+     * @param page sô trang
+     * @param size kích thước trang
      * @return
      */
     @Override
-    public Page<EmployeeDto> getAllEmployee(Pageable pageable) {
+    public Page<EmployeeDto> getAllEmployee(int page, int size) {
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
         return employeeRepository.findAll(pageable).map(EmployeeMapper::mapToEmployeeDto);
     }
     /**

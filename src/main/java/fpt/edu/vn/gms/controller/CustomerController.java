@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * REST Controller cho các thao tác liên quan đến khách hàng.
@@ -18,18 +15,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
 public class CustomerController {
-    private final CustomerService customerService;/**
-        * Lấy danh sách khách hàng với phân trang
-        * @param pageable
-        * @return
-        */
+    private final CustomerService customerService;
+
+    /**
+     * Lấy danh sách khách hàng với phân trang
+     *
+     * @param page số trang
+     * @param size kích thước trang
+     * @return
+     */
     @GetMapping
-    public ResponseEntity<Page<CustomerDto>> getAllCustomer(Pageable pageable) {
-        return ResponseEntity.ok(customerService.getAllCustumer(pageable));
+    public ResponseEntity<Page<CustomerDto>> getAllCustomer( @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "6") int size) {
+        return ResponseEntity.ok(customerService.getAllCustumer(page, size));
     }
 
     /**
      * Lấy khách hàng theo ID
+     *
      * @param customerId
      * @return
      */

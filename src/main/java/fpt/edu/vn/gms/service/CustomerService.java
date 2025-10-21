@@ -6,11 +6,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface CustomerService {
     /**
-     * Get all customers with pagination
-     * @param pageable
-     * @return
+     * Lây danh sách khách hàng
+     * @param page số trang
+     * @param size kích thước trang
+     * @return danh sách khách hàng phân trang
      */
-    Page<CustomerDto> getAllCustumer(Pageable pageable);
+    Page<CustomerDto> getAllCustumer(int page, int size);
 
     /**
      * Get a single customer by their ID

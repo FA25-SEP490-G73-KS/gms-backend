@@ -24,24 +24,33 @@ public class ServiceTicketMapper {
      */
     public static ServiceTicketDto mapToServiceTicketDto(ServiceTicket serviceTicket) {
         if (serviceTicket == null) return null;
-        Long appointmentId = serviceTicket.getAppointment() != null ? serviceTicket.getAppointment().getAppointmentId() : null;
-        Long customerId = serviceTicket.getCustomer() != null ? serviceTicket.getCustomer().getCustomerId() : null;
-        Long vehicleId = serviceTicket.getVehicle() != null ? serviceTicket.getVehicle().getVehicleId() : null;
 
+        // Lấy các thực thể liên quan
         Customer customer = serviceTicket.getCustomer();
         Vehicle vehicle = serviceTicket.getVehicle();
+        Appointment appointment = serviceTicket.getAppointment();
 
-        // Convert string fields in Customer to enums expected by DTO (null-safe and tolerant to invalid values)
-        CustomerType customerType = null;
-        CustomerLoyaltyLevel loyaltyLevel = null;
-        if (customer != null) {
-            if (customer.getCustomerType() != null) {
-                try { customerType = CustomerType.valueOf(String.valueOf(customer.getCustomerType())); } catch (IllegalArgumentException ignored) {}
-            }
-            if (customer.getLoyaltyLevel() != null) {
-                try { loyaltyLevel = CustomerLoyaltyLevel.valueOf(String.valueOf(customer.getLoyaltyLevel())); } catch (IllegalArgumentException ignored) {}
-            }
-        }
+        // Lấy các ID
+        Long appointmentId = (appointment != null) ? appointment.getAppointmentId() : null;
+        Long customerId = (customer != null) ? customer.getCustomerId() : null;
+        Long vehicleId = (vehicle != null) ? vehicle.getVehicleId() : null;
+
+        // Lấy thông tin khách hàng
+        String fullName = (customer != null) ? customer.getFullName() : null;
+        String phone = (customer != null) ? customer.getPhone() : null;
+        String zaloId = (customer != null) ? customer.getZaloId() : null;
+        String address = (customer != null) ? customer.getAddress() : null;
+        CustomerType customerType = (customer != null) ? customer.getCustomerType() : null;
+        CustomerLoyaltyLevel loyaltyLevel = (customer != null) ? customer.getLoyaltyLevel() : null;
+
+        // Lấy thông tin xe
+        String licensePlate = (vehicle != null) ? vehicle.getLicensePlate() : null;
+        String brand = (vehicle != null) ? vehicle.getBrand() : null;
+        String model = (vehicle != null) ? vehicle.getModel() : null;
+        Integer year = (vehicle != null) ? vehicle.getYear() : null;
+        String vin = (vehicle != null) ? vehicle.getVin() : null;
+
+        // Trả về DTO
         return ServiceTicketDto.builder()
                 .serviceTicketId(serviceTicket.getServiceTicketId())
                 .appointmentId(appointmentId)
@@ -51,17 +60,17 @@ public class ServiceTicketMapper {
                 .notes(serviceTicket.getNotes())
                 .createdAt(serviceTicket.getCreatedAt())
                 .deliveryAt(serviceTicket.getDeliveryAt())
-                .fullName(customer != null ? customer.getFullName() : null)
-                .phone(customer != null ? customer.getPhone() : null)
-                .zaloId(customer != null ? customer.getZaloId() : null)
-                .address(customer != null ? customer.getAddress() : null)
+                .fullName(fullName)
+                .phone(phone)
+                .zaloId(zaloId)
+                .address(address)
                 .customerType(customerType)
                 .loyaltyLevel(loyaltyLevel)
-                .licensePlate(vehicle != null ? vehicle.getLicensePlate() : null)
-                .brand(vehicle != null ? vehicle.getBrand() : null)
-                .model(vehicle != null ? vehicle.getModel() : null)
-                .year(vehicle != null ? vehicle.getYear() : null)
-                .vin(vehicle != null ? vehicle.getVin() : null)
+                .licensePlate(licensePlate)
+                .brand(brand)
+                .model(model)
+                .year(year)
+                .vin(vin)
                 .build();
     }
 
@@ -77,24 +86,22 @@ public class ServiceTicketMapper {
     public static ServiceTicket mapToServiceTicket(ServiceTicketDto dto) {
         if (dto == null) return null;
 
-        Appointment appointment = null;
-        if (dto.getAppointmentId() != null) {
-            appointment = new Appointment();
-            appointment.setAppointmentId(dto.getAppointmentId());
-        }
+        // Lấy các ID từ DTO
+        Long appointmentId = (dto.getAppointmentId() != null) ? dto.getAppointmentId() : null;
+        Long customerId = (dto.getCustomerId() != null) ? dto.getCustomerId() : null;
+        Long vehicleId = (dto.getVehicleId() != null) ? dto.getVehicleId() : null;
 
-        Customer customer = null;
-        if (dto.getCustomerId() != null) {
-            customer = new Customer();
-            customer.setCustomerId(dto.getCustomerId());
-        }
+        // Khởi tạo entity liên quan
+        Appointment appointment = (appointmentId != null) ? new Appointment() : null;
+        if (appointment != null) appointment.setAppointmentId(appointmentId);
 
-        Vehicle vehicle = null;
-        if (dto.getVehicleId() != null) {
-            vehicle = new Vehicle();
-            vehicle.setVehicleId(dto.getVehicleId());
-        }
+        Customer customer = (customerId != null) ? new Customer() : null;
+        if (customer != null) customer.setCustomerId(customerId);
 
+        Vehicle vehicle = (vehicleId != null) ? new Vehicle() : null;
+        if (vehicle != null) vehicle.setVehicleId(vehicleId);
+
+        // Trả về ServiceTicket entity
         return ServiceTicket.builder()
                 .serviceTicketId(dto.getServiceTicketId())
                 .appointment(appointment)
@@ -106,4 +113,5 @@ public class ServiceTicketMapper {
                 .deliveryAt(dto.getDeliveryAt())
                 .build();
     }
+
 }

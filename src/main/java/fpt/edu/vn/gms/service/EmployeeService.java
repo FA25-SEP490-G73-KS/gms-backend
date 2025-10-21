@@ -10,10 +10,11 @@ import java.util.List;
 public interface EmployeeService {
     /**
      * Lây danh sách nhân viên với phân trang
-     * @param pageable
+     * @param page sô trang
+     * @param size kích thước trang
      * @return
      */
-    Page<EmployeeDto> getAllEmployee(Pageable pageable);
+    Page<EmployeeDto> getAllEmployee(int page, int size);
 
     /**
      * Lấy danh sách kỹ thuật viên đang hoạt động

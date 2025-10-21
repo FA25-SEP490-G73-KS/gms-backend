@@ -15,7 +15,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     @Override
-    public Page<CustomerDto> getAllCustumer(Pageable pageable) {
+    public Page<CustomerDto> getAllCustumer(int page, int size) {
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
         return customerRepository.findAll(pageable).map(CustomerMapper::mapToCustomerDto);
     }
 

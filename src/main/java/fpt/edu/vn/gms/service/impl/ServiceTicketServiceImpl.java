@@ -29,55 +29,70 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final VehicleRepository vehicleRepository;
     private final AssignmentRepository AssignmentRepository;
 
-//    /**
-//     * Tạo mới phiếu dịch vụ từ DTO. Nếu chưa có createdAt thì tự động gán thời điểm hiện tại.
-//     */
-//    @Override
-//    public ServiceTicketDto create(ServiceTicketDto dto) {
-//        ServiceTicket entity = ServiceTicketMapper.mapToServiceTicket(dto);
-//        if (entity.getCreatedAt() == null) {
-//            entity.setCreatedAt(LocalDateTime.now());
-//        }
-//        ServiceTicket saved = serviceTicketRepository.save(entity);
-//        return ServiceTicketMapper.mapToServiceTicketDto(saved);
-//    }
-
+    /**
+     * Tạo mới phiếu dịch vụ cho khách vãng lai
+     * @param serviceTicketDtoRequest dữ liệu phiếu dịch vụ cần tạo
+     * @param employeeIdOfServiceAvidor employee_id của Service Advisor
+     * @return
+     */
     @Override
     public ServiceTicketDto createServiceTicket(ServiceTicketDto serviceTicketDtoRequest, Long employeeIdOfServiceAvidor) {
-        if (serviceTicketDtoRequest.getFullName() == null || serviceTicketDtoRequest.getFullName().isBlank()) {
-            throw new IllegalArgumentException("fullName là bắt buộc");
-        }
-        if (serviceTicketDtoRequest.getPhone() == null || serviceTicketDtoRequest.getPhone().isBlank()) {
-            throw new IllegalArgumentException("phone là bắt buộc");
-        }
+        //Kiểm tra đầu vào bắt buộc: licensePlate (biển số xe) luôn luôn phải có.
         if (serviceTicketDtoRequest.getLicensePlate() == null || serviceTicketDtoRequest.getLicensePlate().isBlank()) {
             throw new IllegalArgumentException("licensePlate là bắt buộc");
         }
-        // Validate số điện thoại theo quy tắc hệ thống
-        String phoneError = PhoneUtils.validatePhoneNumber(serviceTicketDtoRequest.getPhone());
-        if (phoneError != null) {
-            throw new IllegalArgumentException(phoneError);
+
+        Customer customer;
+
+        //Trường hợp đã có sẵn customerId trong request
+        if (serviceTicketDtoRequest.getCustomerId() != null) {
+            // -> Tìm Customer theo ID. Nếu không tồn tại thì báo lỗi.
+            customer = customerRepository.findById(Math.toIntExact(serviceTicketDtoRequest.getCustomerId()))
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Customer không tồn tại với id: " + serviceTicketDtoRequest.getCustomerId()));
+
+        } else {
+            //Trường hợp KHÔNG có customerId, bắt buộc phải nhập đầy đủ họ tên và số điện thoại.
+            if (serviceTicketDtoRequest.getFullName() == null || serviceTicketDtoRequest.getFullName().isBlank()) {
+                throw new IllegalArgumentException("fullName là bắt buộc");
+            }
+            if (serviceTicketDtoRequest.getPhone() == null || serviceTicketDtoRequest.getPhone().isBlank()) {
+                throw new IllegalArgumentException("phone là bắt buộc");
+            }
+            String phoneError = PhoneUtils.validatePhoneNumber(serviceTicketDtoRequest.getPhone());
+            if (phoneError != null) {
+                throw new IllegalArgumentException(phoneError);
+            }
+            //Chuẩn hóa số điện thoại (loại bỏ khoảng trắng thừa)
+            String normalizedPhone = serviceTicketDtoRequest.getPhone().replaceAll("\\s+", "");
+            //Tìm khách hàng theo số điện thoại:
+            // - Nếu đã có trong DB → lấy thông tin đó.
+            // - Nếu chưa có → tạo mới một khách hàng với thông tin trong request.
+            customer = customerRepository.findByPhone(normalizedPhone)
+                    .orElseGet(() -> {
+                        //Tạo mới khách hàng
+                        Customer c = Customer.builder()
+                                .fullName(serviceTicketDtoRequest.getFullName())
+                                .phone(normalizedPhone)
+                                .zaloId(serviceTicketDtoRequest.getZaloId())
+                                .address(serviceTicketDtoRequest.getAddress())
+                                .customerType(serviceTicketDtoRequest.getCustomerType())
+                                .loyaltyLevel(serviceTicketDtoRequest.getLoyaltyLevel())
+                                .build();
+                        return customerRepository.save(c);
+                    });
         }
-        String normalizedPhone = serviceTicketDtoRequest.getPhone().replaceAll("\\s+", "");
-
-        //nếu như tồn tại custumer cùng với tất cả những vehicle liên quan tới customer thì ko cần tạo nữa. ngược lại thì vẫn tạo như bình thường
-        // Tìm hoặc tạo Customer theo số điện thoại (coi phone là duy nhất)
-        Customer customer = customerRepository.findByPhone(normalizedPhone)
+        // Xử lý Vehicle (xe):
+        // Một biển số có thể thuộc nhiều khách hàng khác nhau (nếu xe đổi chủ).
+        // Vì vậy ta phải tìm theo cặp (licensePlate + customerId).
+        // - Nếu tồn tại: dùng lại xe đó.
+        // - Nếu chưa có: tạo mới Vehicle gắn với customer hiện tại.
+        Vehicle vehicle = vehicleRepository
+                .findByLicensePlateAndCustomer_CustomerId(
+                        serviceTicketDtoRequest.getLicensePlate(),
+                        customer.getCustomerId())
                 .orElseGet(() -> {
-                    Customer c = Customer.builder()
-                            .fullName(serviceTicketDtoRequest.getFullName())
-                            .phone(normalizedPhone)
-                            .zaloId(serviceTicketDtoRequest.getZaloId())
-                            .address(serviceTicketDtoRequest.getAddress())
-                            .customerType(serviceTicketDtoRequest.getCustomerType())
-                            .loyaltyLevel(serviceTicketDtoRequest.getLoyaltyLevel())
-                            .build();
-                    return customerRepository.save(c);
-                });
-
-        // Tìm hoặc tạo Vehicle theo biển số. Nếu đã tồn tại thì dùng lại và ưu tiên customer của vehicle đó
-        Vehicle vehicle = vehicleRepository.findByLicensePlate(serviceTicketDtoRequest.getLicensePlate())
-                .orElseGet(() -> {
+                    //Tạo mới xe gắn với khách hàng hiện tại
                     Vehicle v = Vehicle.builder()
                             .customer(customer)
                             .licensePlate(serviceTicketDtoRequest.getLicensePlate())
@@ -89,7 +104,10 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     return vehicleRepository.save(v);
                 });
 
-        // Tạo ServiceTicket trước, sau đó mới tạo Assignment gắn với ServiceTicket
+        //Tạo mới phiếu dịch vụ (ServiceTicket):
+        // - Không có Appointment (đặt lịch) ban đầu → để null.
+        // - Mặc định trạng thái ban đầu là "CHỜ BÁO GIÁ".
+        // - Thời gian tạo phiếu là thời điểm hiện tại.
         LocalDateTime now = LocalDateTime.now();
         ServiceTicket st = new ServiceTicket();
         st.setAppointment(null);
@@ -117,7 +135,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
      * Lấy danh sách phiếu dịch vụ có phân trang.
      */
     @Override
-    public Page<ServiceTicketDto> getAllServiceTicket(Pageable pageable) {
+    public Page<ServiceTicketDto> getAllServiceTicket(int page, int size) {
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
         return serviceTicketRepository.findAll(pageable).map(ServiceTicketMapper::mapToServiceTicketDto);
     }
 

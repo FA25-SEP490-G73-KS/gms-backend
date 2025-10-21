@@ -1,4 +1,5 @@
 package fpt.edu.vn.gms.controller;
+
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.service.CustomerService;
@@ -21,7 +22,7 @@ public class ServiceTicketController {
 
 
     /**
-     *  tạo phiếu cho khách mới (chưa có trong hệ thống), đồng thời tạo Customer và Vehicle.
+     * tạo phiếu cho khách mới (chưa có trong hệ thống), đồng thời tạo Customer và Vehicle.
      * appointmentId = null, createdAt = now, deliveryAt = null, notes = null, status = CHO_BAO_GIA.
      */
     @PostMapping("/new-service-tickets")
@@ -34,10 +35,10 @@ public class ServiceTicketController {
     }
 
     /**
-     * Lấy chi tiết phiếu dịch vụ theo ID.
+     * Lấy chi tiết phiếu dịch vụ theo serviceTicketId.
      */
     @GetMapping("/{serviceTicketId}")
-    public ResponseEntity<ServiceTicketDto> getById(@PathVariable("id") Long employeeIdOfServiceAvidor) {
+    public ResponseEntity<ServiceTicketDto> getById(@PathVariable("serviceTicketId") Long employeeIdOfServiceAvidor) {
         return ResponseEntity.ok(serviceTicketService.getServiceTicketByServiceTicketId(employeeIdOfServiceAvidor));
     }
 
@@ -45,12 +46,13 @@ public class ServiceTicketController {
      * Lấy danh sách phiếu dịch vụ có phân trang.
      */
     @GetMapping
-    public ResponseEntity<Page<ServiceTicketDto>> getAllServiceTicket(Pageable pageable) {
-        return ResponseEntity.ok(serviceTicketService.getAllServiceTicket(pageable));
+    public ResponseEntity<Page<ServiceTicketDto>> getAllServiceTicket(    @RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "6") int size) {
+        return ResponseEntity.ok(serviceTicketService.getAllServiceTicket(page, size));
     }
 
     /**
-     * Cập nhật phiếu dịch vụ theo ID.
+     * Cập nhật phiếu dịch vụ theo serviceTicketId.
      */
     @PutMapping("/update-service-ticket/{serviceTicketId}")
     public ResponseEntity<ServiceTicketDto> update(@PathVariable("serviceTicketId") Long serviceTicketId, @RequestBody ServiceTicketDto dto) {

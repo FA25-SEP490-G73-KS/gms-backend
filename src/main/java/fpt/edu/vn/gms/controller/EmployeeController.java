@@ -19,12 +19,14 @@ public class EmployeeController {
 
     /**
      * Lây danh sách nhân viên với phân trang
-     * @param pageable
+     * @param page sô trang
+     * @param size kích thước trang
      * @return
      */
     @GetMapping
-    public ResponseEntity<Page<EmployeeDto>> getAllEmployees(Pageable pageable) {
-        return ResponseEntity.ok(employeeService.getAllEmployee(pageable));
+    public ResponseEntity<Page<EmployeeDto>> getAllEmployees( @RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "6") int size) {
+        return ResponseEntity.ok(employeeService.getAllEmployee(page, size));
     }
 
     /**
