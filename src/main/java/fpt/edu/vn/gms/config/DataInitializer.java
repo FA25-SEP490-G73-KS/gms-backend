@@ -25,7 +25,7 @@ public class DataInitializer {
 
             // Tạo account khớp với controller login
             Account admin = Account.builder()
-                    .phone("0986475989")
+                    .phone("0909123456")
                     .password(encoder.encode("admin123")) // hash password
                     .role(adminRole)
                     .build();
