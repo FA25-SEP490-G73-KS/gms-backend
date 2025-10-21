@@ -15,6 +15,7 @@ tags:
   - name: Authentication
   - name: Accounts
   - name: Appointments
+  - name: ServiceTickets
 
 paths:
   /auth/login:
@@ -263,6 +264,120 @@ paths:
         '404':
           description: Appointment not found
 
+  /service-tickets:
+    get:
+      tags: [ServiceTickets]
+      summary: List all service tickets
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: Paged list of service tickets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageServiceTicketResponse'
+    post:
+      tags: [ServiceTickets]
+      summary: Create a service ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTicketCreateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicketResponse'
+        '400':
+          description: Validation error
+
+  /service-tickets/search:
+    get:
+      tags: [ServiceTickets]
+      summary: Search service tickets
+      parameters:
+        - name: appointmentDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: vehicleId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: Paged search result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageServiceTicketResponse'
+
+  /service-tickets/{serviceTicketId}:
+    get:
+      tags: [ServiceTickets]
+      summary: Find a service ticket by ID
+      parameters:
+        - name: serviceTicketId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Service ticket found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicketResponse'
+        '404':
+          description: Service ticket not found
+    put:
+      tags: [ServiceTickets]
+      summary: Update a service ticket
+      parameters:
+        - name: serviceTicketId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTicketUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicketResponse'
+        '404':
+          description: Service ticket not found
+
 components:
   parameters:
     page:
@@ -488,5 +603,100 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppointmentResponse'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    ServiceTicket:
+      type: object
+      properties:
+        serviceTicketId:
+          type: integer
+          format: int64
+        appointmentId:
+          type: integer
+          format: int64
+        employeeId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [chờ báo giá, duyệt, không duyệt, đang sửa chữa, Chờ thanh toán, Chờ công nợ, hoàn thành, Hủy]
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deliveryAt:
+          type: string
+          format: date-time
+      required: [serviceTicketId, appointmentId, customerId, vehicleId, status, createdAt]
+
+    ServiceTicketCreateRequest:
+      type: object
+      properties:
+        appointmentId:
+          type: integer
+          format: int64
+        employeeId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [chờ báo giá, duyệt, không duyệt, đang sửa chữa, Chờ thanh toán, Chờ công nợ, hoàn thành, Hủy]
+        notes:
+          type: string
+        deliveryAt:
+          type: string
+          format: date-time
+      required: [appointmentId, customerId, vehicleId, status]
+
+    ServiceTicketUpdateRequest:
+      type: object
+      properties:
+        appointmentId:
+          type: integer
+          format: int64
+        employeeId:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [chờ báo giá, duyệt, không duyệt, đang sửa chữa, Chờ thanh toán, Chờ công nợ, hoàn thành, Hủy]
+        notes:
+          type: string
+        deliveryAt:
+          type: string
+          format: date-time
+      description: Supply only fields to update.
+
+    ServiceTicketResponse:
+      allOf:
+        - $ref: '#/components/schemas/ServiceTicket'
+
+    PageServiceTicketResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceTicketResponse'
         page:
           $ref: '#/components/schemas/PageMeta'

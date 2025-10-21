@@ -47,6 +47,7 @@ public class Appointment {
 
     // đánh dấu field trong entity là kiểu dữ liệu lớn
     @Lob
+    @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
 
     // NEW: createdAt - set once when inserting
