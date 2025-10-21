@@ -19,9 +19,8 @@ public class ServiceTicket {
     private Long serviceTicketId;
 
     @ManyToOne
-    @JoinColumn(name = "appointment_id", referencedColumnName = "appointment_id")
+    @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId") // <-- sửa thành field name
     private Appointment appointment;
-
 
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
@@ -34,7 +33,7 @@ public class ServiceTicket {
     @Column(name = "status", length = 50)
     private String status;
 
-    @Column(name = "notes", columnDefinition = "char(max)")
+    @Column(name = "notes", columnDefinition = "char(255)")
     private String notes;
 
     @Column(name = "created_at")

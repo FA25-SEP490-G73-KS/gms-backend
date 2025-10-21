@@ -54,7 +54,7 @@ public class Warranty {
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
-    @Column(name = "description", columnDefinition = "nvarchar(max)")
+    @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
 
     @Column(name = "attachment_url", length = 500)
