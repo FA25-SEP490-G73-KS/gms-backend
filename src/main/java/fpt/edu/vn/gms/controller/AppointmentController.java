@@ -30,7 +30,7 @@ public class AppointmentController {
 
     @PostMapping()
     public AppointmentResponseDto createAppointment(@RequestBody AppointmentRequestDto dto) {
-        return service.createAppointment(dto);
+        return service.createAppointment(dto); 
     }
 
     // Get all appointment
