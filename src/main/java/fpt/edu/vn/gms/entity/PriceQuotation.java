@@ -17,7 +17,7 @@ public class PriceQuotation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "price_quotation_id")
-    private Long quotationId;
+    private Long priceQuotationId;
 
     @ManyToOne
     @JoinColumn(name = "service_ticket_id", referencedColumnName = "service_ticket_id")
