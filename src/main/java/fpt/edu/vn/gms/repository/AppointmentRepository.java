@@ -15,7 +15,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a " +
             "WHERE a.status = 'CONFIRMED' " +
             "AND a.appointmentDate = :currentDate " +
-            "AND a.timeSlot.startTime < :currentTime")
+            "AND a.timeSlot.endTime < :currentTime")
     List<Appointment> findOverdueAppointments(
             @Param("currentDate") LocalDate currentDate,
             @Param("currentTime") LocalTime currentTime);
