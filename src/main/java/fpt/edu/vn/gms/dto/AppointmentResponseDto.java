@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import fpt.edu.vn.gms.common.ServiceType;
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import lombok.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@CrossOrigin(origins = "http://localhost:5173")
 public class AppointmentResponseDto {
     private Long appointmentId;
     private String customerName;

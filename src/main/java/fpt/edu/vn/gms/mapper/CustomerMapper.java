@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.mapper;
 
+import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.CustomerType;
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.entity.Customer;
 
@@ -20,8 +22,8 @@ public class CustomerMapper {
                 .phone(entity.getPhone())
                 .zaloId(entity.getZaloId())
                 .address(entity.getAddress())
-                .customerType(entity.getCustomerType())
-                .loyaltyLevel(entity.getLoyaltyLevel())
+                .customerType(String.valueOf(entity.getCustomerType()))
+                .loyaltyLevel(String.valueOf(entity.getLoyaltyLevel()))
                 .build();
     }
 
@@ -38,8 +40,8 @@ public class CustomerMapper {
                 .phone(dto.getPhone())
                 .zaloId(dto.getZaloId())
                 .address(dto.getAddress())
-                .customerType(dto.getCustomerType())
-                .loyaltyLevel(dto.getLoyaltyLevel())
+                .customerType(CustomerType.valueOf(dto.getCustomerType()))
+                .loyaltyLevel(CustomerLoyaltyLevel.valueOf(dto.getLoyaltyLevel()))
                 .build();
     }
 }

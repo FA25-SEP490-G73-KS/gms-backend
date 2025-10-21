@@ -1,6 +1,8 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
+import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.CustomerType;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.entity.*;
@@ -71,6 +73,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                             .address(serviceTicketDtoRequest.getAddress())
                             .customerType(serviceTicketDtoRequest.getCustomerType())
                             .loyaltyLevel(serviceTicketDtoRequest.getLoyaltyLevel())
+                            .customerType(CustomerType.valueOf(String.valueOf(serviceTicketDtoRequest.getCustomerType())))
+                            .loyaltyLevel(CustomerLoyaltyLevel.valueOf(String.valueOf(serviceTicketDtoRequest.getLoyaltyLevel())))
                             .build();
                     return customerRepository.save(c);
                 });
@@ -131,7 +135,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
         // Cập nhật các trường nếu có trong dto
         if (dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
+            Appointment appointment = appointmentRepository.findById((long) Math.toIntExact(dto.getAppointmentId()))
                     .orElseThrow(() -> new ResourceNotFoundException("Appointment không tồn tại với id: " + dto.getAppointmentId()));
             existing.setAppointment(appointment);
         }
