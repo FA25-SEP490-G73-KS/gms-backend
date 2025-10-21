@@ -51,7 +51,7 @@ public class AuthController {
                             examples = @ExampleObject(value = "{\"error\": \"Invalid credentials\"}")
                     ))
     })
-    public LoginResponseDTO login(
+    public ResponseEntity<LoginResponseDTO> login(
             @RequestBody(
                     description = "User login credentials",
                     required = true,
@@ -69,9 +69,9 @@ public class AuthController {
         );
 
         UserDetails userDetails = accountDetailsService.loadUserByUsername(request.getPhone());
-        String token = jwtUtils.generateToken(userDetails.getUsername());
+        String token = jwtUtils.generateToken(userDetails);
 
-        return new LoginResponseDTO(token);
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     // ========== RESET PASSWORD ==========
