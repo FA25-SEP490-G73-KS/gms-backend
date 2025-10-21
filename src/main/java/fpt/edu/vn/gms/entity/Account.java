@@ -23,6 +23,6 @@ public class Account {
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     private Role role;
 
-    @Column(name = "password", length = 20)
+    @Column(name = "password", length = 100)
     private String password;
 }
