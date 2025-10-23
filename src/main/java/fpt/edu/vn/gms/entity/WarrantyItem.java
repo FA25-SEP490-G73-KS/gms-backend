@@ -26,7 +26,7 @@ public class WarrantyItem {
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")
     private Part part;
 
-    @Column(name = "description", columnDefinition = "nvarchar(max)")
+    @Column(name = "description", columnDefinition = "nvarchar(255)")
     private String description;
 
     @Column(name = "cost", precision = 18, scale = 2)

@@ -58,6 +58,26 @@
 - vin 
 
 ## API: Appointment
-- update appointment_date Appointment
-- update Status Appointment (Trừ trạng thái Quá hạn)
+- create appointment 
+- customer update appointment status: (Xác nhận) -> (Hủy lịch hẹn)
+- service advisor update appoint status: (Xác nhận) -> (Đã đến)
 - list all Appointment
+
+## Entity: ServiceTicket
+- service_ticket_id (PK)
+- appointment_id (ref -> Appointment.appointment_id)
+- employee_id (ref -> Employee.employee_id)
+- customer_id (ref -> Customer.customer_id)
+- vehicle_id (ref -> Vehicle.vehicle_id)
+- status (chờ báo giá/duyệt/không duyệt/đang sửa chữa/Chờ thanh toán/Chờ công nợ/hoàn thành/Hủy)
+- notes
+- created_at
+- delivery_at
+
+## API: ServiceTicket
+- create an serviceticket
+- update an serviceticket
+- find an serviceticket by service_ticket_id
+- list all serviceticket
+- search serviceticket by keywork(appointment_date, customer_id, vehicle_id)
+

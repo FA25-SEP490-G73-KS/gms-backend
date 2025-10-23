@@ -32,3 +32,4 @@ ENV JAVA_OPTS="" \
 
 # Health-friendly start command
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
