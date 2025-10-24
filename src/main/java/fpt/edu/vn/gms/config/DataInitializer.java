@@ -39,7 +39,7 @@ public class DataInitializer {
             accountRepo.save(admin);
             accountRepo.save(user);
 
-            System.out.println("✅ Test data created for Controller login");
+            System.out.println("Test data created for Controller login");
         };
     }
 }

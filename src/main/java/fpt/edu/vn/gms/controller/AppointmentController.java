@@ -1,9 +1,10 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
-import fpt.edu.vn.gms.dto.AppointmentRequestDto;
-import fpt.edu.vn.gms.dto.AppointmentResponseDto;
-import fpt.edu.vn.gms.dto.TimeSlotDto;
+import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
+import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
+import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.TimeSlotDto;
 import fpt.edu.vn.gms.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,8 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +29,9 @@ public class AppointmentController {
 
     private final AppointmentService service;
 
+    // =============================
+    // Get available time slots
+    // =============================
     @GetMapping("/time-slots")
     @Operation(
             summary = "Get available time slots by date",
@@ -40,20 +42,24 @@ public class AppointmentController {
                     responseCode = "200",
                     description = "Successfully retrieved time slots",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TimeSlotDto.class))
+                            schema = @Schema(implementation = ApiResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "Invalid date format"
             )
     })
-    public List<TimeSlotDto> getSlots(
-            @Parameter(description = "Date for which to retrieve available slots", required = true, example = "2025-10-21")
+    public ResponseEntity<ApiResponse<List<TimeSlotDto>>> getSlots(
+            @Parameter(description = "Date for which to retrieve available slots", example = "2025-10-21")
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        return service.getTimeSlotsByDate(date);
+        List<TimeSlotDto> slots = service.getTimeSlotsByDate(date);
+        return ResponseEntity.ok(ApiResponse.success("Retrieved available time slots", slots));
     }
 
+    // =============================
+    // Create a new appointment
+    // =============================
     @PostMapping
     @Operation(
             summary = "Create a new appointment",
@@ -64,14 +70,14 @@ public class AppointmentController {
                     responseCode = "201",
                     description = "Appointment created successfully",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AppointmentResponseDto.class))
+                            schema = @Schema(implementation = ApiResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
                     description = "Invalid appointment data provided"
             )
     })
-    public AppointmentResponseDto createAppointment(
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> createAppointment(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Appointment details to create",
                     required = true,
@@ -79,83 +85,60 @@ public class AppointmentController {
             )
             @RequestBody AppointmentRequestDto dto
     ) {
-        return service.createAppointment(dto);
+        AppointmentResponseDto response = service.createAppointment(dto);
+        return ResponseEntity.status(201)
+                .body(ApiResponse.created("Appointment created successfully", response));
     }
 
+    // =============================
+    // Get all appointments (paginated)
+    // =============================
     @GetMapping
     @Operation(
             summary = "Get all appointments",
             description = "Retrieves a paginated list of all appointments"
     )
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Successfully retrieved appointments",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AppointmentResponseDto.class))
-            )
-    })
-    public ResponseEntity<Page<AppointmentResponseDto>> getAllAppointments(
+    public ResponseEntity<ApiResponse<Page<AppointmentResponseDto>>> getAllAppointments(
             @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "6")
             @RequestParam(defaultValue = "6") int size
     ) {
-        return ResponseEntity.ok(service.getAllAppointments(page, size));
+        Page<AppointmentResponseDto> appointments = service.getAllAppointments(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Appointments fetched successfully", appointments));
     }
 
+    // =============================
+    // Get appointment by ID
+    // =============================
     @GetMapping("/{id}")
     @Operation(
             summary = "Get appointment by ID",
             description = "Retrieves a specific appointment by its unique identifier"
     )
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Successfully retrieved appointment",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AppointmentResponseDto.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "404",
-                    description = "Appointment not found"
-            )
-    })
-    public ResponseEntity<AppointmentResponseDto> getAppointmentById(
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> getAppointmentById(
             @Parameter(description = "Unique identifier of the appointment", required = true, example = "1")
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(service.getAppointmentById(id));
+        AppointmentResponseDto appointment = service.getAppointmentById(id);
+        return ResponseEntity.ok(ApiResponse.success("Appointment found", appointment));
     }
 
+    // =============================
+    // Update appointment status
+    // =============================
     @PatchMapping("/{id}/status")
     @Operation(
             summary = "Update appointment status",
             description = "Updates the status of a specific appointment"
     )
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Appointment status updated successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AppointmentResponseDto.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid status value"
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "404",
-                    description = "Appointment not found"
-            )
-    })
-    public ResponseEntity<AppointmentResponseDto> updateStatus(
-            @Parameter(description = "Unique identifier of the appointment", required = true, example = "1")
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> updateStatus(
+            @Parameter(description = "Unique identifier of the appointment", example = "1")
             @PathVariable Long id,
-            @Parameter(description = "New appointment status", required = true, example = "CONFIRMED")
+            @Parameter(description = "New appointment status", example = "CONFIRMED")
             @RequestParam AppointmentStatus status
     ) {
-        return ResponseEntity.ok(service.updateStatus(id, status));
+        AppointmentResponseDto updated = service.updateStatus(id, status);
+        return ResponseEntity.ok(ApiResponse.success("Appointment status updated", updated));
     }
 }
-

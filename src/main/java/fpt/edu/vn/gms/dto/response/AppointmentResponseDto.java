@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto;
+package fpt.edu.vn.gms.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import fpt.edu.vn.gms.common.ServiceType;

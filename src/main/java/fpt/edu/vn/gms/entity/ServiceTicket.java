@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,8 +24,8 @@ public class ServiceTicket {
     @Column(name = "service_ticket_id")
     private Long serviceTicketId;
 
-    @ManyToOne
-    @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId") // <-- sửa thành field name
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId", unique = true)
     private Appointment appointment;
 
     @ManyToOne
@@ -34,16 +36,49 @@ public class ServiceTicket {
     @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id")
     private Vehicle vehicle;
 
+    @ManyToMany
+    @JoinTable(
+            name = "service_ticket_technicians",
+            joinColumns = @JoinColumn(name = "service_ticket_id"),
+            inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private List<Employee> technicians = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "advisor_id", referencedColumnName = "employee_id")
+    private Employee serviceAdvisor;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "quotation_id")
+    private PriceQuotation priceQuotation;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
     private ServiceTicketStatus status;
 
-    @Column(name = "notes", columnDefinition = "char(255)")
+    @Column(name = "receive_condition", columnDefinition = "TEXT")
+    private String receiveCondition;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(name = "delivery_at")
     private LocalDateTime deliveryAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
 }

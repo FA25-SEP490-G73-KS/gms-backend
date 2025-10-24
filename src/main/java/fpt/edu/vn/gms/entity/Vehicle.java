@@ -20,8 +20,8 @@ public class Vehicle {
     @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
     private Customer customer;
 
-    @Column(name = "license_plate", length = 20)
-    private String licensePlate;
+    @Column(name = "license_plate", length = 20, unique = true)
+    private String licensePlate; // Biển số xe
 
     @Column(name = "brand", length = 50)
     private String brand;
@@ -30,8 +30,8 @@ public class Vehicle {
     private String model;
 
     @Column(name = "year")
-    private Integer year;
+    private Integer year; // Năm sản xuất
 
     @Column(name = "vin", length = 50)
-    private String vin;
+    private String vin; // Số khung
 }

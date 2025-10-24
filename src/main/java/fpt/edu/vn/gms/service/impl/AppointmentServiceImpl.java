@@ -2,9 +2,9 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.dto.AppointmentRequestDto;
-import fpt.edu.vn.gms.dto.AppointmentResponseDto;
-import fpt.edu.vn.gms.dto.TimeSlotDto;
+import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
+import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
+import fpt.edu.vn.gms.dto.response.TimeSlotDto;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.TimeSlot;

@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.mapper;
 
-import fpt.edu.vn.gms.dto.AccountResponseDTO;
-import fpt.edu.vn.gms.dto.ResetPasswordResponseDTO;
+import fpt.edu.vn.gms.dto.response.AccountResponseDTO;
+import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
 import fpt.edu.vn.gms.entity.Account;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

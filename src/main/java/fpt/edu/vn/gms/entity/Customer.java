@@ -21,7 +21,7 @@ public class Customer {
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "phone")
+    @Column(name = "phone", unique = true)
     private String phone;
 
     @Column(name = "zalo_id", length = 50)

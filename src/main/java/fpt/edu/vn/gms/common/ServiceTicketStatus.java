@@ -1,11 +1,8 @@
 package fpt.edu.vn.gms.common;
 
-
-/**
- * Trạng thái của Phiếu Dịch Vụ
- */
 public enum ServiceTicketStatus {
     CHO_BAO_GIA("chờ báo giá"),
+    CHO_DUYET("chờ duyệt"),
     DUYET("duyệt"),
     KHONG_DUYET("không duyệt"),
     DANG_SUA_CHUA("đang sửa chữa"),

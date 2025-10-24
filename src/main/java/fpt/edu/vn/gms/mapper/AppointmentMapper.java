@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.mapper;
 
-import fpt.edu.vn.gms.dto.AppointmentResponseDto;
+import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.entity.Appointment;
 
 public class AppointmentMapper {

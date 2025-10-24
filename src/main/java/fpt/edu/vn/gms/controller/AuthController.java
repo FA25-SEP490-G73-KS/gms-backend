@@ -1,10 +1,10 @@
 package fpt.edu.vn.gms.controller;
 
 import com.google.firebase.auth.FirebaseAuthException;
-import fpt.edu.vn.gms.dto.LoginRequestDTO;
-import fpt.edu.vn.gms.dto.LoginResponseDTO;
-import fpt.edu.vn.gms.dto.ResetPasswordRequestDTO;
-import fpt.edu.vn.gms.dto.ResetPasswordResponseDTO;
+import fpt.edu.vn.gms.dto.request.LoginRequestDTO;
+import fpt.edu.vn.gms.dto.response.LoginResponseDTO;
+import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDTO;
+import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
 import fpt.edu.vn.gms.security.JwtUtils;
 import fpt.edu.vn.gms.service.AccountDetailsService;
 import fpt.edu.vn.gms.service.AccountService;

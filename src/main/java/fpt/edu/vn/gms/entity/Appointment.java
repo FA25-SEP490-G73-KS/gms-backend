@@ -30,6 +30,9 @@ public class Appointment {
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
+    @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    private ServiceTicket serviceTicket;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "time_slot_id")
     private TimeSlot timeSlot;

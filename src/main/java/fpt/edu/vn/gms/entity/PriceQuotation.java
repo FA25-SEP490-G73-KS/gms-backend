@@ -19,8 +19,7 @@ public class PriceQuotation {
     @Column(name = "price_quotation_id")
     private Long priceQuotationId;
 
-    @ManyToOne
-    @JoinColumn(name = "service_ticket_id", referencedColumnName = "service_ticket_id")
+    @OneToOne(mappedBy = "priceQuotation")
     private ServiceTicket serviceTicket;
 
     @Column(name = "total_amount", precision = 18, scale = 2)

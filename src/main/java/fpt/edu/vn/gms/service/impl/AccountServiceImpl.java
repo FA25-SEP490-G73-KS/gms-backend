@@ -1,12 +1,10 @@
 package fpt.edu.vn.gms.service.impl;
 
-import com.google.cloud.firestore.FirestoreBundle;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import fpt.edu.vn.gms.dto.AccountResponseDTO;
-import fpt.edu.vn.gms.dto.ResetPasswordRequestDTO;
-import fpt.edu.vn.gms.dto.ResetPasswordResponseDTO;
+import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDTO;
+import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
 import fpt.edu.vn.gms.entity.Account;
 import fpt.edu.vn.gms.mapper.AccountMapper;
 import fpt.edu.vn.gms.repository.AccountRepository;
@@ -14,8 +12,6 @@ import fpt.edu.vn.gms.service.AccountService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 @AllArgsConstructor

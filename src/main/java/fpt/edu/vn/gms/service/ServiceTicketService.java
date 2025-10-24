@@ -1,22 +1,15 @@
 package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.ServiceTicketDto;
+import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
+import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-/**
- * Dịch vụ xử lý Phiếu Dịch Vụ (ServiceTicket).
- * Cung cấp các thao tác CRUD cơ bản và tìm kiếm có phân trang/sắp xếp.
- */
 public interface ServiceTicketService {
-    /**
-     * Tạo mới phiếu dịch vụ cho khách mới với khả năng truyền employeeId của Service Advisor đang đăng nhập.
-     *
-     * @param req                        dữ liệu phiếu dịch vụ cần tạo
-     * @param employeeIdOfServiceAdvisor employee_id của Service Advisor đang đăng nhập (lấy từ header hoặc context); có thể null
-     * @return phiếu dịch vụ đã tạo
-     */
-    ServiceTicketDto createServiceTicket(ServiceTicketDto req, Long employeeIdOfServiceAdvisor);
+
+    ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto req);
 
     /**
      * Lấy chi tiết phiếu dịch vụ theo ID.
@@ -24,7 +17,7 @@ public interface ServiceTicketService {
      * @param serviceTicketId mã phiếu dịch vụ
      * @return thông tin phiếu dịch vụ
      */
-    ServiceTicketDto getServiceTicketByServiceTicketId(Long serviceTicketId);
+    ServiceTicketResponseDto getServiceTicketById(Long serviceTicketId);
 
     /**
      * Lấy danh sách phiếu dịch vụ có phân trang.
@@ -33,7 +26,7 @@ public interface ServiceTicketService {
      * @param size kích thước trang
      * @return trang dữ liệu các phiếu dịch vụ
      */
-    Page<ServiceTicketDto> getAllServiceTicket(int page, int size);
+    Page<ServiceTicketResponseDto> getAllServiceTicket(int page, int size);
 
     /**
      * Cập nhật phiếu dịch vụ theo ID.
@@ -42,7 +35,8 @@ public interface ServiceTicketService {
      * @param dto             dữ liệu cập nhật
      * @return phiếu dịch vụ sau khi cập nhật
      */
-    ServiceTicketDto updateServiceTicket(Long serviceTicketId, ServiceTicketDto dto);
+    ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketDto dto);
 
+    ServiceTicketResponseDto createServiceTicketFromAppointment(Long appointmentId, ServiceTicketRequestDto dto);
 
 }
