@@ -21,4 +21,6 @@ public class ServiceTicketResponseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime expectedDeliveryAt;
+
+
 }

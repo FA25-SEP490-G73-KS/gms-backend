@@ -1,11 +1,8 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface ServiceTicketService {
 
@@ -35,7 +32,7 @@ public interface ServiceTicketService {
      * @param dto             dữ liệu cập nhật
      * @return phiếu dịch vụ sau khi cập nhật
      */
-    ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketDto dto);
+    ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
 
     ServiceTicketResponseDto createServiceTicketFromAppointment(Long appointmentId, ServiceTicketRequestDto dto);
 

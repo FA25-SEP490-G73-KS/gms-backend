@@ -1,15 +1,15 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.ServiceTicketDto;
+import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
+import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +31,7 @@ import java.util.List;
 public class ServiceTicketController {
 
     private final ServiceTicketService serviceTicketService;
-
+    private final PriceQuotationService priceQuotationService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createServiceTicket(
@@ -79,11 +79,21 @@ public class ServiceTicketController {
     @PutMapping("/{serviceTicketId}")
     public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> update(
             @PathVariable("serviceTicketId") Long serviceTicketId,
-            @RequestBody ServiceTicketDto dto) {
+            @RequestBody ServiceTicketRequestDto dto) {
 
         ServiceTicketResponseDto updated = serviceTicketService.updateServiceTicket(serviceTicketId, dto);
 
         return ResponseEntity.status(200)
                 .body(ApiResponse.created("Update service ticket successfully!", updated));
+    }
+
+    @PostMapping("/{id}/quotation")
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation(
+            @PathVariable Long id,
+            @RequestBody PriceQuotationRequestDto dto
+    ) {
+        PriceQuotationResponseDto quotation = priceQuotationService.createQuotationFromServiceTicket(id, dto);
+        return ResponseEntity.status(201)
+                .body(ApiResponse.created("Quotation created successfully", quotation));
     }
 }

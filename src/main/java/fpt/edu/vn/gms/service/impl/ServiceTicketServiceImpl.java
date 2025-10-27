@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
-import fpt.edu.vn.gms.dto.ServiceTicketDto;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
@@ -11,9 +10,7 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -95,7 +92,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .deliveryAt(dto.getExpectedDeliveryAt())
-                .status(ServiceTicketStatus.CHO_BAO_GIA)
+                .status(ServiceTicketStatus.TIEP_NHAN)
                 .build();
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
@@ -117,36 +114,9 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     }
 
     @Override
-    public ServiceTicketResponseDto updateServiceTicket(Long id, ServiceTicketDto dto) {
-        ServiceTicket existing = serviceTicketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + id));
-        // Cập nhật các trường nếu có trong dto
-        if (dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Appointment không tồn tại với id: " + dto.getAppointmentId()));
-            existing.setAppointment(appointment);
-        }
-        if (dto.getCustomerId() != null) {
-            Customer customer = customerRepository.findById(Math.toIntExact(dto.getCustomerId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("Customer không tồn tại với id: " + dto.getCustomerId()));
-            existing.setCustomer(customer);
-        }
-        if (dto.getVehicleId() != null) {
-            Vehicle vehicle = vehicleRepository.findById(Math.toIntExact(dto.getVehicleId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("Vehicle không tồn tại với id: " + dto.getVehicleId()));
-            existing.setVehicle(vehicle);
-        }
-        if (dto.getNotes() != null) {
-            existing.setNotes(dto.getNotes());
-        }
-        if (dto.getStatus() != null) {
-            existing.setStatus(dto.getStatus());
-        }
-        if (dto.getDeliveryAt() != null) {
-            existing.setDeliveryAt(dto.getDeliveryAt());
-        }
-        ServiceTicket saved = serviceTicketRepository.save(existing);
-        return serviceTicketMapper.toResponseDto(saved);
+    public ServiceTicketResponseDto updateServiceTicket(Long id, ServiceTicketRequestDto dto) {
+
+        return null;
     }
 
     @Override
@@ -201,7 +171,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .receiveCondition(dto.getReceiveCondition())
                 .notes(dto.getNote())
                 .deliveryAt(dto.getExpectedDeliveryAt())
-                .status(ServiceTicketStatus.CHO_BAO_GIA)
+                .status(ServiceTicketStatus.TIEP_NHAN)
                 .build();
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
