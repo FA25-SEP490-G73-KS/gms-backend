@@ -15,9 +15,6 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "ServiceTicket")
-/**
- * Thực thể Phiếu Dịch Vụ, ánh xạ tới bảng ServiceTicket.
- */
 public class ServiceTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +24,10 @@ public class ServiceTicket {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId", unique = true)
     private Appointment appointment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_type_id", referencedColumnName = "service_type_id")
+    private ServiceType serviceType;
 
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")

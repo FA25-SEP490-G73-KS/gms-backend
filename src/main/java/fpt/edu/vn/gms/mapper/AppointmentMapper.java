@@ -17,7 +17,7 @@ public class AppointmentMapper {
                 .licensePlate(appointment.getVehicle() != null ? appointment.getVehicle().getLicensePlate() : null)
                 .appointmentDate(appointment.getAppointmentDate())
                 .timeSlotLabel(appointment.getTimeSlot() != null ? appointment.getTimeSlot().getLabel() : null)
-                .serviceType(appointment.getServiceType())
+                .serviceType(appointment.getServiceType().getName())
                 .status(appointment.getStatus())
                 .note(appointment.getDescription())
                 .createdAt(appointment.getCreatedAt()) // NEW

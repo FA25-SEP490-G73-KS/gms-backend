@@ -5,15 +5,9 @@ import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.response.TimeSlotDto;
-import fpt.edu.vn.gms.entity.Appointment;
-import fpt.edu.vn.gms.entity.Customer;
-import fpt.edu.vn.gms.entity.TimeSlot;
-import fpt.edu.vn.gms.entity.Vehicle;
+import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.mapper.AppointmentMapper;
-import fpt.edu.vn.gms.repository.AppointmentRepository;
-import fpt.edu.vn.gms.repository.CustomerRepository;
-import fpt.edu.vn.gms.repository.TimeSlotRepository;
-import fpt.edu.vn.gms.repository.VehicleRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +29,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final CustomerRepository customerRepo;
     private final TimeSlotRepository timeSlotRepo;
     private final AppointmentRepository appointmentRepo;
+    private final ServiceTypeRepository serviceTypeRepo;
 
     public List<TimeSlotDto> getTimeSlotsByDate(LocalDate date) {
         List<TimeSlot> slots = timeSlotRepo.findAll();
@@ -90,12 +85,15 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Time slot is full");
         }
 
+        // get service type
+        ServiceType serviceType = serviceTypeRepo.getById(dto.getServiceType());
+
         Appointment appointment = Appointment.builder()
                 .customer(vehicle.getCustomer())
                 .vehicle(vehicle)
                 .timeSlot(slot)
                 .appointmentDate(dto.getAppointmentDate())
-                .serviceType(dto.getServiceType())
+                .serviceType(serviceType)
                 .description(dto.getNote())
                 .status(AppointmentStatus.CONFIRMED)
                 .build();

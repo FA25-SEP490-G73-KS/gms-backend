@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import fpt.edu.vn.gms.common.ServiceType;
 import fpt.edu.vn.gms.common.AppointmentStatus;
+import fpt.edu.vn.gms.entity.ServiceType;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ public class AppointmentResponseDto {
     private String licensePlate;
     private LocalDate appointmentDate;
     private String timeSlotLabel;
-    private ServiceType serviceType;
+    private String serviceType;
     private AppointmentStatus status;
     private String note;
 

@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ServiceType;
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,8 +39,8 @@ public class Appointment {
     @Column(nullable = false)
     private LocalDate appointmentDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_type_id", referencedColumnName = "service_type_id")
     private ServiceType serviceType;
 
     @Enumerated(EnumType.STRING)

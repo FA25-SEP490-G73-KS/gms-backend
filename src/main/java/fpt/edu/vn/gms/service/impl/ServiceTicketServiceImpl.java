@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final EmployeeRepository employeeRepository;
+    private final ServiceTypeRepository serviceTypeRepository;
     private final ServiceTicketMapper serviceTicketMapper;
 
     @Override
@@ -82,7 +84,11 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
         }
 
+        // Get service type by id
+        ServiceType maintenance = serviceTypeRepository.findById(dto.getServiceType()).get();
+
         ServiceTicket ticket = ServiceTicket.builder()
+                .serviceType(maintenance)
                 .customer(customer)
                 .vehicle(vehicle)
                 .serviceAdvisor(advisor)
@@ -164,6 +170,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // Tạo service ticket
         ServiceTicket ticket = ServiceTicket.builder()
                 .appointment(appointment)
+                .serviceType(appointment.getServiceType())
                 .customer(customer)
                 .vehicle(vehicle)
                 .serviceAdvisor(advisor)
