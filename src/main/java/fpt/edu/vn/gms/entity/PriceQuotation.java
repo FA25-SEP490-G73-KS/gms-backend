@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "PriceQuotation")
+@Table(name = "price_quotation")
 public class PriceQuotation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

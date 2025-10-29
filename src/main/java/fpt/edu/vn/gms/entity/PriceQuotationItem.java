@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.PartStatus;
-import fpt.edu.vn.gms.common.QuotationItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -45,32 +44,4 @@ public class PriceQuotationItem {
 
     @Column(name = "description", columnDefinition = "text")
     private String description;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 50)
-    private QuotationItemStatus status;
-
-    @PrePersist
-    @PreUpdate
-    public void calculateTotal() {
-        syncStatusWithPart();
-
-        if (unitPrice != null && quantity != null) {
-            totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-            if (discountRate != null)
-                totalPrice = totalPrice.subtract(totalPrice.multiply(discountRate.divide(BigDecimal.valueOf(100))));
-        }
-    }
-
-    public void syncStatusWithPart() {
-        if (part == null) {
-            status = QuotationItemStatus.TEMPORARY;
-        } else {
-            switch (part.getStatus()) {
-                case PartStatus.UNKNOWN -> status = QuotationItemStatus.TEMPORARY;
-                case PartStatus.AVAILABLE -> status = QuotationItemStatus.ACTIVE;
-                case PartStatus.OUT_OF_STOCK -> status = QuotationItemStatus.OUT_OF_STOCK;
-            }
-        }
-    }
 }

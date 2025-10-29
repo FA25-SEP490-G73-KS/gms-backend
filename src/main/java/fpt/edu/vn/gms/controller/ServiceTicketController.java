@@ -42,18 +42,6 @@ public class ServiceTicketController {
                 .body(ApiResponse.created("Service Ticket Created", created));
     }
 
-    @PostMapping("/from-appointment/{appointmentId}")
-    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createFromAppointment(
-            @PathVariable Long appointmentId,
-            @RequestBody ServiceTicketRequestDto request) {
-
-        ServiceTicketResponseDto created =serviceTicketService.createServiceTicketFromAppointment(appointmentId, request);
-
-        return ResponseEntity.status(201)
-                .body(ApiResponse.created("Service Ticket Created", created));
-    }
-
-
     @GetMapping("/{serviceTicketId}")
     public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getById(
             @PathVariable("serviceTicketId") Long serviceTicketId) {

@@ -29,7 +29,7 @@ public class Appointment {
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "appointment")
     private ServiceTicket serviceTicket;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)

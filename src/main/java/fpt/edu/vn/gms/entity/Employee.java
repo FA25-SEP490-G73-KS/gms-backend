@@ -1,9 +1,10 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.Position;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -12,31 +13,44 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Employee")
+@Table(name = "employee")
 public class Employee {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "employee_id")
     private Long employeeId;
 
-    @Column(name = "full_name", length = 100)
+    // --- Thông tin cá nhân ---
+    @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
-    @Column(name = "position", length = 50)
-    private String position;
+    @Column(name = "gender", length = 10)
+    private String gender; // Nam, Nữ, Khác
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 
     @Column(name = "phone", length = 20, unique = true)
     private String phone;
 
-    @Column(name = "salary_base", precision = 18, scale = 2)
-    private BigDecimal salaryBase;
+    @Column(name = "email", length = 100, unique = true)
+    private String email;
 
-    @Column(name = "paid_amount", precision = 18, scale = 2)
-    private BigDecimal paidAmount;
+    @Column(name = "address", length = 200)
+    private String address;
+
+    // --- Thông tin công việc ---
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
+    private Position position;
 
     @Column(name = "hire_date")
     private LocalDateTime hireDate;
 
     @Column(name = "status", length = 50)
-    private String status;
+    private String status; // Active, Nghỉ việc, Tạm ngưng
+
+    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+    private Account account; // nullable nếu nhân viên không có account
 }

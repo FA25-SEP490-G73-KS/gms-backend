@@ -12,6 +12,5 @@ public interface PriceQuotationItemMapper {
     PriceQuotationItemMapper INSTANCE = Mappers.getMapper(PriceQuotationItemMapper.class);
 
     @Mapping(source = "part.name", target = "partName")
-    @Mapping(source = "status", target = "status")
     PriceQuotationItemResponseDto toResponseDto(PriceQuotationItem entity);
 }

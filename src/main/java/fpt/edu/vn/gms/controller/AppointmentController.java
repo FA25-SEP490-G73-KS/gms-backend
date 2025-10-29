@@ -2,10 +2,13 @@ package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
+import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.dto.response.TimeSlotDto;
 import fpt.edu.vn.gms.service.AppointmentService;
+import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,6 +31,7 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService service;
+    private final ServiceTicketService serviceTicket;
 
     // =============================
     // Get available time slots
@@ -140,5 +144,16 @@ public class AppointmentController {
     ) {
         AppointmentResponseDto updated = service.updateStatus(id, status);
         return ResponseEntity.ok(ApiResponse.success("Appointment status updated", updated));
+    }
+
+    @PostMapping("/{appointmentId}/service-tickets")
+    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createFromAppointment(
+            @PathVariable Long appointmentId,
+            @RequestBody ServiceTicketRequestDto request) {
+
+        ServiceTicketResponseDto created = serviceTicket.createServiceTicketFromAppointment(appointmentId, request);
+
+        return ResponseEntity.status(201)
+                .body(ApiResponse.created("Service Ticket Created", created));
     }
 }

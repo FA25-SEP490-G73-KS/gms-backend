@@ -12,15 +12,16 @@ import java.util.List;
 @Builder
 public class ServiceTicketResponseDto {
 
-    private CustomerRequestDto customer;
-    private VehicleRequestDto vehicle;
-    private Long advisorId;
-    private List<Long> assignedTechnicianIds;
+    private Long id;
+    private String serviceType;
+    private CustomerResponseDto customer;
+    private VehicleResponseDto vehicle;
+    private String serviceAdvisor;
+    private List<String> technicians;
     private String receiveCondition;
-    private String note;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime expectedDeliveryAt;
-
-
+    private LocalDateTime deliveryAt;
+    private String status;
 }

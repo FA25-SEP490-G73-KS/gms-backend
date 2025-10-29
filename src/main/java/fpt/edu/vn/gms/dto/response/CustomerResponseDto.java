@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 public class CustomerResponseDto {
 
+    private Long customerId;
     private String fullName;
     private String phone;
     private String address;

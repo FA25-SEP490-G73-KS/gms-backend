@@ -9,25 +9,23 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Vehicle")
+@Table(name = "vehicle")
 public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "vehicle_id")
     private Long vehicleId;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id", nullable = false)
     private Customer customer;
 
     @Column(name = "license_plate", length = 20, unique = true)
     private String licensePlate; // Biển số xe
 
-    @Column(name = "brand", length = 50)
-    private String brand;
-
-    @Column(name = "model", length = 50)
-    private String model;
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_model_id", referencedColumnName = "vehicle_model_id")
+    private VehicleModel vehicleModel;
 
     @Column(name = "year")
     private Integer year; // Năm sản xuất

@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "part")
@@ -20,17 +22,28 @@ public class Part {
     @Column(name = "part_id")
     private Long partId;
 
-    @Column(name = "part_code", length = 50, unique = true, nullable = true)
-    private String partCode;
-
     @Column(name = "part_name", length = 100)
     private String name;
 
-    @Column(name = "supplier", length = 100)
-    private String supplier;
+    @Column(name = "is_universal")
+    private boolean isUniversal;
 
-    @Column(name = "unit_price", precision = 18, scale = 2)
-    private BigDecimal unitPrice;
+    @ManyToMany
+    @JoinTable(
+            name = "part_vehicle_model",
+            joinColumns = @JoinColumn(name = "part_id"),
+            inverseJoinColumns = @JoinColumn(name = "vehicle_model_id")
+    )
+    private Set<VehicleModel> compatibleVehicles = new HashSet<>();
+
+    @OneToMany(mappedBy = "part", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PartOrigin> origins = new HashSet<>();
+
+    @Column(name = "purchase_price", precision = 12, scale = 2)
+    private BigDecimal purchasePrice;
+
+    @Column(name = "selling_price", precision = 12, scale = 2)
+    private BigDecimal sellingPrice;
 
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
@@ -48,10 +61,6 @@ public class Part {
 
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", referencedColumnName = "category_id")
-    private Category category;
 
     @PrePersist
     @PreUpdate

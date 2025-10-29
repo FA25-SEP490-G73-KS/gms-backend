@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
+import fpt.edu.vn.gms.dto.request.VehicleRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
@@ -28,6 +29,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final EmployeeRepository employeeRepository;
     private final ServiceTypeRepository serviceTypeRepository;
     private final ServiceTicketMapper serviceTicketMapper;
+    private final VehicleModelRepository vehicleModelRepository;
 
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto) {
@@ -53,20 +55,22 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         }
 
         Vehicle vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate()).orElse(null);
+
+        VehicleModel vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found"));
+
         if (vehicle == null) {
             // Chưa tồn tại → tạo mới
             vehicle = Vehicle.builder()
                     .licensePlate(dto.getVehicle().getLicensePlate())
-                    .brand(dto.getVehicle().getBrand())
-                    .model(dto.getVehicle().getModel())
+                    .vehicleModel(vehicleModel)
                     .year(dto.getVehicle().getYear())
                     .vin(dto.getVehicle().getVin())
-                    .customer(customer) // gán luôn customer mới
+                    .customer(customer)
                     .build();
         } else {
             // Đã tồn tại → cập nhật thông tin
-            vehicle.setBrand(dto.getVehicle().getBrand());
-            vehicle.setModel(dto.getVehicle().getModel());
+            vehicle.setVehicleModel(vehicleModel);
             vehicle.setYear(dto.getVehicle().getYear());
             vehicle.setVin(dto.getVehicle().getVin());
             vehicle.setCustomer(customer);
@@ -96,9 +100,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .receiveCondition(dto.getReceiveCondition())
                 .notes(dto.getNote())
                 .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .deliveryAt(dto.getExpectedDeliveryAt())
-                .status(ServiceTicketStatus.TIEP_NHAN)
+                .status(ServiceTicketStatus.CREATED)
                 .build();
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
@@ -128,14 +130,15 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     @Override
     public ServiceTicketResponseDto createServiceTicketFromAppointment(Long appointmentId, ServiceTicketRequestDto dto) {
 
+        // Lấy appointment
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Appointment ID: " + appointmentId));
 
-        // Lấy thông tin customer và vehicle từ appointment
+        // Lấy customer và vehicle từ appointment
         Customer customer = appointment.getCustomer();
         Vehicle vehicle = appointment.getVehicle();
 
-        // Cập nhật thông tin của người dùng nếu nhập bổ sung
+        // Cập nhật thông tin customer nếu có
         if (dto.getCustomer() != null) {
             customer.setFullName(dto.getCustomer().getFullName());
             customer.setPhone(dto.getCustomer().getPhone());
@@ -145,29 +148,40 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             customerRepository.save(customer);
         }
 
+        // Cập nhật thông tin vehicle nếu có
         if (dto.getVehicle() != null) {
-            vehicle.setLicensePlate(dto.getVehicle().getLicensePlate());
-            vehicle.setBrand(dto.getVehicle().getBrand());
-            vehicle.setModel(dto.getVehicle().getModel());
-            vehicle.setYear(dto.getVehicle().getYear());
-            vehicle.setVin(dto.getVehicle().getVin());
-            vehicleRepository.save(vehicle);
+            VehicleRequestDto vehicleDto = dto.getVehicle();
+
+            if (vehicle != null) {
+                vehicle.setLicensePlate(vehicleDto.getLicensePlate());
+                vehicle.setYear(vehicleDto.getYear());
+                vehicle.setVin(vehicleDto.getVin());
+
+                // Chỉ cập nhật vehicleModel nếu có modelId mới
+                if (vehicleDto.getModelId() != null) {
+                    VehicleModel vehicleModel = vehicleModelRepository.findById(vehicleDto.getModelId())
+                            .orElseThrow(() -> new RuntimeException("Vehicle model not found: ID " + vehicleDto.getModelId()));
+                    vehicle.setVehicleModel(vehicleModel);
+                }
+
+                vehicleRepository.save(vehicle);
+            }
         }
 
-        // Gán cố vấn dịch vụ (advisor)
+        // Lấy advisor nếu có
         Employee advisor = null;
         if (dto.getAdvisorId() != null) {
             advisor = employeeRepository.findById(dto.getAdvisorId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên tư vấn ID: " + dto.getAdvisorId()));
         }
 
-        // Gán danh sách kỹ thuật viên
+        // Lấy danh sách kỹ thuật viên
         List<Employee> technicians = List.of();
         if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
             technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
         }
 
-        // Tạo service ticket
+        // Tạo ServiceTicket mới
         ServiceTicket ticket = ServiceTicket.builder()
                 .appointment(appointment)
                 .serviceType(appointment.getServiceType())
@@ -178,17 +192,18 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .receiveCondition(dto.getReceiveCondition())
                 .notes(dto.getNote())
                 .deliveryAt(dto.getExpectedDeliveryAt())
-                .status(ServiceTicketStatus.TIEP_NHAN)
+                .status(ServiceTicketStatus.CREATED)
                 .build();
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
 
-        // Gán service ticket vào appointment
+        // Gán ServiceTicket vào appointment
         appointment.setServiceTicket(saved);
         appointmentRepository.save(appointment);
 
-        // Trả về Dto
+        // Trả về DTO
         return serviceTicketMapper.toResponseDto(saved);
     }
+
 
 }

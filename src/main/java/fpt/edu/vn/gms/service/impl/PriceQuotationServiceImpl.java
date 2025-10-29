@@ -35,65 +35,65 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public PriceQuotationResponseDto createQuotationFromServiceTicket(Long id, PriceQuotationRequestDto request) {
 
-        // Lấy phiếu dịch vụ
-        ServiceTicket ticket = serviceTicketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ."));
-
-        // Kiểm tra trạng thái hợp lệ
-        if (ticket.getStatus() != ServiceTicketStatus.TIEP_NHAN
-                && ticket.getStatus() != ServiceTicketStatus.DANG_BAO_GIA) {
-            throw new IllegalStateException("Phiếu dịch vụ không ở trạng thái cho phép tạo báo giá.");
-        }
-
-        // Tạo phiếu báo giá mới
-        PriceQuotation quotation = PriceQuotation.builder()
-                .serviceTicket(ticket)
-                .estimateAmount(BigDecimal.ZERO)
-                .discount(BigDecimal.ZERO)
-                .build();
-
-        priceQuotationRepository.save(quotation);
-
-        // Thêm các item
-        BigDecimal total = BigDecimal.ZERO;
-        List<PriceQuotationItem> itemList = new ArrayList<>();
-
-        for (PriceQuotationItemRequestDto itemDto : request.getItems()) {
-            Part part = null;
-            if (itemDto.getPartId() != null) {
-                part = partRepository.findById(itemDto.getPartId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện"));
-            }
-
-            PriceQuotationItem item = PriceQuotationItem.builder()
-                    .priceQuotation(quotation)
-                    .part(part)
-                    .partName(itemDto.getPartName())
-                    .unitPrice(itemDto.getUnitPrice())
-                    .quantity(itemDto.getQuantity())
-                    .discountRate(itemDto.getDiscount() != null ? itemDto.getDiscount() : BigDecimal.ZERO)
-                    .description(itemDto.getDescription())
-                    .build();
-
-            item.syncStatusWithPart();  // tự set ACTIVE / TEMPORARY / OUT_OF_STOCK
-            item.calculateTotal();
-
-            total = total.add(item.getTotalPrice());
-            itemList.add(item);
-        }
-
-        priceQuotationItemRepository.saveAll(itemList);
-
-        // Cập nhật tổng tiền
-        quotation.setEstimateAmount(total);
-        priceQuotationRepository.save(quotation);
-
-        // Cập nhật trạng thái phiếu dịch vụ
-        ticket.setPriceQuotation(quotation);
-        ticket.setStatus(ServiceTicketStatus.CHO_DUYET_BAO_GIA);
-        serviceTicketRepository.save(ticket);
-
-        return priceQuotationMapper.toResponseDto(quotation);
-
+//        // Lấy phiếu dịch vụ
+//        ServiceTicket ticket = serviceTicketRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ."));
+//
+//        // Kiểm tra trạng thái hợp lệ
+//        if (ticket.getStatus() != ServiceTicketStatus.TIEP_NHAN
+//                && ticket.getStatus() != ServiceTicketStatus.DANG_BAO_GIA) {
+//            throw new IllegalStateException("Phiếu dịch vụ không ở trạng thái cho phép tạo báo giá.");
+//        }
+//
+//        // Tạo phiếu báo giá mới
+//        PriceQuotation quotation = PriceQuotation.builder()
+//                .serviceTicket(ticket)
+//                .estimateAmount(BigDecimal.ZERO)
+//                .discount(BigDecimal.ZERO)
+//                .build();
+//
+//        priceQuotationRepository.save(quotation);
+//
+//        // Thêm các item
+//        BigDecimal total = BigDecimal.ZERO;
+//        List<PriceQuotationItem> itemList = new ArrayList<>();
+//
+//        for (PriceQuotationItemRequestDto itemDto : request.getItems()) {
+//            Part part = null;
+//            if (itemDto.getPartId() != null) {
+//                part = partRepository.findById(itemDto.getPartId())
+//                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện"));
+//            }
+//
+//            PriceQuotationItem item = PriceQuotationItem.builder()
+//                    .priceQuotation(quotation)
+//                    .part(part)
+//                    .partName(itemDto.getPartName())
+//                    .unitPrice(itemDto.getUnitPrice())
+//                    .quantity(itemDto.getQuantity())
+//                    .discountRate(itemDto.getDiscount() != null ? itemDto.getDiscount() : BigDecimal.ZERO)
+//                    .description(itemDto.getDescription())
+//                    .build();
+//
+//            item.syncStatusWithPart();  // tự set ACTIVE / TEMPORARY / OUT_OF_STOCK
+//            item.calculateTotal();
+//
+//            total = total.add(item.getTotalPrice());
+//            itemList.add(item);
+//        }
+//
+//        priceQuotationItemRepository.saveAll(itemList);
+//
+//        // Cập nhật tổng tiền
+//        quotation.setEstimateAmount(total);
+//        priceQuotationRepository.save(quotation);
+//
+//        // Cập nhật trạng thái phiếu dịch vụ
+//        ticket.setPriceQuotation(quotation);
+//        ticket.setStatus(ServiceTicketStatus.CHO_DUYET_BAO_GIA);
+//        serviceTicketRepository.save(ticket);
+//
+//        return priceQuotationMapper.toResponseDto(quotation);
+          return null;
     }
 }

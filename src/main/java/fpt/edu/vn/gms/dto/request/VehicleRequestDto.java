@@ -8,8 +8,8 @@ import lombok.Data;
 public class VehicleRequestDto {
 
     private String licensePlate;
-    private String brand;
-    private String model;
+    private Long brandId;
+    private Long modelId;
     private Integer year;
     private String vin;
 }
