@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class ServiceTicket {
     private LocalDateTime updatedAt;
 
     @Column(name = "delivery_at")
-    private LocalDateTime deliveryAt;
+    private LocalDate deliveryAt;
 
     @PrePersist
     protected void onCreate() {

@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.request;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,5 +19,5 @@ public class ServiceTicketRequestDto {
     private List<Long> assignedTechnicianIds;
     private String receiveCondition;
     private String note;
-    private LocalDateTime expectedDeliveryAt;
+    private LocalDate expectedDeliveryAt;
 }

@@ -104,6 +104,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .receiveCondition(dto.getReceiveCondition())
                 .notes(dto.getNote())
                 .createdAt(LocalDateTime.now())
+                .deliveryAt(dto.getExpectedDeliveryAt())
                 .status(ServiceTicketStatus.CREATED)
                 .build();
 

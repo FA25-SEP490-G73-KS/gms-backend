@@ -17,7 +17,7 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @GetMapping("/dropdown")
+    @GetMapping("/technicians")
     public ResponseEntity<List<EmployeeDto>> getTechnicianDropdown() {
         return ResponseEntity.status(200).body(employeeService.findAllEmployeeIsTechniciansActive());
     }

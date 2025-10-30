@@ -5,6 +5,7 @@ import fpt.edu.vn.gms.dto.request.VehicleRequestDto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +23,6 @@ public class ServiceTicketResponseDto {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime deliveryAt;
+    private LocalDate deliveryAt;
     private String status;
 }

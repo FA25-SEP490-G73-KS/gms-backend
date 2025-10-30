@@ -20,7 +20,7 @@ public interface ServiceTicketMapper {
     @Mapping(target = "customer", source = "customer")
     @Mapping(target = "vehicle", source = "vehicle")
     @Mapping(target = "serviceType", source = "serviceType.name")
-    @Mapping(target = "serviceAdvisor", source = "serviceAdvisor.fullName") // chỉ tên
+    @Mapping(target = "serviceAdvisor", source = "serviceAdvisor.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh sách tên
     @Mapping(target = "notes", source = "notes")
     @Mapping(target = "deliveryAt", source = "deliveryAt")
