@@ -26,9 +26,13 @@ public class ServiceTicket {
     @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId", unique = true)
     private Appointment appointment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_type_id", referencedColumnName = "service_type_id")
-    private ServiceType serviceType;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "ticket_service_type",
+            joinColumns = @JoinColumn(name = "service_ticket_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_type_id")
+    )
+    private List<ServiceType> serviceTypes = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")

@@ -3,12 +3,10 @@ package fpt.edu.vn.gms.mapper;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.dto.response.VehicleResponseDto;
-import fpt.edu.vn.gms.entity.Customer;
-import fpt.edu.vn.gms.entity.Employee;
-import fpt.edu.vn.gms.entity.ServiceTicket;
-import fpt.edu.vn.gms.entity.Vehicle;
+import fpt.edu.vn.gms.entity.*;
 import org.mapstruct.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +17,7 @@ public interface ServiceTicketMapper {
     @Mapping(target = "id", source = "serviceTicketId")
     @Mapping(target = "customer", source = "customer")
     @Mapping(target = "vehicle", source = "vehicle")
-    @Mapping(target = "serviceType", source = "serviceType.name")
+    @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "serviceAdvisor", source = "serviceAdvisor.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh sách tên
     @Mapping(target = "notes", source = "notes")
@@ -54,5 +52,12 @@ public interface ServiceTicketMapper {
         return technicians.stream()
                 .map(Employee::getFullName)
                 .collect(Collectors.toList());
+    }
+
+    default List<String> mapServiceTypeNames(List<ServiceType> serviceTypes) {
+        if (serviceTypes == null) return new ArrayList<>();
+        return serviceTypes.stream()
+                .map(ServiceType::getName)
+                .toList();
     }
 }

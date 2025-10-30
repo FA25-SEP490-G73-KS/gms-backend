@@ -14,7 +14,7 @@ import java.util.List;
 public class ServiceTicketResponseDto {
 
     private Long id;
-    private String serviceType;
+    private List<String> serviceType;
     private CustomerResponseDto customer;
     private VehicleResponseDto vehicle;
     private String serviceAdvisor;

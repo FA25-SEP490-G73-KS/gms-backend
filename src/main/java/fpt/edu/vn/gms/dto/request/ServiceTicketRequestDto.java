@@ -12,7 +12,7 @@ import java.util.List;
 public class ServiceTicketRequestDto {
 
     private Long appointmentId;
-    private Long serviceType;
+    private List<Long> serviceTypeIds;
     private CustomerRequestDto customer;
     private VehicleRequestDto vehicle;
     private Long advisorId;
