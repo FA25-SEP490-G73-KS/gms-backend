@@ -34,8 +34,12 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto) {
 
-        Customer customer = customerRepository.findByPhone(dto.getCustomer().getPhone())
-                .orElse(null);
+        Customer customer = null;
+
+        if (dto.getCustomer() != null && dto.getCustomer().getCustomerId() != null) {
+            customer = customerRepository.findById(dto.getCustomer().getCustomerId())
+                    .orElse(null);
+        }
 
         if (customer == null) {
             // Chưa tồn tại → tạo mới
@@ -191,7 +195,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .technicians(technicians)
                 .receiveCondition(dto.getReceiveCondition())
                 .notes(dto.getNote())
-                .deliveryAt(dto.getExpectedDeliveryAt())
                 .status(ServiceTicketStatus.CREATED)
                 .build();
 

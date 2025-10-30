@@ -53,9 +53,9 @@ public class CustomerController {
 //    }
 
 
-    @GetMapping("/search-by-phone")
-    public ResponseEntity<ApiResponse<List<CustomerResponseDto>>> searchByPhone(@RequestParam String phonePart) {
-        return ResponseEntity.status(200)
-                .body(ApiResponse.success("Search by phone", customerService.searchByPhone(phonePart)));
+    @GetMapping("/search")
+    public ResponseEntity<List<CustomerDto>> searchCustomers(@RequestParam("q") String query) {
+        List<CustomerDto> customers = customerService.searchCustomersByPhone(query);
+        return ResponseEntity.status(200).body(customers);
     }
 }

@@ -150,7 +150,6 @@ public class AppointmentController {
     public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createFromAppointment(
             @PathVariable Long appointmentId,
             @RequestBody ServiceTicketRequestDto request) {
-
         ServiceTicketResponseDto created = serviceTicket.createServiceTicketFromAppointment(appointmentId, request);
 
         return ResponseEntity.status(201)

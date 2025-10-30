@@ -8,9 +8,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface CustomerRepository extends JpaRepository<Customer, Integer> {
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Optional<Customer> findByPhone(String phone);
 
-    @Query(value = "SELECT * FROM customer WHERE phone LIKE %:phonePart% LIMIT 10", nativeQuery = true)
-    List<Customer> searchByPhoneContaining(@Param("phonePart") String phonePart);
+    // Lấy top 10 số điện thoại khớp với ký tự
+    List<Customer> findTop10ByPhoneContainingOrderByPhoneAsc(String phone);
 }

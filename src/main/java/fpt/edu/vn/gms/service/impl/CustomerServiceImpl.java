@@ -36,10 +36,14 @@ public class CustomerServiceImpl implements CustomerService {
 
 
     @Override
-    public List<CustomerResponseDto> searchByPhone(String phonePart) {
-
-        List<Customer> customers = customerRepository.searchByPhoneContaining((phonePart));
-
-        return customerMapper.toDtoList(customers);
+    public List<CustomerDto> searchCustomersByPhone(String query) {
+        if (query == null || query.isEmpty()) {
+            return List.of();
+        }
+        return customerRepository.findTop10ByPhoneContainingOrderByPhoneAsc(query)
+                .stream()
+                .map(c -> new CustomerDto(c.getCustomerId(), c.getFullName(), c.getPhone()))
+                .collect(Collectors.toList());
     }
+
 }

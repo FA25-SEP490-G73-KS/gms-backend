@@ -13,5 +13,5 @@ public interface CustomerService {
 
 //    CustomerDto getCustumerByCustomerId(Long customerId);
 
-    List<CustomerResponseDto> searchByPhone(String phonePart);
+    List<CustomerDto> searchCustomersByPhone(String query);
 }
