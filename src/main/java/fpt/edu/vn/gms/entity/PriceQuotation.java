@@ -7,7 +7,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -25,9 +27,6 @@ public class PriceQuotation {
     @OneToOne(mappedBy = "priceQuotation", fetch = FetchType.LAZY)
     private ServiceTicket serviceTicket;
 
-    @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PriceQuotationItem> items = new ArrayList<>();
-
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
     
@@ -42,7 +41,10 @@ public class PriceQuotation {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private PriceQuotationStatus status;
+    private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
+
+    @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PriceQuotationItem> items = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

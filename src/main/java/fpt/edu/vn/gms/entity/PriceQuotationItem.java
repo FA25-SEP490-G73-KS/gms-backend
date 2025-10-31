@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PartStatus;
+import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,6 +43,19 @@ public class PriceQuotationItem {
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
-    @Column(name = "description", columnDefinition = "text")
-    private String description;
+    // AVAILABLE, LOW_STOCK, UNKNOWN
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private PriceQuotationItemStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "warehouse_review_status")
+    private WarehouseReviewStatus warehouseReviewStatus;
+    // PENDING / CONFIRMED / REJECTED
+
+    @Column(name = "warehouse_note", length = 255)
+    private String warehouseNote; // ghi chú của kho
+
+    @OneToOne(mappedBy = "quotationItem", fetch = FetchType.LAZY)
+    private PurchaseRequestItem purchaseRequestItem; // Nếu part cần nhập thêm
 }

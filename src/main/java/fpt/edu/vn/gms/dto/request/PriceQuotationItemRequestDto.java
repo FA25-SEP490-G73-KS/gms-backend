@@ -9,10 +9,9 @@ import java.math.BigDecimal;
 @Builder
 public class PriceQuotationItemRequestDto {
 
-    private Long partId;
+    private Long partId;       // optional - if new part, backend can accept partName instead
     private String partName;
-    private BigDecimal unitPrice;
     private Integer quantity;
-    private BigDecimal discount;
-    private String description;
+    private BigDecimal unitPrice;
+    private BigDecimal discountRate;
 }

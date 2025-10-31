@@ -1,13 +1,12 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PartStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import fpt.edu.vn.gms.entity.VehicleModel;
 
 @Entity
 @Table(name = "part")
@@ -17,17 +16,20 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Part {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "part_id")
     private Long partId;
 
-    @Column(name = "part_name", length = 100)
+    @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "is_universal")
-    private boolean isUniversal;
+    // SKU có thể sinh tự động, vd: "BRAKEPAD-CIVIC"
+    @Column(name = "sku", unique = true, length = 50)
+    private String sku;
 
+    // Một linh kiện có thể dùng cho nhiều model xe
     @ManyToMany
     @JoinTable(
             name = "part_vehicle_model",
@@ -36,8 +38,8 @@ public class Part {
     )
     private Set<VehicleModel> compatibleVehicles = new HashSet<>();
 
-    @OneToMany(mappedBy = "part", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PartOrigin> origins = new HashSet<>();
+    @Column(name = "is_universal", nullable = false)
+    private boolean isUniversal = false; // true = dùng chung cho mọi model
 
     @Column(name = "purchase_price", precision = 12, scale = 2)
     private BigDecimal purchasePrice;
@@ -51,21 +53,9 @@ public class Part {
     @Column(name = "quantity_in_stock")
     private Integer quantityInStock;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 50)
-    private PartStatus status;
-    // AVAILABLE, OUT_OF_STOCK, UNKNOWN
+    @Column(name = "reserved_quantity")
+    private Integer reservedQuantity;
 
     @Column(name = "reorder_level")
-    private Integer reorderLevel;
-
-    @Column(name = "last_updated")
-    private LocalDateTime lastUpdated;
-
-    @PrePersist
-    @PreUpdate
-    protected void onUpdate() {
-        lastUpdated = LocalDateTime.now();
-    }
+    private Integer reorderLevel; // ngưỡng báo cần nhập thêm
 }
-

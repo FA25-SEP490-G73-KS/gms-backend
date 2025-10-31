@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.request.VehicleRequestDto;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final ServiceTypeRepository serviceTypeRepository;
     private final ServiceTicketMapper serviceTicketMapper;
     private final VehicleModelRepository vehicleModelRepository;
+    private final PriceQuotationRepository priceQuotationRepository;
 
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto) {
@@ -102,6 +105,14 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             }
         }
 
+        // Kiểm tra có được tạo từ appointment k
+        Appointment appointment = null;
+        if (dto.getAppointmentId() != null) {
+            appointment = appointmentRepository.findById(dto.getAppointmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn ID: " + dto.getAppointmentId()));
+        }
+
+
         // Tạo mới ServiceTicket
         ServiceTicket ticket = ServiceTicket.builder()
                 .serviceTypes(serviceTypes)
@@ -114,9 +125,20 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .createdAt(LocalDateTime.now())
                 .deliveryAt(dto.getExpectedDeliveryAt())
                 .status(ServiceTicketStatus.CREATED)
+                .appointment(appointment)
                 .build();
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
+
+        // Tạo price quotation 1-1
+        PriceQuotation quotation = PriceQuotation.builder()
+                .serviceTicket(ticket)
+                .status(PriceQuotationStatus.DRAFT)
+                .createdAt(LocalDateTime.now())
+                .estimateAmount(BigDecimal.ZERO) // ban đầu 0
+                .build();
+
+        priceQuotationRepository.save(quotation);
 
         return serviceTicketMapper.toResponseDto(saved);
     }

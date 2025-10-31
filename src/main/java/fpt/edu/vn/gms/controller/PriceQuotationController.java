@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,5 +9,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PriceQuotationController {
 
-    private final PriceQuotationService priceQuotationService;
+//    private final PriceQuotationService service;
+//
+//    @PostMapping
+//    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> create(@RequestBody PriceQuotationRequestDto dto) {
+//        PriceQuotationResponseDto resp = service.createQuotation(dto);
+//        return ResponseEntity.status(200)
+//                .body(ApiResponse.created("Created", resp));
+//    }
 }

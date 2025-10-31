@@ -9,7 +9,6 @@ import java.util.List;
 @Builder
 public class PriceQuotationRequestDto {
 
-    private Long serviceTicketId;
+    private Long priceQuotationId;
     private List<PriceQuotationItemRequestDto> items;
-
 }

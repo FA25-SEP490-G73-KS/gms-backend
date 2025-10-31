@@ -31,7 +31,6 @@ import java.util.List;
 public class ServiceTicketController {
 
     private final ServiceTicketService serviceTicketService;
-    private final PriceQuotationService priceQuotationService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createServiceTicket(
@@ -76,13 +75,4 @@ public class ServiceTicketController {
                 .body(ApiResponse.created("Update service ticket successfully!", updated));
     }
 
-    @PostMapping("/{id}/quotation")
-    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation(
-            @PathVariable Long id,
-            @RequestBody PriceQuotationRequestDto dto
-    ) {
-        PriceQuotationResponseDto quotation = priceQuotationService.createQuotationFromServiceTicket(id, dto);
-        return ResponseEntity.status(201)
-                .body(ApiResponse.created("Quotation created successfully", quotation));
-    }
 }

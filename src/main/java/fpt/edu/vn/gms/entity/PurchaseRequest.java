@@ -1,42 +1,42 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
+@Entity
+@Table(name = "purchase_request")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "PurchaseRequest")
 public class PurchaseRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "purchase_request_id")
-    private Long purchaseRequestId;
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
+    @Column(name = "request_code", length = 50, unique = true)
+    private String requestCode;
 
-    private PriceQuotation priceQuotation;
-
-
-    @ManyToOne
-    @JoinColumn(name = "part_id", referencedColumnName = "part_id")
-    private Part part;
-
-    @Column(name = "supplier", length = 100)
-    private String supplier;
-
-    @Column(name = "expected_date")
-    private LocalDateTime expectedDate;
-
-    @Column(name = "status", length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 30)
+    private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PurchaseRequestItem> items = new HashSet<>();
 }
