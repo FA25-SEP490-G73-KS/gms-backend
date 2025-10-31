@@ -11,6 +11,7 @@ import fpt.edu.vn.gms.mapper.ServiceTicketMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -112,11 +113,20 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn ID: " + dto.getAppointmentId()));
         }
 
+        // Tạo price quotation 1-1
+        PriceQuotation quotation = PriceQuotation.builder()
+                .status(PriceQuotationStatus.DRAFT)
+                .createdAt(LocalDateTime.now())
+                .estimateAmount(BigDecimal.ZERO) // ban đầu 0
+                .build();
+
+        priceQuotationRepository.save(quotation);
 
         // Tạo mới ServiceTicket
         ServiceTicket ticket = ServiceTicket.builder()
                 .serviceTypes(serviceTypes)
                 .customer(customer)
+                .priceQuotation(quotation)
                 .vehicle(vehicle)
                 .serviceAdvisor(advisor)
                 .technicians(technicians)
@@ -130,24 +140,23 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
 
-        // Tạo price quotation 1-1
-        PriceQuotation quotation = PriceQuotation.builder()
-                .serviceTicket(ticket)
-                .status(PriceQuotationStatus.DRAFT)
-                .createdAt(LocalDateTime.now())
-                .estimateAmount(BigDecimal.ZERO) // ban đầu 0
-                .build();
-
-        priceQuotationRepository.save(quotation);
-
         return serviceTicketMapper.toResponseDto(saved);
     }
 
 
     @Override
     public ServiceTicketResponseDto getServiceTicketById(Long serviceTicketId) {
+
         ServiceTicket serviceTicket = serviceTicketRepository.findById(serviceTicketId)
                 .orElseThrow(() -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + serviceTicketId));
+
+        // load quan hệ để tránh LazyInitializationException
+        Hibernate.initialize(serviceTicket.getPriceQuotation());
+        if (serviceTicket.getPriceQuotation() != null) {
+            Hibernate.initialize(serviceTicket.getPriceQuotation().getItems());
+            System.out.println(">>> PQ id = " + serviceTicket.getPriceQuotation().getPriceQuotationId());
+        }
+
         return serviceTicketMapper.toResponseDto(serviceTicket);
     }
 

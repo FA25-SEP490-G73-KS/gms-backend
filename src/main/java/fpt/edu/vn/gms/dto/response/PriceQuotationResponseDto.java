@@ -5,18 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
 @Builder
 public class PriceQuotationResponseDto {
 
-    private Long id;
-    private Long serviceTicketId;
+    private Long priceQuotationId;
+    private PriceQuotationStatus status;
     private List<PriceQuotationItemResponseDto> items;
     private BigDecimal estimateAmount;
     private BigDecimal discount;
-    private LocalDateTime createdAt;
-    private PriceQuotationStatus status;
+    private LocalDate createdAt;
 }

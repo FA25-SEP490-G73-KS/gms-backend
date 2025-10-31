@@ -29,9 +29,10 @@ public class PriceQuotation {
 
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
-    
-    @Column(name = "discount", precision = 18, scale = 2)
-    private BigDecimal discount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "discount_policy_id")
+    private DiscountPolicy discountPolicy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -44,7 +45,7 @@ public class PriceQuotation {
     private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
 
     @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PriceQuotationItem> items = new HashSet<>();
+    private List<PriceQuotationItem> items = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -54,10 +55,4 @@ public class PriceQuotation {
     @PreUpdate
     protected void onUpdate() {updatedAt = LocalDateTime.now();}
 
-    public void calculateTotal() {
-        BigDecimal total = items.stream()
-                .map(PriceQuotationItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.estimateAmount = total.subtract(discount != null ? discount : BigDecimal.ZERO);
-    }
 }

@@ -1,20 +1,34 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
+import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/quotations")
 @RequiredArgsConstructor
 public class PriceQuotationController {
 
-//    private final PriceQuotationService service;
-//
-//    @PostMapping
-//    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> create(@RequestBody PriceQuotationRequestDto dto) {
-//        PriceQuotationResponseDto resp = service.createQuotation(dto);
-//        return ResponseEntity.status(200)
-//                .body(ApiResponse.created("Created", resp));
-//    }
+    private final PriceQuotationService priceQuotationService;
+
+    // === Cập nhật / thêm danh sách item cho báo giá ===
+    @PutMapping()
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateItems(
+            @RequestBody PriceQuotationRequestDto dto) {
+
+        PriceQuotationResponseDto response = priceQuotationService.updateQuotationItems(dto);
+
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá thành công!", response));
+    }
+
+    // === Lấy chi tiết báo giá ===
+    @GetMapping("/{quotationId}")
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> getById(@PathVariable Long quotationId) {
+        PriceQuotationResponseDto response = priceQuotationService.getById(quotationId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy báo giá thành công!", response));
+    }
 }

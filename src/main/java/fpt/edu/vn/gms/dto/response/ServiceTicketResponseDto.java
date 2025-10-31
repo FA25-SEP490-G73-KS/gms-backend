@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class ServiceTicketResponseDto {
 
-    private Long id;
+    private Long serviceTicketId;
     private List<String> serviceType;
     private CustomerResponseDto customer;
     private VehicleResponseDto vehicle;
@@ -25,4 +25,6 @@ public class ServiceTicketResponseDto {
     private LocalDateTime updatedAt;
     private LocalDate deliveryAt;
     private String status;
+
+    private PriceQuotationResponseDto priceQuotation;
 }

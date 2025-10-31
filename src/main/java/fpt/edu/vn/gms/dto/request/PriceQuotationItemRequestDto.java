@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.dto.request;
 
+import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.PriceQuotationItemType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,9 +11,12 @@ import java.math.BigDecimal;
 @Builder
 public class PriceQuotationItemRequestDto {
 
-    private Long partId;       // optional - if new part, backend can accept partName instead
-    private String partName;
+    private Long priceQuotationItemId;
+    private Long partId;
+    private String itemName;
     private Integer quantity;
+    private PriceQuotationItemStatus status;
+    private PriceQuotationItemType type;
     private BigDecimal unitPrice;
-    private BigDecimal discountRate;
+    private BigDecimal totalPrice;
 }

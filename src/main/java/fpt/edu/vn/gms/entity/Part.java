@@ -1,12 +1,12 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.Market;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import fpt.edu.vn.gms.entity.VehicleModel;
 
 @Entity
 @Table(name = "part")
@@ -25,10 +25,6 @@ public class Part {
     @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    // SKU có thể sinh tự động, vd: "BRAKEPAD-CIVIC"
-    @Column(name = "sku", unique = true, length = 50)
-    private String sku;
-
     // Một linh kiện có thể dùng cho nhiều model xe
     @ManyToMany
     @JoinTable(
@@ -37,6 +33,10 @@ public class Part {
             inverseJoinColumns = @JoinColumn(name = "vehicle_model_id")
     )
     private Set<VehicleModel> compatibleVehicles = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "market", length = 20)
+    private Market market;
 
     @Column(name = "is_universal", nullable = false)
     private boolean isUniversal = false; // true = dùng chung cho mọi model

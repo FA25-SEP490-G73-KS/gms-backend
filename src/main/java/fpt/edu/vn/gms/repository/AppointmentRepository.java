@@ -13,11 +13,12 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
     @Query("SELECT a FROM Appointment a " +
-            "WHERE a.status = 'CONFIRMED' " +
+            "WHERE a.status = 'PENDING' " +
             "AND a.appointmentDate = :currentDate " +
             "AND a.timeSlot.endTime < :currentTime")
     List<Appointment> findOverdueAppointments(
             @Param("currentDate") LocalDate currentDate,
             @Param("currentTime") LocalTime currentTime);
+
     int countByAppointmentDateAndTimeSlot(LocalDate appointmentDate, TimeSlot timeSlot);
 }

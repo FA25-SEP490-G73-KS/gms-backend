@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +30,7 @@ public class PriceQuotationItem {
     private Part part;
 
     @Column(name = "part_name", length = 100)
-    private String partName; // Cho phép nhập nếu part chưa tồn tại
+    private String itemName; // Cho phép nhập nếu part chưa tồn tại
 
     @Column(name = "unit_price", precision = 18, scale = 2)
     private BigDecimal unitPrice;
@@ -42,6 +43,10 @@ public class PriceQuotationItem {
 
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_type", nullable = false)
+    private PriceQuotationItemType itemType;
 
     // AVAILABLE, LOW_STOCK, UNKNOWN
     @Enumerated(EnumType.STRING)

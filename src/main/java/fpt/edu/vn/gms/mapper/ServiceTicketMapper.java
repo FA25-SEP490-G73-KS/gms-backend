@@ -10,21 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {PriceQuotationMapper.class})
 public interface ServiceTicketMapper {
 
     // ----------- ENTITY -> RESPONSE -----------
-    @Mapping(target = "id", source = "serviceTicketId")
-    @Mapping(target = "customer", source = "customer")
-    @Mapping(target = "vehicle", source = "vehicle")
     @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "serviceAdvisor", source = "serviceAdvisor.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh sách tên
-    @Mapping(target = "notes", source = "notes")
-    @Mapping(target = "deliveryAt", source = "deliveryAt")
-    @Mapping(target = "createdAt", source = "createdAt")
-    @Mapping(target = "updatedAt", source = "updatedAt")
-    @Mapping(target = "status", source = "status")
     ServiceTicketResponseDto toResponseDto(ServiceTicket serviceTicket);
 
     // ----------- CUSTOMER & VEHICLE NESTED MAPPING -----------
