@@ -14,9 +14,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class AppointmentResponseDto {
+
     private Long appointmentId;
+    private Long customerId;
     private String customerName;
     private String customerPhone;
+    private Long vehicleId;
     private String licensePlate;
     private LocalDate appointmentDate;
     private String timeSlotLabel;

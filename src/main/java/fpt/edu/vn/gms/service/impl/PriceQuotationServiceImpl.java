@@ -31,14 +31,15 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     @Override
     public PriceQuotationResponseDto updateQuotationItems(PriceQuotationRequestDto dto) {
-        // 1️⃣ Luôn luôn tìm báo giá đã có
+
+        // Luôn luôn tìm báo giá đã có
         PriceQuotation quotation = priceQuotationRepository.findById(dto.getPriceQuotationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy báo giá ID: " + dto.getPriceQuotationId()));
 
         quotation.setEstimateAmount(dto.getEstimateAmount());
 
-        // 2️⃣ Duyệt từng item trong request
+        // Duyệt từng item trong request
         if (dto.getItems() != null) {
             // Lấy danh sách ID item có trong request
             Set<Long> requestItemIds = dto.getItems().stream()
@@ -46,18 +47,18 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
 
-            // 3️⃣ Xóa các item cũ không còn trong request
+            // Xóa các item cũ không còn trong request
             quotation.getItems().removeIf(existing ->
                     existing.getPriceQuotationItemId() != null &&
                             !requestItemIds.contains(existing.getPriceQuotationItemId())
             );
 
-            // 4️⃣ Cập nhật hoặc thêm mới
+            // Cập nhật hoặc thêm mới
             for (PriceQuotationItemRequestDto itemDto : dto.getItems()) {
                 PriceQuotationItem item;
 
                 if (itemDto.getPriceQuotationItemId() != null) {
-                    // 🔁 Update item cũ
+                    // Update item cũ
                     item = quotation.getItems().stream()
                             .filter(i -> i.getPriceQuotationItemId().equals(itemDto.getPriceQuotationItemId()))
                             .findFirst()
@@ -73,7 +74,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     }
 
                 } else {
-                    // 🆕 Thêm item mới
+                    // Thêm item mới
                     item = new PriceQuotationItem();
                     item.setPriceQuotation(quotation);
                     item.setWarehouseReviewStatus(WarehouseReviewStatus.PENDING);

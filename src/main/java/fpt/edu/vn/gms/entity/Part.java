@@ -51,7 +51,7 @@ public class Part {
     private BigDecimal discountRate;
 
     @Column(name = "quantity_in_stock")
-    private Integer quantityInStock;
+    private Double quantityInStock;
 
     @Column(name = "reserved_quantity")
     private Integer reservedQuantity;

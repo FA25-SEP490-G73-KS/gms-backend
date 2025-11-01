@@ -31,6 +31,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepo;
     private final ServiceTypeRepository serviceTypeRepo;
 
+    private static final int MAX_APPOINTMENTS_PER_DAY = 1;
+
     public List<TimeSlotDto> getTimeSlotsByDate(LocalDate date) {
         List<TimeSlot> slots = timeSlotRepo.findAll();
         return slots.stream().map(slot -> {
@@ -60,6 +62,12 @@ public class AppointmentServiceImpl implements AppointmentService {
                             .build();
                     return customerRepo.save(newCustomer);
                 });
+
+        // Giới hạn số lần đặt lịch theo ngày
+        int countToday = appointmentRepo.countByCustomerAndAppointmentDate(customer, dto.getAppointmentDate());
+        if (countToday >= MAX_APPOINTMENTS_PER_DAY) {
+            throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY + " lịch trong ngày " + dto.getAppointmentDate());
+        }
 
         // Check vehicle theo license plate
         Vehicle vehicle = vehicleRepo.findByLicensePlate(dto.getLicensePlate())

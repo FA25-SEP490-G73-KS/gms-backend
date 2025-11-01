@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class VehicleRequestDto {
 
+    private Long vehicleId;
     private String licensePlate;
     private Long brandId;
     private Long modelId;
