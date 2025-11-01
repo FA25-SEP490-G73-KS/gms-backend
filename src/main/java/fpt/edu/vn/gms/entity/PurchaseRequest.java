@@ -21,12 +21,13 @@ public class PurchaseRequest {
     @Column(name = "purchase_request_id")
     private Long id;
 
-    @Column(name = "request_code", length = 50, unique = true)
-    private String requestCode;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
     private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

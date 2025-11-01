@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseRequestItemStatus;
+import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +15,7 @@ public class PurchaseRequestItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "purchase_request_item_id")
-    private Long id;
+    private Long itemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_request_id")
@@ -34,7 +34,7 @@ public class PurchaseRequestItem {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private PurchaseRequestItemStatus status = PurchaseRequestItemStatus.PENDING;
+    private WarehouseReviewStatus status = WarehouseReviewStatus.PENDING;
 
     @Column(name = "note", length = 255)
     private String note;

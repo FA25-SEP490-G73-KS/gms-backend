@@ -1,21 +1,22 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
-import fpt.edu.vn.gms.entity.Part;
-import fpt.edu.vn.gms.entity.PriceQuotation;
-import fpt.edu.vn.gms.entity.PriceQuotationItem;
+import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
+import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     private final PriceQuotationRepository priceQuotationRepository;
     private final PartRepository partRepository;
-    private final PriceQuotationItemRepository priceQuotationItemRepository;
+    private final PurchaseRequestRepository purchaseRequestRepository;
     private final PriceQuotationMapper priceQuotationMapper;
 
 
@@ -102,6 +103,51 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         }
 
         PriceQuotation saved = priceQuotationRepository.save(quotation);
+
+        // Tạo PurchaseRequest cho các item là PART
+        Set<PurchaseRequestItem> requestItems = new HashSet<>();
+
+        quotation.getItems().stream()
+                .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
+                .forEach(item -> {
+                    Part part = null;
+                    String note = null;
+
+                    // Nếu partId có sẵn thì tìm trong DB
+                    if (item.getPart() != null && item.getPart().getPartId() != null) {
+                        part = partRepository.findById(item.getPart().getPartId())
+                                .orElseThrow(() -> new RuntimeException("Part not found with id: " + item.getPart().getPartId()));
+                    }
+                    // Nếu partId = null → linh kiện chưa có trong hệ thống (UNKNOWN)
+                    else {
+                        note = "[Chưa có trong kho] " + item.getItemName() + item.getQuantity() + item.getUnitPrice();
+                    }
+
+                    PurchaseRequestItem reqItem = PurchaseRequestItem.builder()
+                            .quotationItem(item)
+                            .part(part)
+                            .quantity(item.getQuantity())
+                            .status(WarehouseReviewStatus.PENDING)
+                            .note(note)
+                            .build();
+
+                    requestItems.add(reqItem);
+                });
+
+        if (!requestItems.isEmpty()) {
+            PurchaseRequest purchaseRequest = PurchaseRequest.builder()
+                    .status(PurchaseRequestStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .createdBy("system") // có thể lấy từ SecurityContext
+                    .items(requestItems)
+                    .build();
+
+            // Gắn liên kết ngược
+            requestItems.forEach(i -> i.setPurchaseRequest(purchaseRequest));
+
+            purchaseRequestRepository.save(purchaseRequest);
+        }
+
         return priceQuotationMapper.toResponseDto(saved);
     }
 

@@ -58,4 +58,7 @@ public class Part {
 
     @Column(name = "reorder_level")
     private Integer reorderLevel; // ngưỡng báo cần nhập thêm
+
+    @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();
 }
