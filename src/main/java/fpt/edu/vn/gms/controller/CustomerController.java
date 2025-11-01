@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,5 +58,13 @@ public class CustomerController {
     public ResponseEntity<List<CustomerDto>> searchCustomers(@RequestParam("q") String query) {
         List<CustomerDto> customers = customerService.searchCustomersByPhone(query);
         return ResponseEntity.status(200).body(customers);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CustomerDetailResponseDto>> findCustomerDetailById(@PathVariable long id) {
+
+            CustomerDetailResponseDto customerDetail = customerService.getCustomerDetailById(id);
+            return ResponseEntity.status(200)
+                    .body(ApiResponse.success("Get customer detail successfully", customerDetail));
     }
 }

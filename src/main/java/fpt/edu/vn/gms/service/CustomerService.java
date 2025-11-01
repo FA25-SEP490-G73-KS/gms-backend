@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,4 +15,6 @@ public interface CustomerService {
 //    CustomerDto getCustumerByCustomerId(Long customerId);
 
     List<CustomerDto> searchCustomersByPhone(String query);
+
+    CustomerDetailResponseDto getCustomerDetailById(Long id);
 }

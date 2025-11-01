@@ -1,8 +1,10 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.service.CustomerService;
@@ -21,20 +23,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
 
-//    @Override
-//    public Page<CustomerDto> getAllCustumer(int page, int size) {
-//        Pageable pageable = Pageable.ofSize(size).withPage(page);
-//        return customerRepository.findAll(pageable).map(CustomerMapper::mapToCustomerDto);
-//    }
-//
-//    @Override
-//    public CustomerDto getCustumerByCustomerId(Long customerId) {
-//        return customerRepository.findById(Math.toIntExact(customerId))
-//                .map(CustomerMapper::mapToCustomerDto)
-//                .orElse(null);
-//    }
-
-
     @Override
     public List<CustomerDto> searchCustomersByPhone(String query) {
         if (query == null || query.isEmpty()) {
@@ -46,4 +34,12 @@ public class CustomerServiceImpl implements CustomerService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public CustomerDetailResponseDto getCustomerDetailById(Long customerId) {
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+
+        return customerMapper.toDetailDto(customer);
+    }
 }
