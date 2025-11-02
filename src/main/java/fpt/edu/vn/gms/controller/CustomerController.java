@@ -25,6 +25,8 @@ import java.util.List;
  * Quản lý thông tin khách hàng bao gồm: xem danh sách khách hàng, xem chi tiết khách hàng theo ID.
  * Mỗi khách hàng bao gồm thông tin cá nhân, loại khách hàng và cấp độ thân thiết.
  */
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor

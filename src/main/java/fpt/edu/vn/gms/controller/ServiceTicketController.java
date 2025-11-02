@@ -1,11 +1,8 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
-import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST Controller cho Phiếu Dịch Vụ (Service Ticket).
- * <p>
- * Cung cấp các API cho phép:
- * - Tạo phiếu mới cho khách hàng mới (bao gồm tạo Customer và Vehicle)
- * - Lấy danh sách phiếu dịch vụ có phân trang
- * - Lấy chi tiết phiếu dịch vụ theo ID
- * - Cập nhật thông tin phiếu dịch vụ
- */
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/service-tickets")
 @RequiredArgsConstructor
