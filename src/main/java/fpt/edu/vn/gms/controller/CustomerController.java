@@ -26,7 +26,7 @@ import java.util.List;
  * Mỗi khách hàng bao gồm thông tin cá nhân, loại khách hàng và cấp độ thân thiết.
  */
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${fe-local-host}")
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor

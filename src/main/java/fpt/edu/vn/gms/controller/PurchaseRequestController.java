@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${fe-local-host}")
 @RestController
 @RequestMapping("/api/purchase-requests")
 @RequiredArgsConstructor
