@@ -12,8 +12,10 @@ import java.util.List;
 @Data
 @Builder
 public class CustomerDetailResponseDto {
+
     private Long customerId;
     private String fullName;
+    private String zaloId;
     private String phone;
     private String address;
     private CustomerType customerType;

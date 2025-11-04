@@ -1,8 +1,11 @@
 package fpt.edu.vn.gms.service;
 
+import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 public interface ServiceTicketService {
 
@@ -34,6 +37,6 @@ public interface ServiceTicketService {
      */
     ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
 
-//    ServiceTicketResponseDto createServiceTicketFromAppointment(Long appointmentId, ServiceTicketRequestDto dto);
+    Page<ServiceTicketResponseDto> getServiceTicketsByStatus(ServiceTicketStatus status, int page, int size);
 
 }

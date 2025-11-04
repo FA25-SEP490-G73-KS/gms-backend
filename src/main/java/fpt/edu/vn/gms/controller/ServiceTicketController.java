@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
@@ -16,7 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/service-tickets")
 @RequiredArgsConstructor
-@Tag(name = "Service Ticket Management", description = "Quản lý Phiếu Dịch Vụ của Garage (Service Ticket)")
 public class ServiceTicketController {
 
     private final ServiceTicketService serviceTicketService;
@@ -51,10 +51,8 @@ public class ServiceTicketController {
                 .body(ApiResponse.created("Get all service tickets", dtos));
     }
 
-
-
     @PutMapping("/{serviceTicketId}")
-    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> update(
+    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateServiceTicket(
             @PathVariable("serviceTicketId") Long serviceTicketId,
             @RequestBody ServiceTicketRequestDto dto) {
 
@@ -62,6 +60,18 @@ public class ServiceTicketController {
 
         return ResponseEntity.status(200)
                 .body(ApiResponse.created("Update service ticket successfully!", updated));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<ApiResponse<Page<ServiceTicketResponseDto>>> getServiceTicketsByStatus(
+            @PathVariable("status") ServiceTicketStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size)
+    {
+
+        Page<ServiceTicketResponseDto> tickets = serviceTicketService.getServiceTicketsByStatus(status, page, size);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Service Ticket với " + status, tickets));
     }
 
 }

@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -126,6 +127,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         ServiceTicket ticket = ServiceTicket.builder()
                 .serviceTypes(serviceTypes)
                 .customer(customer)
+                .customerName(dto.getCustomer().getFullName())
+                .customerPhone(dto.getCustomer().getPhone())
                 .priceQuotation(quotation)
                 .vehicle(vehicle)
                 .serviceAdvisor(advisor)
@@ -169,85 +172,111 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     @Override
     public ServiceTicketResponseDto updateServiceTicket(Long id, ServiceTicketRequestDto dto) {
 
-        return null;
+        // Tìm ServiceTicket cũ
+        ServiceTicket existing = serviceTicketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với ID: " + id));
+
+        // Cập nhật thông tin khách hàng (nếu có)
+        if (dto.getCustomer() != null) {
+            Customer customer = existing.getCustomer();
+            if (customer == null || (dto.getCustomer().getCustomerId() != null &&
+                    !dto.getCustomer().getCustomerId().equals(customer.getCustomerId()))) {
+
+                customer = customerRepository.findById(dto.getCustomer().getCustomerId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng ID: " + dto.getCustomer().getCustomerId()));
+            }
+
+            customer.setFullName(dto.getCustomer().getFullName());
+            customer.setPhone(dto.getCustomer().getPhone());
+            customer.setAddress(dto.getCustomer().getAddress());
+            customer.setCustomerType(dto.getCustomer().getCustomerType());
+            customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
+            customerRepository.save(customer);
+
+            existing.setCustomer(customer);
+            existing.setCustomerName(customer.getFullName());
+            existing.setCustomerPhone(customer.getPhone());
+        }
+
+        // Cập nhật xe
+        if (dto.getVehicle() != null) {
+            Vehicle vehicle = existing.getVehicle();
+            if (vehicle == null) {
+                // chưa có xe → tạo mới
+                VehicleModel model = vehicleModelRepository.findById(dto.getVehicle().getModelId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe ID: " + dto.getVehicle().getModelId()));
+                vehicle = Vehicle.builder()
+                        .licensePlate(dto.getVehicle().getLicensePlate())
+                        .vehicleModel(model)
+                        .year(dto.getVehicle().getYear())
+                        .vin(dto.getVehicle().getVin())
+                        .customer(existing.getCustomer())
+                        .build();
+            } else {
+                // có rồi → update tại chỗ (không tạo mới)
+                vehicle.setLicensePlate(dto.getVehicle().getLicensePlate());
+                vehicle.setYear(dto.getVehicle().getYear());
+                vehicle.setVin(dto.getVehicle().getVin());
+
+                VehicleModel model = vehicleModelRepository.findById(dto.getVehicle().getModelId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe ID: " + dto.getVehicle().getModelId()));
+                vehicle.setVehicleModel(model);
+            }
+            vehicleRepository.save(vehicle);
+            existing.setVehicle(vehicle);
+        }
+
+        // Cập nhật nhân viên tư vấn
+        if (dto.getAdvisorId() != null) {
+            Employee advisor = employeeRepository.findById(dto.getAdvisorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên tư vấn ID: " + dto.getAdvisorId()));
+            existing.setServiceAdvisor(advisor);
+        }
+
+        // Cập nhật kỹ thuật viên
+        if (dto.getAssignedTechnicianIds() != null) {
+            List<Employee> technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
+            existing.setTechnicians(technicians);
+        }
+
+        // Cập nhật loại dịch vụ
+        if (dto.getServiceTypeIds() != null) {
+            List<ServiceType> serviceTypes = serviceTypeRepository.findAllById(dto.getServiceTypeIds());
+            existing.setServiceTypes(serviceTypes);
+        }
+
+        // Cập nhật các thông tin khác
+        existing.setReceiveCondition(dto.getReceiveCondition());
+        existing.setNotes(dto.getNote());
+        existing.setDeliveryAt(dto.getExpectedDeliveryAt());
+
+        // Lưu lại
+        ServiceTicket updated = serviceTicketRepository.save(existing);
+
+        // Trả về response DTO
+        return serviceTicketMapper.toResponseDto(updated);
     }
 
-//    @Override
-//    public ServiceTicketResponseDto createServiceTicketFromAppointment(Long appointmentId, ServiceTicketRequestDto dto) {
-//
-//        // Lấy appointment
-//        Appointment appointment = appointmentRepository.findById(appointmentId)
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy Appointment ID: " + appointmentId));
-//
-//        // Lấy customer và vehicle từ appointment
-//        Customer customer = appointment.getCustomer();
-//        Vehicle vehicle = appointment.getVehicle();
-//
-//        // Cập nhật thông tin customer nếu có
-//        if (dto.getCustomer() != null) {
-//            customer.setFullName(dto.getCustomer().getFullName());
-//            customer.setPhone(dto.getCustomer().getPhone());
-//            customer.setAddress(dto.getCustomer().getAddress());
-//            customer.setCustomerType(dto.getCustomer().getCustomerType());
-//            customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
-//            customerRepository.save(customer);
-//        }
-//
-//        // Cập nhật thông tin vehicle nếu có
-//        if (dto.getVehicle() != null) {
-//            VehicleRequestDto vehicleDto = dto.getVehicle();
-//
-//            if (vehicle != null) {
-//                vehicle.setLicensePlate(vehicleDto.getLicensePlate());
-//                vehicle.setYear(vehicleDto.getYear());
-//                vehicle.setVin(vehicleDto.getVin());
-//
-//                // Chỉ cập nhật vehicleModel nếu có modelId mới
-//                if (vehicleDto.getModelId() != null) {
-//                    VehicleModel vehicleModel = vehicleModelRepository.findById(vehicleDto.getModelId())
-//                            .orElseThrow(() -> new RuntimeException("Vehicle model not found: ID " + vehicleDto.getModelId()));
-//                    vehicle.setVehicleModel(vehicleModel);
-//                }
-//
-//                vehicleRepository.save(vehicle);
-//            }
-//        }
-//
-//        // Lấy advisor nếu có
-//        Employee advisor = null;
-//        if (dto.getAdvisorId() != null) {
-//            advisor = employeeRepository.findById(dto.getAdvisorId())
-//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên tư vấn ID: " + dto.getAdvisorId()));
-//        }
-//
-//        // Lấy danh sách kỹ thuật viên
-//        List<Employee> technicians = List.of();
-//        if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
-//            technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
-//        }
-//
-//        // Tạo ServiceTicket mới
-//        ServiceTicket ticket = ServiceTicket.builder()
-//                .appointment(appointment)
-//                .serviceType(appointment.getServiceType())
-//                .customer(customer)
-//                .vehicle(vehicle)
-//                .serviceAdvisor(advisor)
-//                .technicians(technicians)
-//                .receiveCondition(dto.getReceiveCondition())
-//                .notes(dto.getNote())
-//                .status(ServiceTicketStatus.CREATED)
-//                .build();
-//
-//        ServiceTicket saved = serviceTicketRepository.save(ticket);
-//
-//        // Gán ServiceTicket vào appointment
-//        appointment.setServiceTicket(saved);
-//        appointmentRepository.save(appointment);
-//
-//        // Trả về DTO
-//        return serviceTicketMapper.toResponseDto(saved);
-//    }
 
+    @Override
+    public Page<ServiceTicketResponseDto> getServiceTicketsByStatus(ServiceTicketStatus status, int page, int size) {
 
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+
+        // Tìm theo trạng thái + phân trang
+        Page<ServiceTicket> ticketPage = serviceTicketRepository.findByStatus(status, pageable);
+
+        // Load dữ liệu tránh LazyInitializationException
+        ticketPage.getContent().forEach(ticket -> {
+            Hibernate.initialize(ticket.getPriceQuotation());
+            if (ticket.getPriceQuotation() != null) {
+                Hibernate.initialize(ticket.getPriceQuotation().getItems());
+            }
+            Hibernate.initialize(ticket.getServiceTypes());
+            Hibernate.initialize(ticket.getTechnicians());
+        });
+
+        // Trả về Page DTO
+        return ticketPage.map(serviceTicketMapper::toResponseDto);
+    }
 }

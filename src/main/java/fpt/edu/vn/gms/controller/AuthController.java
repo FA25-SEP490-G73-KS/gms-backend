@@ -1,13 +1,12 @@
 package fpt.edu.vn.gms.controller;
 
-import com.google.firebase.auth.FirebaseAuthException;
 import fpt.edu.vn.gms.dto.request.ChangePasswordRequest;
 import fpt.edu.vn.gms.dto.request.LoginRequestDto;
+import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDto;
 import fpt.edu.vn.gms.dto.response.AccountResponseDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.LoginResponseDto;
-import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDTO;
-import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
+import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDto;
 import fpt.edu.vn.gms.security.JwtUtils;
 import fpt.edu.vn.gms.service.AccountDetailsService;
 import fpt.edu.vn.gms.service.AccountService;
@@ -45,23 +44,6 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponseDto(token));
     }
 
-    // ========== RESET PASSWORD ==========
-    @PostMapping("/reset-password")
-    public ResponseEntity<ResetPasswordResponseDTO> resetPassword(
-          @RequestBody ResetPasswordRequestDTO requestDTO
-    ) {
-        try {
-            ResetPasswordResponseDTO responseDTO = accountService.resetPassword(requestDTO);
-            return ResponseEntity.ok(responseDTO);
-        } catch (FirebaseAuthException e) {
-            return ResponseEntity.status(401)
-                    .body(new ResetPasswordResponseDTO(null, null, null, "Invalid OTP or token"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ResetPasswordResponseDTO(null, null, null, e.getMessage()));
-        }
-    }
-
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse<AccountResponseDto>> changePassword(
             @RequestBody ChangePasswordRequest req,
@@ -74,5 +56,15 @@ public class AuthController {
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Thay đổi mật khẩu thành công", responseDTO));
 
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<ResetPasswordResponseDto>> resetPassword(
+            @RequestBody ResetPasswordRequestDto req
+            ) {
+
+            ResetPasswordResponseDto res = accountService.resetPassword(req);
+            return ResponseEntity.status(200)
+                    .body(ApiResponse.success("Làm mới mật khẩu thành công!!!", res));
     }
 }

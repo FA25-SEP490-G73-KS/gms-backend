@@ -131,10 +131,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
 
-        if (status == AppointmentStatus.OVERDUE) {
-            throw new IllegalArgumentException("OVERDUE is handled automatically by system");
-        }
-
         // Validate allowed transitions (simple example)
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new IllegalStateException("Cannot change status of a cancelled appointment");
