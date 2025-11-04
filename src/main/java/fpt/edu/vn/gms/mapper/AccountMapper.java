@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.mapper;
 
-import fpt.edu.vn.gms.dto.response.AccountResponseDTO;
+import fpt.edu.vn.gms.dto.response.AccountResponseDto;
 import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
 import fpt.edu.vn.gms.entity.Account;
 import org.mapstruct.Mapper;
@@ -13,7 +13,7 @@ public interface AccountMapper {
     AccountMapper INSTANCE = Mappers.getMapper(AccountMapper.class);
 
     @Mapping(source = "role.roleName", target = "roleName")
-    AccountResponseDTO toDTO(Account account);
+    AccountResponseDto toDTO(Account account);
 
     // Map Account → ResetPasswordResponseDTO
     @Mapping(source = "role.roleName", target = "roleName")

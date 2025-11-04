@@ -26,16 +26,13 @@ public class Employee {
     private String fullName;
 
     @Column(name = "gender", length = 10)
-    private String gender; // Nam, Nữ, Khác
+    private String gender;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
     @Column(name = "phone", length = 20, unique = true)
     private String phone;
-
-    @Column(name = "email", length = 100, unique = true)
-    private String email;
 
     @Column(name = "address", length = 200)
     private String address;
@@ -48,9 +45,11 @@ public class Employee {
     @Column(name = "hire_date")
     private LocalDateTime hireDate;
 
+    // Active, Nghỉ việc, Tạm ngưng
     @Column(name = "status", length = 50)
-    private String status; // Active, Nghỉ việc, Tạm ngưng
+    private String status;
 
+    // nullable với TECHNICIANS
     @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
-    private Account account; // nullable nếu nhân viên không có account
+    private Account account;
 }

@@ -3,7 +3,9 @@ package fpt.edu.vn.gms.service.impl;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import fpt.edu.vn.gms.dto.request.ChangePasswordRequest;
 import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDTO;
+import fpt.edu.vn.gms.dto.response.AccountResponseDto;
 import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDTO;
 import fpt.edu.vn.gms.entity.Account;
 import fpt.edu.vn.gms.mapper.AccountMapper;
@@ -19,6 +21,7 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepo;
     private final PasswordEncoder passwordEncoder;
+    private AccountMapper accountMapper;
 
     @Override
     public ResetPasswordResponseDTO resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) throws FirebaseAuthException {
@@ -42,5 +45,23 @@ public class AccountServiceImpl implements AccountService {
         ResetPasswordResponseDTO newPasswordDTO = AccountMapper.INSTANCE.toResetPasswordResponseDTO(account);
         newPasswordDTO.setMessage("Password cập nhật thành công!");
         return newPasswordDTO;
+    }
+
+
+    @Override
+    public AccountResponseDto changePassword(String phoneNumber, ChangePasswordRequest req) {
+
+        Account acc = accountRepo.findByPhone(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+
+        System.out.println(req.getNewPassword());
+        System.out.println(acc.getPassword());
+        if (!passwordEncoder.matches(req.getCurrentPassword(), acc.getPassword())) {
+            throw new RuntimeException("Mật khẩu hiện tại không đúng!");
+        }
+
+        acc.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        accountRepo.save(acc);
+        return accountMapper.toDTO(acc);
     }
 }

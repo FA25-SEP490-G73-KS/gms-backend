@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.repository;
 
 import fpt.edu.vn.gms.dto.EmployeeDto;
+import fpt.edu.vn.gms.dto.response.EmployeeInfoResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      */
     @Query("SELECT e FROM Employee e WHERE e.status = 'Active' and  e.position = 'TECHNICIAN'" )
     List<EmployeeDto> findAllEmployeeIsTechniciansActive();
+
+    EmployeeInfoResponseDto findEmployeeInfoByPhone(String phone);
 }

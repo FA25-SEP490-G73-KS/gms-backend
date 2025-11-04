@@ -147,13 +147,4 @@ public class AppointmentController {
         return ResponseEntity.ok(ApiResponse.success("Appointment status updated", updated));
     }
 
-//    @PostMapping("/{appointmentId}/service-tickets")
-//    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createFromAppointment(
-//            @PathVariable Long appointmentId,
-//            @RequestBody ServiceTicketRequestDto request) {
-//        ServiceTicketResponseDto created = serviceTicket.createServiceTicketFromAppointment(appointmentId, request);
-//
-//        return ResponseEntity.status(201)
-//                .body(ApiResponse.created("Service Ticket Created", created));
-//    }
 }

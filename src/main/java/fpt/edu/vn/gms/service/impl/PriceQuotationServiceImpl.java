@@ -118,6 +118,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         part = partRepository.findById(item.getPart().getPartId())
                                 .orElseThrow(() -> new RuntimeException("Part not found with id: " + item.getPart().getPartId()));
                     }
+
                     // Nếu partId = null → linh kiện chưa có trong hệ thống (UNKNOWN)
                     else {
                         note = "[Chưa có trong kho] " + item.getItemName() + item.getQuantity() + item.getUnitPrice();

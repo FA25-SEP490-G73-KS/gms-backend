@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    // Đọc và kiểm tra Jwt cho từng request
     private final JwtUtils jwtUtils;
-    private final AccountDetailsService accountDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -48,6 +48,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String username = jwtUtils.extractUsername(token);
         List<String> roles = jwtUtils.extractRoles(token);
 
+        // SecurityContextHolder lưu trữ thông tin xác thực cho request
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             // Convert roles -> GrantedAuthorities
             var authorities = roles.stream()
@@ -58,7 +59,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(username, null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            // Gắn thông tin user vào SecurityContext
+            // Gắn thông tin authentication vào SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
