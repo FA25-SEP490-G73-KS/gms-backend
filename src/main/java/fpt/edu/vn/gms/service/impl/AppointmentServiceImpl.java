@@ -58,7 +58,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                     Customer newCustomer = Customer.builder()
                             .fullName(dto.getCustomerName())
                             .phone(dto.getPhoneNumber())
-                            .loyaltyLevel(CustomerLoyaltyLevel.NORMAL)
+                            .loyaltyLevel(CustomerLoyaltyLevel.BRONZE)
                             .build();
                     return customerRepo.save(newCustomer);
                 });

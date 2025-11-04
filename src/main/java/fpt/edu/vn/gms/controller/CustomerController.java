@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
+import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
@@ -30,30 +31,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/customers")
 @RequiredArgsConstructor
-@Tag(name = "Customer Management", description = "APIs for managing customers in the Garage Management System. Includes viewing, filtering, and retrieving detailed customer info.")
 public class CustomerController {
 
     private final CustomerService customerService;
 
-    // ================== GET ALL CUSTOMERS ==================
-//    @GetMapping
-//    public ResponseEntity<Page<CustomerDto>> getAllCustomer(
-//            @Parameter(description = "Page number for pagination (default = 0)", example = "0")
-//            @RequestParam(defaultValue = "0") int page,
-//            @Parameter(description = "Number of items per page (default = 6)", example = "6")
-//            @RequestParam(defaultValue = "6") int size
-//    ) {
-//        return ResponseEntity.ok(customerService.getAllCustumer(page, size));
-//    }
-//
-//    // ================== GET CUSTOMER BY ID ==================
-//    @GetMapping("/{customerId}")
-//    public ResponseEntity<CustomerDto> getCustumerByCustomerId(
-//            @Parameter(description = "Unique identifier of the customer", example = "1")
-//            @PathVariable Long customerId
-//    ) {
-//        return ResponseEntity.ok(customerService.getCustumerByCustomerId(customerId));
-//    }
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<CustomerResponseDto>>> getALlCustomer(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+
+        Page<CustomerResponseDto> customerList = customerService.getAllCustomers(page, size);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Danh sách khách hàng!!", customerList));
+    }
 
 
     @GetMapping("/search")
@@ -68,5 +59,24 @@ public class CustomerController {
             CustomerDetailResponseDto customerDetail = customerService.getCustomerDetailById(id);
             return ResponseEntity.status(200)
                     .body(ApiResponse.success("Get customer detail successfully", customerDetail));
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<CustomerResponseDto>> createCustomer(@RequestBody CustomerRequestDto dto) {
+
+        CustomerResponseDto response = customerService.createCustomer(dto);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Tạo thông tin khách hàng thành công!!", response));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<CustomerResponseDto>> updateCustomer(
+            @PathVariable Long id,
+            @RequestBody CustomerRequestDto dto
+    ) {
+
+        CustomerResponseDto updated = customerService.updateCustomer(id, dto);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Cập nhật thông tin khách hàng thành công!!", updated));
     }
 }

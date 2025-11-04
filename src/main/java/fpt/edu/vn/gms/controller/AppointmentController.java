@@ -28,7 +28,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
-@Tag(name = "Appointment Management", description = "Controller for managing appointments")
 public class AppointmentController {
 
     private final AppointmentService service;

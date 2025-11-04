@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
+import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
@@ -41,5 +42,46 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
 
         return customerMapper.toDetailDto(customer);
+    }
+
+    @Override
+    public Page<CustomerResponseDto> getAllCustomers(int page, int size) {
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        return customerRepository.findAll(pageable).map(customerMapper::toDto);
+    }
+
+    @Override
+    public CustomerResponseDto createCustomer(CustomerRequestDto customerDto) {
+
+        if (customerRepository.existsByPhone(customerDto.getPhone())) {
+            throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");
+        }
+
+        Customer customer = customerMapper.toEntity(customerDto);
+        Customer saved = customerRepository.save(customer);
+
+        return customerMapper.toDto(saved);
+    }
+
+    @Override
+    public CustomerResponseDto updateCustomer(Long id, CustomerRequestDto dto) {
+
+        Customer existing = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng với ID: " + id));
+
+        if (!existing.getPhone().equals(dto.getPhone()) && customerRepository.existsByPhone(dto.getPhone())) {
+            throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");
+        }
+
+        existing.setFullName(dto.getFullName());
+        existing.setPhone(dto.getPhone());
+        existing.setAddress(dto.getAddress());
+        existing.setCustomerType(dto.getCustomerType());
+        existing.setLoyaltyLevel(dto.getLoyaltyLevel());
+
+        Customer updated = customerRepository.save(existing);
+
+        return customerMapper.toDto(updated);
     }
 }

@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.mapper;
 
+import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
@@ -22,4 +23,6 @@ public interface CustomerMapper {
 
     // Map list entity sang list DTO
     List<CustomerResponseDto> toDtoList(List<Customer> customers);
+
+    Customer toEntity(CustomerRequestDto dto);
 }

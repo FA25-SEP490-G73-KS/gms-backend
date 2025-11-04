@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
@@ -14,6 +15,8 @@ import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,6 +41,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy báo giá ID: " + dto.getPriceQuotationId()));
 
+        // Khi update quotation status -> DRAFT
+        quotation.setStatus(PriceQuotationStatus.DRAFT);
         quotation.setEstimateAmount(dto.getEstimateAmount());
 
         // Duyệt từng item trong request
@@ -135,11 +140,13 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     requestItems.add(reqItem);
                 });
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (!requestItems.isEmpty()) {
             PurchaseRequest purchaseRequest = PurchaseRequest.builder()
                     .status(PurchaseRequestStatus.PENDING)
                     .createdAt(LocalDateTime.now())
-                    .createdBy("system") // có thể lấy từ SecurityContext
+                    .createdBy(auth.getName())
                     .items(requestItems)
                     .build();
 
