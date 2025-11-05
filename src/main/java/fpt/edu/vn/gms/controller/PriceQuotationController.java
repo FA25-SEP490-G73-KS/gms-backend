@@ -17,11 +17,12 @@ public class PriceQuotationController {
     private final PriceQuotationService priceQuotationService;
 
     // === Cập nhật / thêm danh sách item cho báo giá ===
-    @PutMapping()
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateItems(
+            @PathVariable Long id,
             @RequestBody PriceQuotationRequestDto dto) {
 
-        PriceQuotationResponseDto response = priceQuotationService.updateQuotationItems(dto);
+        PriceQuotationResponseDto response = priceQuotationService.updateQuotationItems(id, dto);
 
         return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá thành công!", response));
     }

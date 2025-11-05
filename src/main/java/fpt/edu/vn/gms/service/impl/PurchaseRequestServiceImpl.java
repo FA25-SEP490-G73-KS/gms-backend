@@ -103,7 +103,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                     .orElse(null);
 
             if (quotation != null) {
-                quotation.setStatus(PriceQuotationStatus.CONFIRMED_BY_WAREHOUSE);
+                quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
                 priceQuotationRepository.save(quotation);
             }
         }

@@ -53,11 +53,14 @@ public class Part {
     @Column(name = "quantity_in_stock")
     private Double quantityInStock;
 
+    @Column(name = "unit", length = 20)
+    private String unit; // đơn vị đo, ví dụ: "chai", "bộ", "lít", "cái"
+
     @Column(name = "reserved_quantity")
-    private Integer reservedQuantity;
+    private Double reservedQuantity;
 
     @Column(name = "reorder_level")
-    private Integer reorderLevel; // ngưỡng báo cần nhập thêm
+    private Double reorderLevel; // ngưỡng báo cần nhập thêm
 
     @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();

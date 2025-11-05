@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+
 @Entity
 @Table(name = "price_quotation_item")
 @Getter
@@ -38,6 +39,9 @@ public class PriceQuotationItem {
     @Column(name = "quantity")
     private Integer quantity;
 
+    @Column(name = "unit", length = 20)
+    private String unit;
+
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
 
@@ -51,7 +55,7 @@ public class PriceQuotationItem {
     // AVAILABLE, LOW_STOCK, UNKNOWN
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private PriceQuotationItemStatus status;
+    private PriceQuotationItemStatus inventoryStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "warehouse_review_status")

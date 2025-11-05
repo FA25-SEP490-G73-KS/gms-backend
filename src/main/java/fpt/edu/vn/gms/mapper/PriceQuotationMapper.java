@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface PriceQuotationMapper {
 
     @Mapping(target = "priceQuotationId", source = "priceQuotationId")
+    @Mapping(target = "licensePlate", source = "serviceTicket.vehicle.licensePlate")
     PriceQuotationResponseDto toResponseDto(PriceQuotation entity);
 }

@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 public class PriceQuotationRequestDto {
 
-    private Long priceQuotationId;
     private BigDecimal estimateAmount;
     private BigDecimal discount;
 

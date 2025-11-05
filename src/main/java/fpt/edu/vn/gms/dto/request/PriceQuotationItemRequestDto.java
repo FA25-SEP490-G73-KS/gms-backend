@@ -15,6 +15,7 @@ public class PriceQuotationItemRequestDto {
     private Long partId;
     private String itemName;
     private Integer quantity;
+    private String unit;
     private PriceQuotationItemStatus status;
     private PriceQuotationItemType type;
     private BigDecimal unitPrice;
