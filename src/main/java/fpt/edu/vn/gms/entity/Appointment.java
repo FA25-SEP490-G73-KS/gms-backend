@@ -21,6 +21,9 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long appointmentId;
 
+    @Column(name = "appointment_code", unique = true, nullable = false, length = 20)
+    private String appointmentCode;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id")
     private Customer customer;

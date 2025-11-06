@@ -5,8 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "purchase_request")
@@ -25,12 +25,15 @@ public class PurchaseRequest {
     @Column(name = "status", length = 30)
     private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id")
-    private Vehicle vehicle;
+    @ManyToOne
+    @JoinColumn(name = "quotation_id")
+    private PriceQuotation quotation;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
@@ -39,5 +42,5 @@ public class PurchaseRequest {
     private String createdBy;
 
     @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PurchaseRequestItem> items = new HashSet<>();
+    private List<PurchaseRequestItem> items = new ArrayList<>();
 }

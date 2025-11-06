@@ -31,11 +31,7 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService service;
-    private final ServiceTicketService serviceTicket;
 
-    // =============================
-    // Get available time slots
-    // =============================
     @GetMapping("/time-slots")
     @Operation(
             summary = "Get available time slots by date",

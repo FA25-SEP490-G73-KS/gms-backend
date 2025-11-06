@@ -28,4 +28,6 @@ public class PartController {
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Get all successfully", partList));
     }
+
+
 }

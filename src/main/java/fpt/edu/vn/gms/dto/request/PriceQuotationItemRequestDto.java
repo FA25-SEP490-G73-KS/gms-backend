@@ -14,7 +14,7 @@ public class PriceQuotationItemRequestDto {
     private Long priceQuotationItemId;
     private Long partId;
     private String itemName;
-    private Integer quantity;
+    private Double quantity;
     private String unit;
     private PriceQuotationItemStatus status;
     private PriceQuotationItemType type;

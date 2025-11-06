@@ -83,6 +83,10 @@ public class ServiceTicket {
     @Column(name = "delivery_at")
     private LocalDate deliveryAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_employee_id")
+    private Employee createdBy;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

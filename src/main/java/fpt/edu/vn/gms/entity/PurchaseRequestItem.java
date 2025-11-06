@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,20 +22,22 @@ public class PurchaseRequestItem {
     @JoinColumn(name = "purchase_request_id")
     private PurchaseRequest purchaseRequest;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quotation_item_id")
-    private PriceQuotationItem quotationItem;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id")
     private Part part;
 
+    @Column(name = "part_name")
+    private String partName;
+
     @Column(name = "quantity")
-    private Integer quantity;
+    private Double quantity;
+
+    @Column(name = "unit")
+    private String unit;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private WarehouseReviewStatus status = WarehouseReviewStatus.PENDING;
+    private ManagerReviewStatus status = ManagerReviewStatus.PENDING;
 
     @Column(name = "note", length = 255)
     private String note;

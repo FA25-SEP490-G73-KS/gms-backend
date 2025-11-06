@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.*;
+import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
@@ -8,8 +9,11 @@ import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.PartRepository;
+import fpt.edu.vn.gms.repository.PartReservationRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
+import fpt.edu.vn.gms.service.NotificationService;
+import fpt.edu.vn.gms.service.PartService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -28,6 +32,9 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final PriceQuotationRepository quotationRepository;
     private final PartRepository partRepository;
     private final PriceQuotationMapper priceQuotationMapper;
+    private final PurchaseRequestRepository purchaseRequestRepository;
+    private final PartReservationRepository partReservationRepository;
+    private final NotificationService notificationService;
 
     @Override
     public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
@@ -112,5 +119,125 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             item.setInventoryStatus(null);
         }
     }
+
+
+    @Override
+    public PriceQuotationResponseDto updateQuotationStatusManual(Long id, ChangeQuotationStatusReqDto reqDto) {
+
+        PriceQuotation quotation = quotationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation không tồn tại!!!"));
+
+        if (quotation.getPriceQuotationId() != null && quotation.getStatus() == PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
+            quotation.setStatus(reqDto.getStatus());
+            quotationRepository.save(quotation);
+        } else {
+            throw new RuntimeException("Không thể thay đổi trạng thái khi kho chưa xác nhận!!");
+        }
+
+        return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+    @Override
+    public PriceQuotationResponseDto confirmQuotationByCustomer(Long quotationId) {
+
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        if (quotation.getStatus() != PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
+            throw new RuntimeException("Chỉ có thể xác nhận khi đang chờ khách hàng xác nhận");
+        }
+
+        // Cập nhật trạng thái báo giá
+        quotation.setStatus(PriceQuotationStatus.CUSTOMER_CONFIRMED);
+        quotation.setUpdatedAt(LocalDateTime.now());
+
+        // Lấy danh sách item theo từng loại tồn kho
+        List<PriceQuotationItem> availableParts = new ArrayList<>();
+        List<PriceQuotationItem> partsToBuy = new ArrayList<>();
+
+        for (PriceQuotationItem item : quotation.getItems()) {
+            if (item.getItemType() != PriceQuotationItemType.PART) continue;
+
+            if (item.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE) {
+                availableParts.add(item);
+            } else if (item.getInventoryStatus() == PriceQuotationItemStatus.OUT_OF_STOCK
+                    || item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN) {
+                partsToBuy.add(item);
+            }
+        }
+
+        // 1. Tạo PartReservation cho các linh kiện AVAILABLE
+        for (PriceQuotationItem item : availableParts) {
+            Part part = item.getPart();
+            if (part == null) continue;
+
+            // Tạo bản ghi đặt giữ
+            PartReservation reservation = PartReservation.builder()
+                    .part(part)
+                    .quotationItem(item)
+                    .reservedQuantity(item.getQuantity())
+                    .reservedAt(LocalDateTime.now())
+                    .active(true)
+                    .build();
+            partReservationRepository.save(reservation);
+
+            // Cập nhật số lượng đã giữ
+            double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+            part.setReservedQuantity(currentReserved + item.getQuantity());
+            partRepository.save(part);
+        }
+
+        // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
+        if (!partsToBuy.isEmpty()) {
+            PurchaseRequest purchaseRequest = PurchaseRequest.builder()
+                    .quotation(quotation)
+                    .status(PurchaseRequestStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .items(new ArrayList<>())
+                    .build();
+
+            for (PriceQuotationItem item : partsToBuy) {
+                PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
+                        .part(item.getPart())
+                        .partName(item.getItemName())
+                        .quantity(item.getQuantity())
+                        .unit(item.getUnit())
+                        .status(ManagerReviewStatus.PENDING)
+                        .purchaseRequest(purchaseRequest)
+                        .build();
+
+                purchaseRequest.getItems().add(requestItem);
+            }
+
+            purchaseRequestRepository.save(purchaseRequest);
+        }
+
+        // Lưu lại báo giá
+        quotationRepository.save(quotation);
+        notificationService.notifyQuotationConfirmedByCustomer(quotation);
+
+        return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+    public PriceQuotationResponseDto rejectQuotationByCustomer(Long quotationId, String reason) {
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        if (quotation.getStatus() != PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
+            throw new RuntimeException("Chỉ có thể từ chối khi đang chờ khách xác nhận");
+        }
+
+        quotation.setStatus(PriceQuotationStatus.CUSTOMER_REJECTED);
+        quotation.setUpdatedAt(LocalDateTime.now());
+        quotation.setRejectReason(reason);
+
+        quotationRepository.save(quotation);
+
+        // Gửi thông báo cho cố vấn
+        notificationService.notifyQuotationRejectedByCustomer(quotation, "Khách hàng không đồng ý giá linh kiện");
+
+        return priceQuotationMapper.toResponseDto(quotation);
+    }
+
 
 }

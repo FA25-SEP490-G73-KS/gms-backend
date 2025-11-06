@@ -37,7 +37,7 @@ public class PriceQuotationItem {
     private BigDecimal unitPrice;
 
     @Column(name = "quantity")
-    private Integer quantity;
+    private Double quantity;
 
     @Column(name = "unit", length = 20)
     private String unit;
@@ -64,7 +64,4 @@ public class PriceQuotationItem {
 
     @Column(name = "warehouse_note", length = 255)
     private String warehouseNote; // ghi chú của kho
-
-    @OneToOne(mappedBy = "quotationItem", fetch = FetchType.LAZY)
-    private PurchaseRequestItem purchaseRequestItem; // Nếu part cần nhập thêm
 }
