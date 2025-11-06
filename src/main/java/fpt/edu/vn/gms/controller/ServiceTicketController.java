@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -72,6 +73,16 @@ public class ServiceTicketController {
         Page<ServiceTicketResponseDto> tickets = serviceTicketService.getServiceTicketsByStatus(status, page, size);
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Service Ticket với " + status, tickets));
+    }
+
+    @PostMapping("/{serviceTicketId}/send-to-customer")
+    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> sendServiceTicketToCustomer(
+            @PathVariable Long serviceTicketId
+    ) {
+        ServiceTicketResponseDto response = serviceTicketService.sendQuotationToCustomer(serviceTicketId);
+
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Successfully", response));
     }
 
 }

@@ -75,7 +75,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
-
     @Override
     public PriceQuotationResponseDto getById(Long id) {
         return priceQuotationMapper.toResponseDto(quotationRepository.findById(id).orElse(null));
@@ -119,6 +118,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             item.setInventoryStatus(null);
         }
     }
+
 
 
     @Override
