@@ -9,6 +9,7 @@ import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final TimeSlotRepository timeSlotRepo;
     private final AppointmentRepository appointmentRepo;
     private final ServiceTypeRepository serviceTypeRepo;
+    private final CodeSequenceService codeSequenceService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
 
@@ -97,6 +99,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         ServiceType serviceType = serviceTypeRepo.getById(dto.getServiceType());
 
         Appointment appointment = Appointment.builder()
+                .appointmentCode(codeSequenceService.generateCode("APT"))
                 .customer(vehicle.getCustomer())
                 .vehicle(vehicle)
                 .timeSlot(slot)

@@ -9,12 +9,10 @@ import java.util.List;
 
 @Mapper(
         componentModel = "spring",
-        uses = {VehicleMapper.class, PurchaseRequestItemMapper.class}
+        uses = PurchaseRequestItemMapper.class
 )
 public interface PurchaseRequestMapper {
 
-    @Mapping(source = "id", target = "purchaseRequestId")
-    @Mapping(source = "vehicle", target = "vehicle") // VehicleMapper tự xử lý
     @Mapping(source = "createdBy", target = "createdBy")
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus().name() : null)")

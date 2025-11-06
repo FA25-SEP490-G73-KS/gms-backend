@@ -9,6 +9,7 @@ import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.ServiceTicketMapper;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
@@ -36,6 +37,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final ServiceTicketMapper serviceTicketMapper;
     private final VehicleModelRepository vehicleModelRepository;
     private final PriceQuotationRepository priceQuotationRepository;
+    private final CodeSequenceService codeSequenceService;
 
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto) {
@@ -125,6 +127,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         // Tạo mới ServiceTicket
         ServiceTicket ticket = ServiceTicket.builder()
+                .serviceTicketCode(codeSequenceService.generateCode("STK"))
                 .serviceTypes(serviceTypes)
                 .customer(customer)
                 .customerName(dto.getCustomer().getFullName())

@@ -22,6 +22,9 @@ public class ServiceTicket {
     @Column(name = "service_ticket_id")
     private Long serviceTicketId;
 
+    @Column(name = "service_ticket_code", unique = true, nullable = false, length = 20)
+    private String serviceTicketCode;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId", unique = true)
     private Appointment appointment;

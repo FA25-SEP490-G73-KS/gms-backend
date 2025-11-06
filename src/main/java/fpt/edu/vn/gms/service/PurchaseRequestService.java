@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface PurchaseRequestService {
 
-    List<PurchaseRequestResponseDto> getAllPurchaseRequests();
-
-    PurchaseRequestResponseDto getPurchaseRequestById(Long id);
-
-    PurchaseRequestResponseDto confirmPurchaseRequestItem(Long itemId, PartRequestDto partDto);
-
-    PurchaseRequestResponseDto rejectPurchaseRequestItem(Long itemId, String note);
+//    List<PurchaseRequestResponseDto> getAllPurchaseRequests();
+//
+//    PurchaseRequestResponseDto getPurchaseRequestById(Long id);
+//
+//    PurchaseRequestResponseDto confirmPurchaseRequestItem(Long itemId, PartRequestDto partDto);
+//
+//    PurchaseRequestResponseDto rejectPurchaseRequestItem(Long itemId, String note);
 }

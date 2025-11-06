@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public interface ServiceTicketMapper {
 
     // ----------- ENTITY -> RESPONSE -----------
+    @Mapping(target = "serviceTicketCode", source = "serviceTicketCode")
     @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "serviceAdvisor", source = "serviceAdvisor.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh sách tên
