@@ -12,5 +12,4 @@ public interface WarehouseQuotationService {
 
     List<PriceQuotationResponseDto> getPendingQuotations();
 
-
 }

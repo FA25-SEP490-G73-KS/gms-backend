@@ -12,13 +12,22 @@ INSERT INTO service_type (name) VALUES ('Sơn');
 INSERT INTO service_type (name) VALUES ('Sửa chữa');
 INSERT INTO service_type (name) VALUES ('Bảo dưỡng');
 
+INSERT INTO role (role_id, role_name)
+VALUES
+    (1, 'ADMIN'),
+    (2, 'USER');
 
 INSERT INTO employee (
     employee_id, full_name, gender, date_of_birth, phone, address, position, hire_date, status
 ) VALUES
-      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0905123456', '123 Đường A, Quận 1', 'SERVICE_ADVISOR', '2023-05-10 08:00:00', 'ACTIVE'),
+      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', 'SERVICE_ADVISOR', '2023-05-10 08:00:00', 'ACTIVE'),
       (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', 'TECHNICIAN', '2023-06-01 08:00:00', 'ACTIVE'),
       (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', 'TECHNICIAN', '2024-01-15 08:00:00', 'ACTIVE');
+
+INSERT INTO account (account_id, phone, password, role_id, employee_id, is_active)
+VALUES
+    (1, '0909123456', '$2a$10$JsmxJv1SXXGd1jFlw9TjMeZ6eVnWxjRfev3GoPr0C8L6EvbnjplbO', 1, 1, 1),
+    (2, '0909988776', '$2a$10$MMR59T4QGrzLKkUsRhSmYeCPjZndSKWZpS1ETCq2odfEl6bi1xql6', 2, NULL, 1);
 
 INSERT INTO part (
     part_name,

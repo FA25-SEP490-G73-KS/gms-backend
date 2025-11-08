@@ -28,12 +28,8 @@ public class Notification {
 
     private LocalDateTime createdAt;
 
-    @Column(name = "related_quotation_id")
-    private Long relatedQuotationId;
-
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
-    @Column(name = "related_service_ticket_id")
-    private Long relatedServiceTicketId;
+    private String serviceTicketCode;
 }

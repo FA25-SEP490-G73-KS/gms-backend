@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
+import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
@@ -34,6 +35,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final PriceQuotationMapper priceQuotationMapper;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PartReservationRepository partReservationRepository;
+    private final NotificationSocketService notificationSocketService;
     private final NotificationService notificationService;
 
     @Override
@@ -193,6 +195,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .quotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
                     .createdAt(LocalDateTime.now())
+                    .createdBy("Hệ thống tự động")
                     .items(new ArrayList<>())
                     .build();
 
@@ -214,7 +217,26 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Lưu lại báo giá
         quotationRepository.save(quotation);
-        notificationService.notifyQuotationConfirmedByCustomer(quotation);
+
+        // --- Gửi realtime WebSocket trước khi lưu Notification vào DB ---
+        String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
+        NotificationResponseDto wsNotification = NotificationResponseDto.builder()
+                .title("Khách hàng đã đồng ý phiếu dịch vụ")
+                .message(String.format("Khách hàng đồng ý phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
+                .type(NotificationType.QUOTATION_CONFIRMED)
+                .code(quotation.getServiceTicket().getServiceTicketCode())
+                .build();
+
+        notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
+
+        // --- Lưu notification vào DB ---
+        notificationService.createNotification(
+                advisorPhone,
+                wsNotification.getTitle(),
+                wsNotification.getMessage(),
+                wsNotification.getType(),
+                wsNotification.getCode()
+        );
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
@@ -233,8 +255,27 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         quotationRepository.save(quotation);
 
-        // Gửi thông báo cho cố vấn
-        notificationService.notifyQuotationRejectedByCustomer(quotation, "Khách hàng không đồng ý giá linh kiện");
+        String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
+
+        // Gửi realtime WebSocket
+        NotificationResponseDto wsNotification = NotificationResponseDto.builder()
+                .title("Khách hàng từ chối phiếu dịch vụ")
+                .message(String.format("Khách hàng từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
+                .type(NotificationType.QUOTATION_REJECTED)
+                .code(quotation.getServiceTicket().getServiceTicketCode())
+                .build();
+
+        notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
+
+        // Lưu notification vào DB
+        notificationService.createNotification(
+                advisorPhone,
+                wsNotification.getTitle(),
+                wsNotification.getMessage(),
+                wsNotification.getType(),
+                wsNotification.getCode()
+        );
+
 
         return priceQuotationMapper.toResponseDto(quotation);
     }

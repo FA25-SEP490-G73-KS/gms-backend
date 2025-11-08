@@ -9,11 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class NotificationResponseDto {
-    private Long id;
+
     private String title;
     private String message;
-    private Long serviceTicketId;
-    private Long quotationId;
+    private String code;
     private NotificationType type;
     private LocalDateTime createdAt;
     private Boolean isRead;
