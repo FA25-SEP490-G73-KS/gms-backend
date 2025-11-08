@@ -95,8 +95,10 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Time slot is full");
         }
 
-        // get service type
-        ServiceType serviceType = serviceTypeRepo.getById(dto.getServiceType());
+        // --- Lấy danh sách ServiceType từ danh sách ID ---
+        List<ServiceType> serviceTypes = dto.getServiceType().stream()
+                .map(serviceTypeRepo::getById) // có thể dùng findById nếu muốn kiểm tra tồn tại
+                .toList();
 
         Appointment appointment = Appointment.builder()
                 .appointmentCode(codeSequenceService.generateCode("APT"))
@@ -104,7 +106,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .vehicle(vehicle)
                 .timeSlot(slot)
                 .appointmentDate(dto.getAppointmentDate())
-                .serviceType(serviceType)
+                .serviceTypes(serviceTypes)
                 .description(dto.getNote())
                 .status(AppointmentStatus.CONFIRMED)
                 .build();

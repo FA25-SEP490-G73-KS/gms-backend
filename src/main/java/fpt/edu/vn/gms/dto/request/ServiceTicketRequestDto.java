@@ -15,9 +15,7 @@ public class ServiceTicketRequestDto {
     private List<Long> serviceTypeIds;
     private CustomerRequestDto customer;
     private VehicleRequestDto vehicle;
-    private Long advisorId;
     private List<Long> assignedTechnicianIds;
     private String receiveCondition;
-    private String note;
     private LocalDate expectedDeliveryAt;
 }

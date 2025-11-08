@@ -8,16 +8,22 @@ import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.entity.Part;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.PriceQuotationItem;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
+import fpt.edu.vn.gms.repository.PartRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,26 +39,27 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     private final PriceQuotationItemMapper priceQuotationItemMapper;
     private final NotificationSocketService notificationSocketService;
     private final NotificationService notificationService;
+    private final PartRepository partRepository;
 
     @Override
-    public List<PriceQuotationResponseDto> getPendingQuotations() {
+    public Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size) {
 
-        // Lấy các báo giá đang chờ kho xác nhận
-        List<PriceQuotation> quotations = quotationRepository
-                .findByStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
 
-        // Chuyển sang DTO, nhưng chỉ giữ lại item có type = PART
-        return quotations.stream()
-                .map(quotation -> {
-                    var dto = priceQuotationMapper.toResponseDto(quotation);
-                    if (dto.getItems() != null) {
-                        dto.setItems(dto.getItems().stream()
-                                .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
-                                .toList());
-                    }
-                    return dto;
-                })
-                .toList();
+        // Lấy báo giá đang chờ kho xác nhận (có phân trang)
+        Page<PriceQuotation> quotations = quotationRepository
+                .findByStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM, pageable);
+
+        // Chuyển sang DTO và lọc item PART
+        return quotations.map(quotation -> {
+            var dto = priceQuotationMapper.toResponseDto(quotation);
+            if (dto.getItems() != null) {
+                dto.setItems(dto.getItems().stream()
+                        .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
+                        .toList());
+            }
+            return dto;
+        });
     }
 
 
@@ -77,9 +84,9 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         }
 
         // Cập nhật giá nếu có thay đổi
-        if (dto.getUnitPrice() != null) {
-            item.setUnitPrice(dto.getUnitPrice());
-            item.setTotalPrice(dto.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+        if (dto.getSellingPrice() != null) {
+            item.setUnitPrice(dto.getSellingPrice());
+            item.setTotalPrice(dto.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
 
         // Ghi chú và trạng thái duyệt
@@ -87,6 +94,27 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         item.setWarehouseReviewStatus(dto.isConfirmed()
                 ? WarehouseReviewStatus.CONFIRMED
                 : WarehouseReviewStatus.REJECTED);
+
+        // --- Cập nhật giá nhập (purchasePrice) nếu kho biết giá ---
+        if (item.getItemType() == PriceQuotationItemType.PART) {
+            Part part = item.getPart();
+
+            if (part != null) {
+                switch (item.getInventoryStatus()) {
+                    case AVAILABLE, OUT_OF_STOCK -> {
+                        if (dto.getPurchasePrice() != null) {
+                            part.setPurchasePrice(dto.getPurchasePrice());
+                            part.setSellingPrice(dto.getSellingPrice());
+                            partRepository.save(part);
+                        }
+                    }
+                    case UNKNOWN -> {
+                        // Không gán Part hoặc purchasePrice cho UNKNOWN
+                        // Chỉ dùng unitPrice hiển thị cho khách
+                    }
+                }
+            }
+        }
 
         quotation.setUpdatedAt(LocalDateTime.now());
         quotationRepository.save(quotation);

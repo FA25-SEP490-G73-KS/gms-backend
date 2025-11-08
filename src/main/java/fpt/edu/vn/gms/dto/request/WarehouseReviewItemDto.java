@@ -11,6 +11,7 @@ public class WarehouseReviewItemDto {
 
     private Long itemId;
     private boolean confirmed;
-    private BigDecimal unitPrice;
+    private BigDecimal purchasePrice;
+    private BigDecimal sellingPrice;
     private String warehouseNote;
 }

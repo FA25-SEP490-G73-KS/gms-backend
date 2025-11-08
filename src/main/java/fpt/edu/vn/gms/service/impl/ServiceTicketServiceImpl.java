@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -90,11 +92,9 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         }
         vehicleRepository.save(vehicle);
 
-        Employee advisor = null;
-        if (dto.getAdvisorId() != null) {
-            advisor = employeeRepository.findById(dto.getAdvisorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên tư vấn ID: " + dto.getAdvisorId()));
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String phone = authentication.getName();
+        Employee creator = employeeRepository.findByPhone(phone);
 
         List<Employee> technicians = List.of();
         if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
@@ -135,10 +135,9 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .customerPhone(dto.getCustomer().getPhone())
                 .priceQuotation(quotation)
                 .vehicle(vehicle)
-                .serviceAdvisor(advisor)
+                .createdBy(creator)
                 .technicians(technicians)
                 .receiveCondition(dto.getReceiveCondition())
-                .notes(dto.getNote())
                 .createdAt(LocalDateTime.now())
                 .deliveryAt(dto.getExpectedDeliveryAt())
                 .status(ServiceTicketStatus.CREATED)
@@ -263,12 +262,11 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             existing.setVehicle(vehicle);
         }
 
-        // Cập nhật nhân viên tư vấn
-        if (dto.getAdvisorId() != null) {
-            Employee advisor = employeeRepository.findById(dto.getAdvisorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên tư vấn ID: " + dto.getAdvisorId()));
-            existing.setServiceAdvisor(advisor);
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String phone = authentication.getName();
+        Employee advisor = employeeRepository.findByPhone(phone);
+
+        existing.setCreatedBy(advisor);
 
         // Cập nhật kỹ thuật viên
         if (dto.getAssignedTechnicianIds() != null) {
@@ -284,7 +282,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         // Cập nhật các thông tin khác
         existing.setReceiveCondition(dto.getReceiveCondition());
-        existing.setNotes(dto.getNote());
         existing.setDeliveryAt(dto.getExpectedDeliveryAt());
 
         // Lưu lại

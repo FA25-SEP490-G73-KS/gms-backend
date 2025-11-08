@@ -280,5 +280,21 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
+    @Override
+    public PriceQuotationResponseDto sendQuotationToCustomer(Long quotationId) {
 
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        if (quotation.getStatus() == PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM) {
+            throw new RuntimeException("Chỉ có thể gửi khi kho đã xác nhận báo giá");
+        }
+
+        quotation.setStatus(PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
+        quotation.setUpdatedAt(LocalDateTime.now());
+
+        quotationRepository.save(quotation);
+
+        return priceQuotationMapper.toResponseDto(quotation);
+    }
 }

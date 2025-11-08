@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,7 +24,7 @@ public class AppointmentResponseDto {
     private String licensePlate;
     private LocalDate appointmentDate;
     private String timeSlotLabel;
-    private String serviceType;
+    private List<String> serviceType;
     private AppointmentStatus status;
     private String note;
 

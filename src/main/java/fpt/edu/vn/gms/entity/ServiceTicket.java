@@ -59,10 +59,6 @@ public class ServiceTicket {
     )
     private List<Employee> technicians = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "advisor_id", referencedColumnName = "employee_id")
-    private Employee serviceAdvisor;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "quotation_id")
     private PriceQuotation priceQuotation;

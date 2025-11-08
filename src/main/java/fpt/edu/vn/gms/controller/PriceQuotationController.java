@@ -44,6 +44,17 @@ public class PriceQuotationController {
                 .body(ApiResponse.success("Successfully!!", responseDto));
     }
 
+    @PostMapping("/{id}/send-to-customer")
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> sendToCustomer(
+            @PathVariable Long id
+    ) {
+
+        PriceQuotationResponseDto response = priceQuotationService.sendQuotationToCustomer(id);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Successfully!!", response));
+    }
+
+
     @PostMapping("/{id}/customer-confirm")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> confirmByCustomer(
             @PathVariable Long id

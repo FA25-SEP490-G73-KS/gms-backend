@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -42,9 +43,13 @@ public class Appointment {
     @Column(nullable = false)
     private LocalDate appointmentDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_type_id", referencedColumnName = "service_type_id")
-    private ServiceType serviceType;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "appointment_service_type",
+            joinColumns = @JoinColumn(name = "appointment_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_type_id")
+    )
+    private List<ServiceType> serviceTypes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

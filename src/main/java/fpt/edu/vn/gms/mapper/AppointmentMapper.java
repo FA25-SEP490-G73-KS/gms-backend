@@ -2,6 +2,9 @@ package fpt.edu.vn.gms.mapper;
 
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.entity.Appointment;
+import fpt.edu.vn.gms.entity.ServiceType;
+
+import java.util.List;
 
 public class AppointmentMapper {
 
@@ -9,6 +12,13 @@ public class AppointmentMapper {
         if (appointment == null) {
             return null;
         }
+
+        // Lấy danh sách tên service type
+        List<String> serviceTypeNames = appointment.getServiceTypes() != null
+                ? appointment.getServiceTypes().stream()
+                .map(ServiceType::getName)
+                .toList()
+                : List.of();
 
         return AppointmentResponseDto.builder()
                 .appointmentId(appointment.getAppointmentId())
@@ -19,7 +29,7 @@ public class AppointmentMapper {
                 .licensePlate(appointment.getVehicle() != null ? appointment.getVehicle().getLicensePlate() : null)
                 .appointmentDate(appointment.getAppointmentDate())
                 .timeSlotLabel(appointment.getTimeSlot() != null ? appointment.getTimeSlot().getLabel() : null)
-                .serviceType(appointment.getServiceType().getName())
+                .serviceType(serviceTypeNames)
                 .status(appointment.getStatus())
                 .note(appointment.getDescription())
                 .createdAt(appointment.getCreatedAt()) // NEW

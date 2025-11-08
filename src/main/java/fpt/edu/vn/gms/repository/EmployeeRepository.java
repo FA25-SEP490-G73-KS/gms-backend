@@ -17,4 +17,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<EmployeeDto> findAllEmployeeIsTechniciansActive();
 
     EmployeeInfoResponseDto findEmployeeInfoByPhone(String phone);
+
+    Employee findByPhone(String phone);
 }

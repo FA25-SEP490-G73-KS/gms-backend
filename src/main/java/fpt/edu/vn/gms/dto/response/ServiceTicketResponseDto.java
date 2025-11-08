@@ -18,10 +18,9 @@ public class ServiceTicketResponseDto {
     private List<String> serviceType;
     private CustomerResponseDto customer;
     private VehicleResponseDto vehicle;
-    private String serviceAdvisor;
+    private String createdBy;
     private List<String> technicians;
     private String receiveCondition;
-    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDate deliveryAt;

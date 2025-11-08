@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.request;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,6 +16,6 @@ public class AppointmentRequestDto {
     private String licensePlate;
     private LocalDate appointmentDate;
     private Integer timeSlotIndex;
-    private Long serviceType;
+    private List<Long> serviceType;
     private String note;
 }
