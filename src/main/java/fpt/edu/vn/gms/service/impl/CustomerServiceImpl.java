@@ -52,6 +52,13 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerDetailResponseDto getByPhone(String phone) {
+
+        return customerMapper.toDetailDto(customerRepository.findByPhone(phone).
+                orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!")));
+    }
+
+    @Override
     public CustomerResponseDto createCustomer(CustomerRequestDto customerDto) {
 
         if (customerRepository.existsByPhone(customerDto.getPhone())) {

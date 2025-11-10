@@ -1,12 +1,8 @@
 package fpt.edu.vn.gms.repository;
 
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
-import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
-import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.Position;
+import fpt.edu.vn.gms.common.EmployeeRole;
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,7 +22,7 @@ public class EmployeeResponseDto {
     private String address;
 
     // --- Thông tin công việc ---
-    private Position position;      // TECHNICIAN, MANAGER, ...
+    private EmployeeRole position;      // TECHNICIAN, MANAGER, ...
     private LocalDateTime hireDate;
     private String status;          // Active, Nghỉ việc, Tạm ngưng
 

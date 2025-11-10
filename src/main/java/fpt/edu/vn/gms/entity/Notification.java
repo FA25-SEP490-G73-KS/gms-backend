@@ -30,6 +30,4 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     private NotificationType type;
-
-    private String serviceTicketCode;
 }

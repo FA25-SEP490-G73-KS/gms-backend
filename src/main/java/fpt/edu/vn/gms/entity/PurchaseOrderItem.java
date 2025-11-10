@@ -25,16 +25,18 @@ public class PurchaseOrderItem {
     @JoinColumn(name = "part_id")
     private Part part;
 
-    @Column(name = "quantity_ordered")
-    private Integer quantityOrdered;
+    @Column(nullable = false)
+    private String partName;
 
-    @Column(name = "quantity_received")
-    private Integer quantityReceived;
+    @Column(nullable = false)
+    private Double quantity;
 
-    @Column(name = "unit_price", precision = 18, scale = 2)
-    private BigDecimal unitPrice;
+    @Column(nullable = false)
+    private BigDecimal purchasePrice; // Giá mua dự kiến từ PR
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_request_item_id")
-    private PurchaseRequestItem purchaseRequestItem;
+    @Column
+    private BigDecimal sellingPrice; // Nếu muốn lưu giá bán (không bắt buộc)
+
+    @Column
+    private BigDecimal amount; // quantity * purchasePrice
 }

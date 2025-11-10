@@ -13,18 +13,15 @@ import fpt.edu.vn.gms.repository.PartRepository;
 import fpt.edu.vn.gms.repository.PartReservationRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
-import fpt.edu.vn.gms.service.PartService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +29,27 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     private final PriceQuotationRepository quotationRepository;
     private final PartRepository partRepository;
-    private final PriceQuotationMapper priceQuotationMapper;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PartReservationRepository partReservationRepository;
     private final NotificationSocketService notificationSocketService;
     private final NotificationService notificationService;
+    private final CodeSequenceService codeSequenceService;
+    private final PriceQuotationMapper priceQuotationMapper;
+
+    @Override
+    public PriceQuotationResponseDto createQuotation() {
+
+        // Tạo price quotation 1-1
+        PriceQuotation quotation = PriceQuotation.builder()
+                .status(PriceQuotationStatus.DRAFT)
+                .createdAt(LocalDateTime.now())
+                .estimateAmount(BigDecimal.ZERO)
+                .build();
+
+        PriceQuotation quotationSaved = quotationRepository.save(quotation);
+
+        return priceQuotationMapper.toResponseDto(quotationSaved);
+    }
 
     @Override
     public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
@@ -46,11 +59,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         quotation.setUpdatedAt(LocalDateTime.now());
         List<PriceQuotationItem> existingItems = quotation.getItems();
-
-        Set<Long> requestItemIds = dto.getItems().stream()
-                .map(PriceQuotationItemRequestDto::getPriceQuotationItemId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
 
         for (var itemDto : dto.getItems()) {
             PriceQuotationItem item = existingItems.stream()
@@ -69,13 +77,36 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             }
         }
 
-        // Các item cũ không có trong request sẽ được giữ nguyên, không xóa
         quotation.setEstimateAmount(dto.getEstimateAmount());
-        quotation.setStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
+
+        // --- Tự động check trạng thái ---
+        updateQuotationStatusAfterItemUpdate(quotation);
 
         quotationRepository.save(quotation);
+
         return priceQuotationMapper.toResponseDto(quotation);
     }
+
+    private void updateQuotationStatusAfterItemUpdate(PriceQuotation quotation) {
+        List<PriceQuotationItem> partItems = quotation.getItems().stream()
+                .filter(i -> i.getItemType() == PriceQuotationItemType.PART)
+                .toList();
+
+        // Kiểm tra xem tất cả item PART đã sẵn sàng gửi khách hay vẫn cần kho xác nhận
+        boolean allReady = partItems.stream()
+                .allMatch(i -> i.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE
+                        || i.getWarehouseReviewStatus() == WarehouseReviewStatus.CONFIRMED);
+
+        if (allReady) {
+            quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
+        } else {
+            quotation.setStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
+        }
+
+        quotation.setUpdatedAt(LocalDateTime.now());
+        quotationRepository.save(quotation);
+    }
+
 
     @Override
     public PriceQuotationResponseDto getById(Long id) {
@@ -90,7 +121,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         item.setUnit(dto.getUnit());
         item.setUnitPrice(dto.getUnitPrice());
         item.setTotalPrice(dto.getUnitPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
-        item.setWarehouseReviewStatus(WarehouseReviewStatus.PENDING);
         item.setWarehouseNote(null);
 
         // Xử lý riêng cho PART
@@ -105,7 +135,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             }
 
             if (part == null) {
-                item.setInventoryStatus(PriceQuotationItemStatus.UNKNOWN);
+                item.setInventoryStatus(PriceQuotationItemStatus.UNKNOWN);;
             } else {
                 double availableQty = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
                         - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -114,6 +144,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                                 ? PriceQuotationItemStatus.AVAILABLE
                                 : PriceQuotationItemStatus.OUT_OF_STOCK
                 );
+                item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
             }
         } else {
             item.setPart(null);
@@ -190,14 +221,19 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         }
 
         // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
+        BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
+
         if (!partsToBuy.isEmpty()) {
             PurchaseRequest purchaseRequest = PurchaseRequest.builder()
-                    .quotation(quotation)
+                    .code(codeSequenceService.generateCode("PR"))
+                    .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
                     .createdAt(LocalDateTime.now())
-                    .createdBy("Hệ thống tự động")
+                    .totalEstimatedAmount(totalEstimatedAmount)
+                    .createdBy(null)
                     .items(new ArrayList<>())
                     .build();
+
 
             for (PriceQuotationItem item : partsToBuy) {
                 PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
@@ -205,13 +241,18 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .partName(item.getItemName())
                         .quantity(item.getQuantity())
                         .unit(item.getUnit())
-                        .status(ManagerReviewStatus.PENDING)
+                        .estimatedPurchasePrice(item.getPart().getPurchasePrice())
+                        .status(PurchaseReqItemStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
 
                 purchaseRequest.getItems().add(requestItem);
+
+                // Cộng dồn vào tổng
+                totalEstimatedAmount = totalEstimatedAmount.add(requestItem.getEstimatedPurchasePrice());
             }
 
+            purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
             purchaseRequestRepository.save(purchaseRequest);
         }
 
@@ -224,7 +265,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 .title("Khách hàng đã đồng ý phiếu dịch vụ")
                 .message(String.format("Khách hàng đồng ý phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
                 .type(NotificationType.QUOTATION_CONFIRMED)
-                .code(quotation.getServiceTicket().getServiceTicketCode())
                 .build();
 
         notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
@@ -234,8 +274,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 advisorPhone,
                 wsNotification.getTitle(),
                 wsNotification.getMessage(),
-                wsNotification.getType(),
-                wsNotification.getCode()
+                wsNotification.getType()
         );
 
         return priceQuotationMapper.toResponseDto(quotation);
@@ -272,10 +311,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 advisorPhone,
                 wsNotification.getTitle(),
                 wsNotification.getMessage(),
-                wsNotification.getType(),
-                wsNotification.getCode()
+                wsNotification.getType()
         );
-
 
         return priceQuotationMapper.toResponseDto(quotation);
     }

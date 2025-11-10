@@ -13,10 +13,12 @@ import java.util.List;
 )
 public interface PurchaseRequestMapper {
 
-    @Mapping(source = "createdBy", target = "createdBy")
+    @Mapping(source = "id", target = "purchaseRequestId")
+    @Mapping(source = "relatedServiceTicket.vehicle", target = "vehicle") // nếu lấy từ serviceTicket
+    @Mapping(source = "createdBy.fullName", target = "createdBy", defaultValue = "N/A") // hoặc tuỳ cấu trúc entity
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? request.getStatus().name() : null)")
-    @Mapping(source = "items", target = "items") // PurchaseRequestItemMapper tự xử lý
+    @Mapping(source = "items", target = "items")
     PurchaseRequestResponseDto toResponseDto(PurchaseRequest request);
 
     List<PurchaseRequestResponseDto> toResponseDtoList(List<PurchaseRequest> requests);

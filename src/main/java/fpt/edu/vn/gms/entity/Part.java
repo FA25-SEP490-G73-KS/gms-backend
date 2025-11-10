@@ -25,7 +25,10 @@ public class Part {
     @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    // Một linh kiện có thể dùng cho nhiều model xe
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private PartCategory category;
+
     @ManyToMany
     @JoinTable(
             name = "part_vehicle_model",
@@ -39,7 +42,7 @@ public class Part {
     private Market market;
 
     @Column(name = "is_universal", nullable = false)
-    private boolean isUniversal = false; // true = dùng chung cho mọi model
+    private boolean isUniversal = false;
 
     @Column(name = "purchase_price", precision = 12, scale = 2)
     private BigDecimal purchasePrice;
@@ -60,7 +63,10 @@ public class Part {
     private Double reservedQuantity;
 
     @Column(name = "reorder_level")
-    private Double reorderLevel; // ngưỡng báo cần nhập thêm
+    private Double reorderLevel;
+
+    @Column(nullable = false)
+    private boolean specialPart = false;
 
     @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();

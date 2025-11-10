@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.common;
 
-public enum ManagerReviewStatus {
+public enum PurchaseReqItemStatus {
     PENDING,
-    CONFIRMED,
+    APPROVED,
     REJECTED
 }

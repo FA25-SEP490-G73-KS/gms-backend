@@ -3,6 +3,9 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -23,4 +26,8 @@ public class VehicleModel {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
+
+    @ManyToMany(mappedBy = "compatibleVehicles")
+    private Set<Part> parts = new HashSet<>();
+
 }

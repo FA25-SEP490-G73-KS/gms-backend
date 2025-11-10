@@ -1,9 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.NotificationType;
-import fpt.edu.vn.gms.common.PriceQuotationItemType;
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
-import fpt.edu.vn.gms.common.WarehouseReviewStatus;
+import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
@@ -55,7 +52,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             var dto = priceQuotationMapper.toResponseDto(quotation);
             if (dto.getItems() != null) {
                 dto.setItems(dto.getItems().stream()
-                        .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
+                        .filter(item -> item.getItemType() == PriceQuotationItemType.PART && item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN)
                         .toList());
             }
             return dto;
@@ -83,38 +80,17 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             throw new RuntimeException("Chỉ có thể duyệt các item loại linh kiện (PART)");
         }
 
-        // Cập nhật giá nếu có thay đổi
-        if (dto.getSellingPrice() != null) {
-            item.setUnitPrice(dto.getSellingPrice());
-            item.setTotalPrice(dto.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-        }
+        // Lấy part tương ứng với partId
+        Part part = partRepository.findById(dto.getPartId()).orElseThrow();
 
         // Ghi chú và trạng thái duyệt
+        item.setPart(part);
+        item.setItemName(dto.getPartName());
+        item.setUnitPrice(dto.getSellingPrice());
         item.setWarehouseNote(dto.getWarehouseNote());
         item.setWarehouseReviewStatus(dto.isConfirmed()
                 ? WarehouseReviewStatus.CONFIRMED
                 : WarehouseReviewStatus.REJECTED);
-
-        // --- Cập nhật giá nhập (purchasePrice) nếu kho biết giá ---
-        if (item.getItemType() == PriceQuotationItemType.PART) {
-            Part part = item.getPart();
-
-            if (part != null) {
-                switch (item.getInventoryStatus()) {
-                    case AVAILABLE, OUT_OF_STOCK -> {
-                        if (dto.getPurchasePrice() != null) {
-                            part.setPurchasePrice(dto.getPurchasePrice());
-                            part.setSellingPrice(dto.getSellingPrice());
-                            partRepository.save(part);
-                        }
-                    }
-                    case UNKNOWN -> {
-                        // Không gán Part hoặc purchasePrice cho UNKNOWN
-                        // Chỉ dùng unitPrice hiển thị cho khách
-                    }
-                }
-            }
-        }
 
         quotation.setUpdatedAt(LocalDateTime.now());
         quotationRepository.save(quotation);
@@ -152,8 +128,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             NotificationResponseDto wsNotification = NotificationResponseDto.builder()
                     .title("Kho đã từ chối một số linh kiện")
                     .message(String.format("Kho đã từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
-                    .type(NotificationType.QUOTATION_CONFIRMED)
-                    .code(quotation.getServiceTicket().getServiceTicketCode())
+                    .type(NotificationType.QUOTATION_REJECTED)
                     .build();
 
             notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
@@ -162,8 +137,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                     advisorPhone,
                     wsNotification.getTitle(),
                     wsNotification.getMessage(),
-                    wsNotification.getType(),
-                    wsNotification.getCode()
+                    wsNotification.getType()
             );
 
         } else {
@@ -177,7 +151,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                     .title("Kho đã xác nhận tất cả linh kiện")
                     .message(String.format("Kho đã từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
                     .type(NotificationType.QUOTATION_CONFIRMED)
-                    .code(quotation.getServiceTicket().getServiceTicketCode())
                     .build();
 
             notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
@@ -186,8 +159,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                     advisorPhone,
                     wsNotification.getTitle(),
                     wsNotification.getMessage(),
-                    wsNotification.getType(),
-                    wsNotification.getCode()
+                    wsNotification.getType()
             );
         }
     }

@@ -29,6 +29,9 @@ public class Appointment {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @Column(length = 30)
+    private String customerName;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;

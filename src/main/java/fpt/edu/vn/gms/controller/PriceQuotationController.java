@@ -2,12 +2,18 @@ package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
+import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.service.PriceQuotationService;
+import fpt.edu.vn.gms.service.WarehouseQuotationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 @CrossOrigin(origins = "${fe-local-host}")
 @RestController
@@ -16,6 +22,39 @@ import org.springframework.web.bind.annotation.*;
 public class PriceQuotationController {
 
     private final PriceQuotationService priceQuotationService;
+    private final WarehouseQuotationService warehouseQuotationService;
+
+    @GetMapping("/pending")
+    public ResponseEntity<ApiResponse<Page<PriceQuotationResponseDto>>> getPendingQuotations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+
+        Page<PriceQuotationResponseDto> quotations = warehouseQuotationService.getPendingQuotations(page, size);
+
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Success", quotations));
+    }
+
+    @PatchMapping("/{id}/review")
+    public ResponseEntity<ApiResponse<PriceQuotationItemResponseDto>> reviewSingleItem(
+            @PathVariable Long id,
+            @RequestBody WarehouseReviewItemDto requestDto
+    ) {
+        PriceQuotationItemResponseDto updatedQuotation =
+                warehouseQuotationService.updateWarehouseReview(id, requestDto);
+
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Success", updatedQuotation));
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation() {
+
+        PriceQuotationResponseDto responseDto = priceQuotationService.createQuotation();
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Tạo phiếu báo giá thành công!!!", responseDto));
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateItems(
@@ -55,7 +94,7 @@ public class PriceQuotationController {
     }
 
 
-    @PostMapping("/{id}/customer-confirm")
+    @PostMapping("/{id}/confirm")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> confirmByCustomer(
             @PathVariable Long id
     ) {
@@ -66,7 +105,7 @@ public class PriceQuotationController {
                 .body(ApiResponse.success("Successfully!!", response));
     }
 
-    @PostMapping("/{id}/customer-reject")
+    @PostMapping("/{id}/reject")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> rejectByCustomer(
             @PathVariable Long id,
             @RequestBody String note

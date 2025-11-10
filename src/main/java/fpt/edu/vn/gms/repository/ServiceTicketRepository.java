@@ -16,4 +16,6 @@ import java.util.List;
 public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Long> {
 
     Page<ServiceTicket> findByStatus(ServiceTicketStatus status, Pageable pageable);
+
+    ServiceTicket findByAppointment_AppointmentId(Long id);
 }

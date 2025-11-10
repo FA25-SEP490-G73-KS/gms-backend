@@ -117,15 +117,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn ID: " + dto.getAppointmentId()));
         }
 
-        // Tạo price quotation 1-1
-        PriceQuotation quotation = PriceQuotation.builder()
-                .status(PriceQuotationStatus.DRAFT)
-                .createdAt(LocalDateTime.now())
-                .estimateAmount(BigDecimal.ZERO) // ban đầu 0
-                .build();
-
-        priceQuotationRepository.save(quotation);
-
         // Tạo mới ServiceTicket
         ServiceTicket ticket = ServiceTicket.builder()
                 .serviceTicketCode(codeSequenceService.generateCode("STK"))
@@ -133,7 +124,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .customer(customer)
                 .customerName(dto.getCustomer().getFullName())
                 .customerPhone(dto.getCustomer().getPhone())
-                .priceQuotation(quotation)
                 .vehicle(vehicle)
                 .createdBy(creator)
                 .technicians(technicians)

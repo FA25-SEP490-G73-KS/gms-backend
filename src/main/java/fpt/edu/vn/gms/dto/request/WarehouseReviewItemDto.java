@@ -10,8 +10,9 @@ import java.math.BigDecimal;
 public class WarehouseReviewItemDto {
 
     private Long itemId;
-    private boolean confirmed;
-    private BigDecimal purchasePrice;
+    private Long partId;
+    private String partName;
     private BigDecimal sellingPrice;
+    private boolean confirmed;
     private String warehouseNote;
 }

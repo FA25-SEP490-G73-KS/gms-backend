@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ManagerReviewStatus;
-import fpt.edu.vn.gms.common.WarehouseReviewStatus;
+import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
+import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "purchase_request_item")
@@ -26,18 +28,21 @@ public class PurchaseRequestItem {
     @JoinColumn(name = "part_id")
     private Part part;
 
-    @Column(name = "part_name")
+    @Column(name = "part_name", nullable = false)
     private String partName;
 
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
     private Double quantity;
 
     @Column(name = "unit")
     private String unit;
 
+    @Column(nullable = false)
+    private BigDecimal estimatedPurchasePrice;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private ManagerReviewStatus status = ManagerReviewStatus.PENDING;
+    private PurchaseReqItemStatus status = PurchaseReqItemStatus.PENDING;
 
     @Column(name = "note", length = 255)
     private String note;

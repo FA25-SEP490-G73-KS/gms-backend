@@ -1,132 +1,133 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.Market;
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
-import fpt.edu.vn.gms.common.WarehouseReviewStatus;
-import fpt.edu.vn.gms.dto.request.PartRequestDto;
+import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+
 
 @Service
 @RequiredArgsConstructor
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
-//    private final PurchaseRequestRepository purchaseRequestRepository;
-//    private final PurchaseRequestItemRepository purchaseRequestItemRepository;
-//    private final VehicleModelRepository vehicleModelRepository;
-//    private final PartRepository partRepository;
-//    private final PriceQuotationRepository priceQuotationRepository;
-//    private final PriceQuotationItemRepository priceQuotationItemRepository;
-//    private final PurchaseRequestMapper purchaseRequestMapper;
-//
-//    @Override
-//    public List<PurchaseRequestResponseDto> getAllPurchaseRequests() {
-//        List<PurchaseRequest> requests = purchaseRequestRepository.findAll();
-//        return purchaseRequestMapper.toResponseDtoList(requests);
-//    }
-//
-//    @Override
-//    public PurchaseRequestResponseDto getPurchaseRequestById(Long id) {
-//        PurchaseRequest request = purchaseRequestRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu yêu cầu với id: " + id));
-//        return purchaseRequestMapper.toResponseDto(request);
-//    }
-//
-//    @Override
-//    public PurchaseRequestResponseDto confirmPurchaseRequestItem(Long itemId, PartRequestDto partDto) {
-//        PurchaseRequestItem item = purchaseRequestItemRepository.findById(itemId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy item với id: " + itemId));
-//
-//        Part part = item.getPart();
-//
-//        if (part == null) {
-//            part = new Part();
-//        }
-//
-//        // Map dữ liệu từ DTO sang Part
-//        part.setName(partDto.getPartName());
-//        part.setMarket(Market.valueOf(partDto.getOrigin().toUpperCase())); // VD: "VN" → Market.VN
-//        part.setPurchasePrice(partDto.getImportPrice());
-//        part.setSellingPrice(partDto.getSalePrice());
-//        part.setQuantityInStock(partDto.getQuantity() != null ? partDto.getQuantity().doubleValue() : 0);
-//        part.setUniversal(Boolean.TRUE.equals(partDto.getIsUniversal()));
-//
-//        // Map dòng xe
-//        if (partDto.getVehicleModelIds() != null && !partDto.getVehicleModelIds().isEmpty()) {
-//            Set<VehicleModel> models = new HashSet<>(vehicleModelRepository.findAllById(partDto.getVehicleModelIds()));
-//            part.setCompatibleVehicles(models);
-//        } else if (Boolean.TRUE.equals(partDto.getIsUniversal())) {
-//            part.setCompatibleVehicles(new HashSet<>());
-//        }
-//
-//        partRepository.save(part);
-//
-//        // Gắn lại vào item
-//        item.setPart(part);
-//        item.setStatus(WarehouseReviewStatus.CONFIRMED);
-//
-//        purchaseRequestItemRepository.save(item);
-//
-//        item.setStatus(WarehouseReviewStatus.CONFIRMED);
-//        purchaseRequestItemRepository.save(item);
-//
-//        PurchaseRequest request = item.getPurchaseRequest();
-//
-//        // Kiểm tra nếu toàn bộ item được confirm -> approved
-//        boolean allConfirmed = request.getItems()
-//                .stream()
-//                .allMatch(i -> i.getStatus() == WarehouseReviewStatus.CONFIRMED);
-//
-//        if (allConfirmed) {
-//            request.setStatus(PurchaseRequestStatus.APPROVED);
-//            purchaseRequestRepository.save(request);
-//
-//            // Cập nhật luôn PriceQuotation status
-//            PriceQuotation quotation = request.getItems().stream()
-//                    .map(PurchaseRequestItem::getQuotationItem)
-//                    .filter(Objects::nonNull)
-//                    .map(PriceQuotationItem::getPriceQuotation)
-//                    .filter(Objects::nonNull)
-//                    .findFirst()
-//                    .orElse(null);
-//
-//            if (quotation != null) {
-//                quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
-//                priceQuotationRepository.save(quotation);
-//            }
-//        }
-//
-//        return purchaseRequestMapper.toResponseDto(request);
-//    }
-//
-//    @Override
-//    public PurchaseRequestResponseDto rejectPurchaseRequestItem(Long itemId, String note) {
-//        PurchaseRequestItem item = purchaseRequestItemRepository.findById(itemId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy item với id: " + itemId));
-//
-//        item.setStatus(WarehouseReviewStatus.REJECTED);
-//        item.setNote(note);
-//        purchaseRequestItemRepository.save(item);
-//
-//        PriceQuotationItem quotationItem = item.getQuotationItem();
-//        if (quotationItem != null) {
-//            quotationItem.setWarehouseReviewStatus(WarehouseReviewStatus.REJECTED);
-//            priceQuotationItemRepository.save(quotationItem);
-//        }
-//
-//        PurchaseRequest request = item.getPurchaseRequest();
-//        return purchaseRequestMapper.toResponseDto(request);
-//    }
+    private final PurchaseRequestRepository purchaseRequestRepo;
+    private final PurchaseRequestItemRepository purchaseRequestItemRepo;
+    private final EmployeeRepository employeeRepo;
+    private final NotificationService notificationService;
+    private final PurchaseRequestMapper purchaseRequestMapper;
+
+
+    @Override
+    public Page<PurchaseRequestResponseDto> getAllRequests(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return purchaseRequestRepo.findAll(pageable)
+                .map(purchaseRequestMapper::toResponseDto);
+    }
+
+    @Transactional
+    public void approveRequestItem(Long id, Long itemId) {
+        PurchaseRequestItem pr = purchaseRequestItemRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR"));
+        pr.setStatus(PurchaseReqItemStatus.APPROVED);
+        purchaseRequestItemRepo.save(pr);
+
+        // Cập nhật trạng thái tổng thể PR
+        updatePurchaseRequestStatus(id);
+    }
+
+    @Transactional
+    public void rejectRequestItem(Long id, Long itemId, String reason) {
+        PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
+                .orElseThrow();
+        item.setStatus(PurchaseReqItemStatus.REJECTED);
+        purchaseRequestItemRepo.save(item);
+
+        updatePurchaseRequestStatus(id);
+
+        // Gửi notification cho service advisor
+        String advisorPhone = item.getPurchaseRequest().getRelatedQuotation()
+                .getServiceTicket()
+                .getCreatedBy()
+                .getPhone();
+
+        notificationService.createNotification(
+                advisorPhone,
+                "Quản lý từ chối PR",
+                "Item " + item.getPartName() + " trong PR #" +
+                        item.getPurchaseRequest().getCode() + " đã bị từ chối.",
+                NotificationType.QUOTATION_CONFIRMED
+        );
+    }
+
+    private void updatePurchaseRequestStatus(Long id) {
+        PurchaseRequest pr = purchaseRequestRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR"));
+
+        List<PurchaseRequestItem> items = pr.getItems();
+
+        boolean allApproved = items.stream()
+                .allMatch(i -> i.getStatus() == PurchaseReqItemStatus.APPROVED);
+        boolean isRejected = items.stream()
+                .anyMatch(i -> i.getStatus() == PurchaseReqItemStatus.REJECTED);
+
+        if (allApproved) {
+            pr.setStatus(PurchaseRequestStatus.APPROVED);
+        } else if (isRejected) {
+            pr.setStatus(PurchaseRequestStatus.REJECTED);
+        }
+
+        purchaseRequestRepo.save(pr);
+
+        String title;
+        String message;
+
+        if (allApproved) {
+            title = "Phiếu yêu cầu mua hàng được phê duyệt";
+            message = "PR #" + pr.getCode() + " đã được phê duyệt.";
+        } else if (isRejected) {
+            title = "Phiếu yêu cầu mua hàng bị từ chối";
+            message = "PR #" + pr.getCode() + " đã bị từ chối.";
+        } else {
+            return;
+        }
+
+        // 1. Gửi cho tất cả nhân viên kho
+        List<Employee> warehouseStaff = employeeRepo.findByEmployeeRole(EmployeeRole.WAREHOUSE);
+        for (Employee staff : warehouseStaff) {
+            notificationService.createNotification(
+                    staff.getPhone(),
+                    title,
+                    message,
+                    NotificationType.PURCHASE_REQUEST_UPDATED
+            );
+        }
+
+        // 2. Gửi CC cho cố vấn dịch vụ
+        ServiceTicket st = pr.getRelatedServiceTicket();
+        if (st != null && st.getCreatedBy() != null) {
+            Employee advisor = st.getCreatedBy();
+            notificationService.createNotification(
+                    advisor.getPhone(),
+                    "[CC] " + title,
+                    message,
+                    NotificationType.PURCHASE_REQUEST_UPDATED
+            );
+        }
+    }
+
+
 }

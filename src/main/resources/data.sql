@@ -18,7 +18,7 @@ VALUES
     (2, 'USER');
 
 INSERT INTO employee (
-    employee_id, full_name, gender, date_of_birth, phone, address, position, hire_date, status
+    employee_id, full_name, gender, date_of_birth, phone, address, employee_role, hire_date, status
 ) VALUES
       (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', 'SERVICE_ADVISOR', '2023-05-10 08:00:00', 'ACTIVE'),
       (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', 'TECHNICIAN', '2023-06-01 08:00:00', 'ACTIVE'),
@@ -26,8 +26,16 @@ INSERT INTO employee (
 
 INSERT INTO account (account_id, phone, password, role_id, employee_id, is_active)
 VALUES
-    (1, '0909123456', '$2a$10$4IntktgBuhyro8N750RyVepboUd5B3mg8hUJENrzCl8gKhkvNJ5km', 1, 1, 1),
+    (1, '0909123456', '$2a$10$OmknXb/vkYtadnX.YitdNOo1Kgl/X50TzXm0XNShrpq/KdUGysA1u', 1, 1, 1),
     (2, '0909988776', '$2a$10$MMR59T4QGrzLKkUsRhSmYeCPjZndSKWZpS1ETCq2odfEl6bi1xql6', 2, NULL, 1);
+
+INSERT INTO part_category (name)
+VALUES
+    ('Dầu, dung dịch'),
+    ('Lọc'),
+    ('Đèn / Phanh'),
+    ('Điện'),
+    ('Phụ kiện tiêu hao');
 
 INSERT INTO part (
     part_name,
@@ -38,18 +46,20 @@ INSERT INTO part (
     discount_rate,
     quantity_in_stock,
     reserved_quantity,
-    reorder_level
+    reorder_level,
+    special_part
 ) VALUES
-      ('Lọc nhớt động cơ', 'VN', false, 80000, 120000, 0.00, 50, 0, 10),
-      ('Dầu động cơ 10W-40', 'VN', true, 250000, 320000, 5.00, 100, 5, 20),
-      ('Bugi đánh lửa', 'JP', false, 40000, 80000, 0.00, 80, 2, 15),
-      ('Phanh đĩa trước', 'JP', false, 300000, 450000, 0.00, 30, 0, 10),
-      ('Ắc quy GS 12V-45Ah', 'JP', true, 950000, 1200000, 3.00, 20, 1, 5),
-      ('Dây curoa tổng', 'VN', false, 180000, 250000, 0.00, 40, 0, 10),
-      ('Lọc gió điều hoà', 'US', true, 50000, 90000, 0.00, 60, 0, 15),
-      ('Gạt mưa trước', 'VN', true, 30000, 60000, 0.00, 120, 0, 30),
-      ('Đèn pha LED', 'EU', false, 700000, 950000, 0.00, 15, 0, 5),
-      ('Cảm biến ABS', 'JP', false, 450000, 600000, 0.00, 10, 0, 3);
+      ('Lọc nhớt động cơ', 'VN', false, 80000, 120000, 0.00, 50, 0, 10, true),
+      ('Lọc nhớt động cơ', 'VN', false, 80000, 120000, 0.00, 50, 0, 10, true),
+      ('Dầu động cơ 10W-40', 'VN', true, 250000, 320000, 5.00, 100, 5, 20, true),
+      ('Bugi đánh lửa', 'JP', false, 40000, 80000, 0.00, 80, 2, 15, true),
+      ('Phanh đĩa trước', 'JP', false, 300000, 450000, 0.00, 30, 0, 10, true),
+      ('Ắc quy GS 12V-45Ah', 'JP', true, 950000, 1200000, 3.00, 20, 1, 5, true),
+      ('Dây curoa tổng', 'VN', false, 180000, 250000, 0.00, 40, 0, 10, true),
+      ('Lọc gió điều hoà', 'US', true, 50000, 90000, 0.00, 60, 0, 15, true),
+      ('Gạt mưa trước', 'VN', true, 30000, 60000, 0.00, 120, 0, 30, true),
+      ('Đèn pha LED', 'EU', false, 700000, 950000, 0.00, 15, 0, 5, true),
+      ('Cảm biến ABS', 'JP', false, 450000, 600000, 0.00, 10, 0, 3, true);
 
 INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, loyalty_level)
 VALUES

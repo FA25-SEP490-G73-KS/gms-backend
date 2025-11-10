@@ -18,10 +18,12 @@ public interface AppointmentService {
     // Get all appointment
     Page<AppointmentResponseDto> getAllAppointments(int page, int size);
 
+    Page<AppointmentResponseDto> getAppByDate(LocalDate date, int page, int size);
+
     // Get appointment by id
     AppointmentResponseDto getAppointmentById(Long id);
 
     // Update appointment status
-    AppointmentResponseDto updateStatus(Long id, AppointmentStatus status);
+    AppointmentResponseDto updateStatus(Long id);
 
 }

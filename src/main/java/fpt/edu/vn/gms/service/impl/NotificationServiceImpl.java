@@ -22,77 +22,25 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationMapper notificationMapper;
 
 
-    /**
-     * Method duy nhất để tạo và lưu notification cho mọi loại
-     */
-    public Notification createNotification(String recipientPhone,
-                                           String title,
-                                           String message,
-                                           NotificationType type,
-                                           String serviceTicketCode) {
+    public NotificationResponseDto createNotification(String recipientPhone,
+                                                      String title,
+                                                      String message,
+                                                      NotificationType type) {
 
         Notification notification = Notification.builder()
                 .recipientPhone(recipientPhone)
                 .title(title)
                 .message(message)
                 .type(type)
-                .serviceTicketCode(serviceTicketCode)
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();
 
-        return notificationRepository.save(notification);
-    }
+        Notification saved = notificationRepository.save(notification);
 
-//    public void notifyQuotationConfirmedByCustomer(PriceQuotation quotation) {
-//        ServiceTicket serviceTicket = quotation.getServiceTicket();
-//        if (serviceTicket == null || serviceTicket.getCreatedBy() == null) return;
-//
-//        String recipientPhone = serviceTicket.getCreatedBy().getPhone();
-//
-//        Notification notification = Notification.builder()
-//                .title("Khách hàng đã xác nhận báo giá")
-//                .message(String.format(
-//                        "Khách hàng đã đồng ý báo giá #%d trong phiếu dịch vụ #%d.",
-//                        quotation.getPriceQuotationId(),
-//                        serviceTicket.getServiceTicketId()
-//                ))
-//                .recipientPhone(recipientPhone)
-//                .relatedServiceTicketId(serviceTicket.getServiceTicketId())
-//                .relatedQuotationId(quotation.getPriceQuotationId())
-//                .type(NotificationType.QUOTATION_CONFIRMED)
-//                .createdAt(LocalDateTime.now())
-//                .isRead(false)
-//                .build();
-//
-//        notificationRepository.save(notification);
-//    }
-//
-//
-//    public void notifyQuotationRejectedByCustomer(PriceQuotation quotation, String reason) {
-//        ServiceTicket serviceTicket = quotation.getServiceTicket();
-//        if (serviceTicket == null || serviceTicket.getCreatedBy() == null) return;
-//
-//        String recipientPhone = serviceTicket.getCreatedBy().getPhone();
-//
-//        Notification notification = Notification.builder()
-//                .title("Khách hàng đã từ chối báo giá")
-//                .message(String.format(
-//                        "Khách hàng đã từ chối báo giá #%d trong phiếu dịch vụ #%d. %s",
-//                        quotation.getPriceQuotationId(),
-//                        serviceTicket.getServiceTicketId(),
-//                        reason != null ? "Lý do: " + reason : ""
-//                ))
-//                .recipientPhone(recipientPhone)
-//                .relatedServiceTicketId(serviceTicket.getServiceTicketId())
-//                .relatedQuotationId(quotation.getPriceQuotationId())
-//                .type(NotificationType.QUOTATION_REJECTED)
-//                .createdAt(LocalDateTime.now())
-//                .isRead(false)
-//                .build();
-//
-//        notificationRepository.save(notification);
-//    }
+        // map entity -> DTO
+        return notificationMapper.toResponseDto(saved);
+    }
 
     @Override
     public List<NotificationResponseDto> getNotificationsForUser(String recipientPhone) {

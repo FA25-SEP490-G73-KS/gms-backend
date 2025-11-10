@@ -1,9 +1,12 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.BrandDto;
+import fpt.edu.vn.gms.dto.VehicleInfoDto;
 import fpt.edu.vn.gms.dto.VehicleModelDto;
+import fpt.edu.vn.gms.entity.Vehicle;
 import fpt.edu.vn.gms.repository.BrandRepository;
 import fpt.edu.vn.gms.repository.VehicleModelRepository;
+import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VehicleServiceImpl implements VehicleService {
 
+    private final VehicleRepository vehicleRep;
     private final VehicleModelRepository vehicleModelRepository;
     private final BrandRepository brandRepository;
 
@@ -29,5 +33,21 @@ public class VehicleServiceImpl implements VehicleService {
                 .stream()
                 .map(m -> new VehicleModelDto(m.getVehicleModelId(), m.getName()))
                 .toList();
+    }
+
+    @Override
+    public VehicleInfoDto findByLicensePlate(String licensePlate) {
+
+        Vehicle vehicle = vehicleRep.findByLicensePlate(licensePlate)
+                .orElseThrow(() -> new IllegalArgumentException("Không có biển số xe này!!!"));
+
+        return VehicleInfoDto.builder()
+                .vehicleId(vehicle.getVehicleId())
+                .licensePlate(vehicle.getLicensePlate())
+                .brandName(vehicle.getVehicleModel().getBrand().getName())
+                .modelName(vehicle.getVehicleModel().getName())
+                .vin(vehicle.getVin())
+                .year(vehicle.getYear())
+                .build();
     }
 }

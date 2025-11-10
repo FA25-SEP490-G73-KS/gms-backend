@@ -31,7 +31,7 @@ public class PriceQuotationItem {
     private Part part;
 
     @Column(name = "part_name", length = 100)
-    private String itemName; // Cho phép nhập nếu part chưa tồn tại
+    private String itemName;
 
     @Column(name = "unit_price", precision = 18, scale = 2)
     private BigDecimal unitPrice;
@@ -41,6 +41,9 @@ public class PriceQuotationItem {
 
     @Column(name = "unit", length = 20)
     private String unit;
+
+    @Column(name = "specification", length = 255)
+    private String specification;
 
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
@@ -63,5 +66,5 @@ public class PriceQuotationItem {
     // PENDING / CONFIRMED / REJECTED
 
     @Column(name = "warehouse_note", length = 255)
-    private String warehouseNote; // ghi chú của kho
+    private String warehouseNote;
 }

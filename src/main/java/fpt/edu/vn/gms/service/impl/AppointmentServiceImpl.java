@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.response.TimeSlotDto;
@@ -16,9 +17,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +34,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final CustomerRepository customerRepo;
     private final TimeSlotRepository timeSlotRepo;
     private final AppointmentRepository appointmentRepo;
+    private final ServiceTicketRepository serviceTicketRepo;
     private final ServiceTypeRepository serviceTypeRepo;
+    private final EmployeeRepository employeeRepo;
     private final CodeSequenceService codeSequenceService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
@@ -58,7 +64,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseGet(() -> {
                     // Nếu chưa có thì tạo mới customer
                     Customer newCustomer = Customer.builder()
-                            .fullName(dto.getCustomerName())
                             .phone(dto.getPhoneNumber())
                             .loyaltyLevel(CustomerLoyaltyLevel.BRONZE)
                             .build();
@@ -103,6 +108,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = Appointment.builder()
                 .appointmentCode(codeSequenceService.generateCode("APT"))
                 .customer(vehicle.getCustomer())
+                .customerName(dto.getCustomerName())
                 .vehicle(vehicle)
                 .timeSlot(slot)
                 .appointmentDate(dto.getAppointmentDate())
@@ -124,25 +130,67 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    public Page<AppointmentResponseDto> getAppByDate(LocalDate date, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return appointmentRepo.findByAppointmentDate(date, pageable)
+                .map(AppointmentMapper::toDto);
+    }
+
+    @Override
     public AppointmentResponseDto getAppointmentById(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+
 
         return AppointmentMapper.toDto(appointment);
     }
 
     @Override
-    public AppointmentResponseDto updateStatus(Long id, AppointmentStatus status) {
+    public AppointmentResponseDto updateStatus(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
 
-        // Validate allowed transitions (simple example)
-        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
-            throw new IllegalStateException("Cannot change status of a cancelled appointment");
+        // Tránh tạo phiếu dịch vụ 2 lần
+        if (AppointmentStatus.ARRIVED.equals(appointment.getStatus())) {
+            throw new RuntimeException("Appointment is arrived");
         }
 
-        appointment.setStatus(status);
+        appointment.setStatus(AppointmentStatus.ARRIVED);
         appointmentRepo.save(appointment);
+
+        // 2. Tạo phiếu dịch vụ
+        createServiceTicketFromAppointment(id);
+
         return AppointmentMapper.toDto(appointment);
+    }
+
+    public void createServiceTicketFromAppointment(Long appId) {
+
+        Appointment appointment = appointmentRepo.findById(appId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appId));
+
+        // Lấy customer và vehicle từ appointment (nếu có)
+        Customer customer = appointment.getCustomer();
+        Vehicle vehicle = appointment.getVehicle();
+
+        // Lấy thông tin cố vấn tạo
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String phoneNumber = authentication.getName();
+        Employee employee = employeeRepo.findByPhone(phoneNumber);
+
+        ServiceTicket newServiceTicket = ServiceTicket.builder()
+                .serviceTicketCode(codeSequenceService.generateCode("STK"))
+                .appointment(appointment)
+                .customer(customer)
+                .vehicle(vehicle)
+                .serviceTypes(appointment.getServiceTypes())
+                .status(ServiceTicketStatus.CREATED)
+                .createdAt(LocalDateTime.now())
+                .createdBy(employee)
+                .build();
+
+        // Lưu phiếu
+        serviceTicketRepo.save(newServiceTicket);
     }
 }

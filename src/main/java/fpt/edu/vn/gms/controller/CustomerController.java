@@ -53,6 +53,17 @@ public class CustomerController {
         return ResponseEntity.status(200).body(customers);
     }
 
+    @GetMapping("/phone")
+    public ResponseEntity<ApiResponse<CustomerDetailResponseDto>> getCustomerByPhone(
+            @RequestParam("phone") String phone
+    ) {
+
+        CustomerDetailResponseDto customers = customerService.getByPhone(phone);
+
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Thành công", customers));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CustomerDetailResponseDto>> findCustomerDetailById(@PathVariable long id) {
 

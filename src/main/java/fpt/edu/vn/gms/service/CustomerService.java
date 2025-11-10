@@ -11,15 +11,13 @@ import java.util.List;
 
 public interface CustomerService {
 
-//    Page<CustomerDto> getAllCustumer(int page, int size);
-
-//    CustomerDto getCustumerByCustomerId(Long customerId);
-
     List<CustomerDto> searchCustomersByPhone(String query);
 
     CustomerDetailResponseDto getCustomerDetailById(Long id);
 
     Page<CustomerResponseDto>  getAllCustomers(int page, int size);
+
+    CustomerDetailResponseDto getByPhone(String phone);
 
     CustomerResponseDto createCustomer(CustomerRequestDto customerDto);
 

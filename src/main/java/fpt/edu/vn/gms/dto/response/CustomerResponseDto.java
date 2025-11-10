@@ -4,6 +4,8 @@ import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.CustomerType;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,5 +18,6 @@ public class CustomerResponseDto {
     private String phone;
     private String address;
     private CustomerType customerType;
+    private List<String> licensePlates;
     private CustomerLoyaltyLevel loyaltyLevel;
 }
