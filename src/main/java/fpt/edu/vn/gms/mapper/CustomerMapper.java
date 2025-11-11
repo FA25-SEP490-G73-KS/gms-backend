@@ -1,9 +1,19 @@
 package fpt.edu.vn.gms.mapper;
 
+
 import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.CustomerType;
 import fpt.edu.vn.gms.dto.CustomerDto;
+
+import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
+import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
+
 import fpt.edu.vn.gms.entity.Customer;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
 
 /**
  * Lớp mapper để chuyển đổi qua lại giữa Customer Entity và CustomerDto
@@ -44,4 +54,23 @@ public class CustomerMapper {
                 .loyaltyLevel(CustomerLoyaltyLevel.valueOf(dto.getLoyaltyLevel()))
                 .build();
     }
+
+import java.util.List;
+
+@Mapper(componentModel = "spring", uses = {VehicleMapper.class})
+public interface CustomerMapper {
+
+    CustomerMapper INSTANCE = Mappers.getMapper(CustomerMapper.class);
+
+    @Mapping(target = "vehicles", source = "vehicles")
+    CustomerDetailResponseDto toDetailDto(Customer customer);
+
+    // Map 1 entity sang DTO
+    CustomerResponseDto toDto(Customer customer);
+
+    // Map list entity sang list DTO
+    List<CustomerResponseDto> toDtoList(List<Customer> customers);
+
+    Customer toEntity(CustomerRequestDto dto);
+
 }

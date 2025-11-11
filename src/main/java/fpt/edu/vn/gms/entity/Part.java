@@ -1,49 +1,73 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.Market;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
+@Entity
+@Table(name = "part")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "Part")
 public class Part {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "part_id")
     private Long partId;
 
-    @Column(name = "part_name", length = 30)
+    @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "supplier", length = 100)
-    private String supplier;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private PartCategory category;
 
-    @Column(name = "cost_price", precision = 18, scale = 2)
-    private BigDecimal costPrice;
+    @ManyToMany
+    @JoinTable(
+            name = "part_vehicle_model",
+            joinColumns = @JoinColumn(name = "part_id"),
+            inverseJoinColumns = @JoinColumn(name = "vehicle_model_id")
+    )
+    private Set<VehicleModel> compatibleVehicles = new HashSet<>();
 
-    @Column(name = "sell_price", precision = 18, scale = 2)
-    private BigDecimal sellPrice;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "market", length = 20)
+    private Market market;
+
+    @Column(name = "is_universal", nullable = false)
+    private boolean isUniversal = false;
+
+    @Column(name = "purchase_price", precision = 12, scale = 2)
+    private BigDecimal purchasePrice;
+
+    @Column(name = "selling_price", precision = 12, scale = 2)
+    private BigDecimal sellingPrice;
+
+    @Column(name = "discount_rate", precision = 5, scale = 2)
+    private BigDecimal discountRate;
 
     @Column(name = "quantity_in_stock")
-    private Integer quantityInStock;
+    private Double quantityInStock;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    @Column(name = "unit", length = 20)
+    private String unit; // đơn vị đo, ví dụ: "chai", "bộ", "lít", "cái"
+
+    @Column(name = "reserved_quantity")
+    private Double reservedQuantity;
 
     @Column(name = "reorder_level")
-    private Integer reorderLevel;
+    private Double reorderLevel;
 
-    @Column(name = "last_updated")
-    private LocalDateTime lastUpdated;
+    @Column(nullable = false)
+    private boolean specialPart = false;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id", referencedColumnName = "category_id")
-    private Category category;
+    @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();
 }

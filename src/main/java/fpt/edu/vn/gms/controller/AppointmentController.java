@@ -1,13 +1,13 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.common.AppointmentStatus;
-import fpt.edu.vn.gms.dto.AppointmentRequestDto;
-import fpt.edu.vn.gms.dto.AppointmentResponseDto;
-import fpt.edu.vn.gms.dto.TimeSlotDto;
+import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
+import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
+import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.TimeSlotDto;
+import fpt.edu.vn.gms.entity.ServiceTicket;
+import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
-
-
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@CrossOrigin(origins = "${fe-local-host}")
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
@@ -23,37 +24,66 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService service;
+    private final ServiceTicketRepository serviceTicketRepo;
 
     @GetMapping("/time-slots")
-    public List<TimeSlotDto> getSlots(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return service.getTimeSlotsByDate(date);
+    public ResponseEntity<ApiResponse<List<TimeSlotDto>>> getSlots(
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        List<TimeSlotDto> slots = service.getTimeSlotsByDate(date);
+        return ResponseEntity.ok(ApiResponse.success("Retrieved available time slots", slots));
     }
 
-    @PostMapping()
-    public AppointmentResponseDto createAppointment(@RequestBody AppointmentRequestDto dto) {
-        return service.createAppointment(dto);
+    @PostMapping
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> createAppointment(
+            @RequestBody AppointmentRequestDto dto
+    ) {
+        AppointmentResponseDto response = service.createAppointment(dto);
+        return ResponseEntity.status(201)
+                .body(ApiResponse.created("Appointment created successfully", response));
     }
 
-    // Get all appointment
     @GetMapping
-    public ResponseEntity<Page<AppointmentResponseDto>> getAllAppointments(
+    public ResponseEntity<ApiResponse<Page<AppointmentResponseDto>>> getAllAppointments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size
     ) {
-        return ResponseEntity.ok(service.getAllAppointments(page, size));
+        Page<AppointmentResponseDto> appointments = service.getAllAppointments(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Appointments fetched successfully", appointments));
     }
 
-    // Get appointment by appointmentId
     @GetMapping("/{id}")
-    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getAppointmentById(id));
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> getAppointmentById(
+            @PathVariable Long id
+    ) {
+        AppointmentResponseDto appointment = service.getAppointmentById(id);
+        return ResponseEntity.ok(ApiResponse.success("Appointment found", appointment));
     }
 
-    // Update appointment status
+    @GetMapping("/date")
+    public ResponseEntity<ApiResponse<Page<AppointmentResponseDto>>> getAppByDate(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+
+        Page<AppointmentResponseDto> appointments = service.getAppByDate(date, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Lấy lịch hẹn theo ngày", appointments));
+    }
+
     @PatchMapping("/{id}/status")
-    public ResponseEntity<AppointmentResponseDto> updateStatus(@PathVariable Long id,
-                                                               @RequestParam AppointmentStatus status) {
-        return ResponseEntity.ok(service.updateStatus(id, status));
+    public ResponseEntity<ApiResponse<AppointmentResponseDto>> updateStatusArrived(
+            @PathVariable Long id
+    ) {
+
+        AppointmentResponseDto updated = service.updateStatus(id);
+
+        ServiceTicket serviceTicket = serviceTicketRepo.findByAppointment_AppointmentId(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Cập nhật & Tạo phiếu dịch vụ # "
+                + serviceTicket.getServiceTicketCode()
+                        + " thành công", updated));
     }
 
 }

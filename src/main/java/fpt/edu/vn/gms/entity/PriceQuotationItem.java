@@ -1,50 +1,70 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
+
+@Entity
+@Table(name = "price_quotation_item")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "PriceQuotationItem")
 public class PriceQuotationItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "price_quotation_item_id")
     private Long priceQuotationItemId;
 
-    @ManyToOne
-    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quotation_id", referencedColumnName = "price_quotation_id")
     private PriceQuotation priceQuotation;
 
-    @ManyToOne(optional = true)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")
     private Part part;
 
-    @Column(name = "description", columnDefinition = "text")
-    private String description;
+    @Column(name = "part_name", length = 100)
+    private String itemName;
+
+    @Column(name = "unit_price", precision = 18, scale = 2)
+    private BigDecimal unitPrice;
 
     @Column(name = "quantity")
-    private Integer quantity;
+    private Double quantity;
 
-    @Column(name = "total_price")
+    @Column(name = "unit", length = 20)
+    private String unit;
+
+    @Column(name = "specification", length = 255)
+    private String specification;
+
+    @Column(name = "discount_rate", precision = 5, scale = 2)
+    private BigDecimal discountRate;
+
+    @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
-    @Column(name = "part_status")
-    private String partStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_type", nullable = false)
+    private PriceQuotationItemType itemType;
 
-    @Column(name = "update_at")
-    private LocalDateTime updateAt;
+    // AVAILABLE, LOW_STOCK, UNKNOWN
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private PriceQuotationItemStatus inventoryStatus;
 
-    @Column(name = "account_id")
-    private Integer accountId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "warehouse_review_status")
+    private WarehouseReviewStatus warehouseReviewStatus;
+    // PENDING / CONFIRMED / REJECTED
 
-    @Column(name = "update_status", length = 50)
-    private String updateStatus;
+    @Column(name = "warehouse_note", length = 255)
+    private String warehouseNote;
 }

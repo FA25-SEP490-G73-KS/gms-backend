@@ -1,21 +1,25 @@
 package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
+import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
+import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
+import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface CustomerService {
-    /**
-     * Get all customers with pagination
-     * @param pageable
-     * @return
-     */
-    Page<CustomerDto> getAllCustumer(Pageable pageable);
+import java.util.List;
 
-    /**
-     * Get a single customer by their ID
-     * @param customerId the ID of the customer
-     * @return the customer DTO
-     */
-    CustomerDto getCustumerByCustomerId(Long customerId);
+public interface CustomerService {
+
+    List<CustomerDto> searchCustomersByPhone(String query);
+
+    CustomerDetailResponseDto getCustomerDetailById(Long id);
+
+    Page<CustomerResponseDto>  getAllCustomers(int page, int size);
+
+    CustomerDetailResponseDto getByPhone(String phone);
+
+    CustomerResponseDto createCustomer(CustomerRequestDto customerDto);
+
+    CustomerResponseDto updateCustomer(Long id, CustomerRequestDto dto);
 }

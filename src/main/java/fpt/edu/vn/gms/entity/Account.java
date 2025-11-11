@@ -17,12 +17,19 @@ public class Account {
     private Long accountId;
 
     @Column(name = "phone", length = 20, unique = true)
-    private String phone; // note: referenced to Employee.phone in docs
+    private String phone;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     private Role role;
 
-    @Column(name = "password", length = 20)
+    @Column(name = "password", length = 100)
     private String password;
+
+    @OneToOne
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    @Column(name = "is_active")
+    private boolean active;
 }

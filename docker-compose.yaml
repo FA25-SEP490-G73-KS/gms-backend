@@ -25,6 +25,8 @@ services:
 
   app:
     build: .
+    env_file:
+      - .env
     container_name: app
     depends_on:
       mysql:
@@ -43,5 +45,5 @@ volumes:
 
 networks:
   app-net:
-  driver: bridge
+    driver: bridge
 
