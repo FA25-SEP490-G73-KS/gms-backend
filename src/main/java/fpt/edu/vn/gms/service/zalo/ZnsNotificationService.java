@@ -5,7 +5,6 @@ import fpt.edu.vn.gms.dto.zalo.SendZnsPayload;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.ServiceTicket;
-import fpt.edu.vn.gms.entity.ServiceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +15,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,21 +69,22 @@ public class ZnsNotificationService {
      */
     public void sendAppointmentConfirmation(Appointment appointment) throws Exception {
         String phone = appointment.getCustomer().getPhone();
+
         Map<String, Object> templateData = new HashMap<>();
 
-        templateData.put("customer_name", appointment.getCustomer().getFullName() != null 
+        templateData.put("customer_name", appointment.getCustomer().getFullName() != null
                 ? appointment.getCustomer().getFullName() : "Quý khách");
-        templateData.put("appointment_date", appointment.getAppointmentDate()
+
+        templateData.put("booking_code", appointment.getAppointmentId().toString());
+
+        templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
+
+        templateData.put("license_plate", appointment.getVehicle().getLicensePlate());
+
+        templateData.put("schedule_date", appointment.getAppointmentDate()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        templateData.put("appointment_time", appointment.getTimeSlot().getLabel());
-        templateData.put("service_type",
-                (appointment.getServiceTypes() != null && !appointment.getServiceTypes().isEmpty())
-                        ? appointment.getServiceTypes().stream()
-                        .map(ServiceType::getName)
-                        .collect(Collectors.joining(", "))
-                        : "Dịch vụ sửa chữa");
-        templateData.put("vehicle_plate", appointment.getVehicle().getLicensePlate());
-        templateData.put("booking_url", frontendUrl + "/booking");
+
+        templateData.put("schedule_time", appointment.getTimeSlot().getLabel());
 
         SendZnsPayload payload = SendZnsPayload.builder()
                 .phone(phone)
@@ -105,11 +104,13 @@ public class ZnsNotificationService {
      */
     public void sendAppointmentReminder(Appointment appointment) throws Exception {
         String phone = appointment.getCustomer().getPhone();
+
         Map<String, Object> templateData = new HashMap<>();
+
         templateData.put("schedule_time", appointment.getAppointmentDate()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
-        templateData.put("customer_name", appointment.getCustomer().getFullName() != null 
+        templateData.put("customer_name", appointment.getCustomer().getFullName() != null
                 ? appointment.getCustomer().getFullName() : "Quý khách");
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
@@ -134,16 +135,23 @@ public class ZnsNotificationService {
      */
     public void sendQuotationNotification(PriceQuotation quotation) throws Exception {
         ServiceTicket ticket = quotation.getServiceTicket();
+
         String phone = ticket.getCustomer().getPhone();
-        String quotationUrl = frontendUrl + "/quotations/" + quotation.getPriceQuotationId();
 
         Map<String, Object> templateData = new HashMap<>();
-        templateData.put("customer_name", ticket.getCustomer().getFullName() != null 
+
+        templateData.put("car_plate", ticket.getVehicle().getLicensePlate());
+
+        templateData.put("customer_name", ticket.getCustomer().getFullName() != null
                 ? ticket.getCustomer().getFullName() : "Quý khách");
-        templateData.put("quotation_id", quotation.getPriceQuotationId().toString());
-        templateData.put("estimate_amount", formatCurrency(quotation.getEstimateAmount()));
-        templateData.put("quotation_url", quotationUrl);
-        templateData.put("vehicle_plate", ticket.getVehicle().getLicensePlate());
+
+        templateData.put("serviceticket_code", ticket.getServiceTicketId().toString());
+
+        templateData.put("expected_date", ticket.getDeliveryAt().toString());
+
+        templateData.put("total_price", quotation.getEstimateAmount().toString());
+
+        templateData.put("customer_phone", phone);
 
         SendZnsPayload payload = SendZnsPayload.builder()
                 .phone(phone)
@@ -161,18 +169,23 @@ public class ZnsNotificationService {
     /**
      * Send payment invoice with QR code information
      */
-    public void sendPaymentInvoice(ServiceTicket ticket, BigDecimal amount, String bankAccount, 
-                                   String bankName, String qrCodeData) throws Exception {
+    public void sendPaymentInvoice(ServiceTicket ticket) throws Exception {
         String phone = ticket.getCustomer().getPhone();
+
         Map<String, Object> templateData = new HashMap<>();
-        templateData.put("customer_name", ticket.getCustomer().getFullName() != null 
+
+        templateData.put("customer_name", ticket.getCustomer().getFullName() != null
                 ? ticket.getCustomer().getFullName() : "Quý khách");
-        templateData.put("amount", formatCurrency(amount));
-        templateData.put("bank_account", bankAccount);
-        templateData.put("bank_name", bankName);
-        templateData.put("qr_code_data", qrCodeData);
-        templateData.put("ticket_id", ticket.getServiceTicketId().toString());
-        templateData.put("payment_url", frontendUrl + "/payments/" + ticket.getServiceTicketId());
+
+        templateData.put("contract_number", "contract_num_test");
+
+        templateData.put("price", ticket.getPriceQuotation().getEstimateAmount().toString());
+
+        templateData.put("transfer_amount", ticket.getPriceQuotation().getEstimateAmount().toString());
+
+        templateData.put("bank_transfer_note", "Thanh toán dịch vụ - Mã phiếu: " + ticket.getServiceTicketId());
+
+        templateData.put("vehicle_license_plate_", ticket.getVehicle().getLicensePlate());
 
         SendZnsPayload payload = SendZnsPayload.builder()
                 .phone(phone)

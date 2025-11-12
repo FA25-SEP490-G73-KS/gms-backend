@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-
 @RestController
 @RequestMapping("/api/zns")
 @RequiredArgsConstructor
@@ -43,13 +41,29 @@ public class ZnsNotificationController {
         }
     }
 
+    @PostMapping("/appointment/{appointmentId}/notification")
+    @Operation(summary = "Send appointment notification", description = "Manually trigger appointment notification")
+    public ResponseEntity<ApiResponse<String>> sendAppointmentNotification(@PathVariable Long appointmentId) {
+        try {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+            znsNotificationService.sendAppointmentConfirmation(appointment);
+            return ResponseEntity.ok(ApiResponse.success("Notification sent successfully", "OK"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, "Failed to send notification: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/quotation/{quotationId}/send")
     @Operation(summary = "Send quotation notification", description = "Send quotation notification to customer via ZNS")
     public ResponseEntity<ApiResponse<String>> sendQuotationNotification(@PathVariable Long quotationId) {
         try {
             PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                     .orElseThrow(() -> new ResourceNotFoundException("Quotation not found"));
+
             znsNotificationService.sendQuotationNotification(quotation);
+
             return ResponseEntity.ok(ApiResponse.success("Quotation notification sent successfully", "OK"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -60,15 +74,14 @@ public class ZnsNotificationController {
     @PostMapping("/payment/{ticketId}/invoice")
     @Operation(summary = "Send payment invoice", description = "Send payment invoice with QR code via ZNS")
     public ResponseEntity<ApiResponse<String>> sendPaymentInvoice(
-            @PathVariable Long ticketId,
-            @RequestParam BigDecimal amount,
-            @RequestParam String bankAccount,
-            @RequestParam String bankName,
-            @RequestParam(required = false) String qrCodeData) {
+            @PathVariable Long ticketId) {
+
         try {
             ServiceTicket ticket = serviceTicketRepository.findById(ticketId)
                     .orElseThrow(() -> new ResourceNotFoundException("Service ticket not found"));
-            znsNotificationService.sendPaymentInvoice(ticket, amount, bankAccount, bankName, qrCodeData);
+
+            znsNotificationService.sendPaymentInvoice(ticket);
+
             return ResponseEntity.ok(ApiResponse.success("Payment invoice sent successfully", "OK"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()

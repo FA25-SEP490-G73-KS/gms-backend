@@ -29,6 +29,10 @@ public class AccessTokenService {
         AccessToken current = accessTokenRepo.findTopByOrderByIdDesc();
         log.info("Refresh access token");
         try {
+            if (current == null || current.getRefreshToken() == null || current.getRefreshToken().isEmpty()) {
+                log.error("No refresh token available to refresh access token");
+                throw new Exception("Missing refresh token");
+            }
             Request request = buildRequest(current);
             OkHttpClient okHttpClient = HttpUtils.createInstance();
             Response response = okHttpClient.newCall(request).execute();
@@ -41,7 +45,21 @@ public class AccessTokenService {
             if (response.body() != null) {
                 String body = response.body().string();
                 log.info("Response body: {}", body);
+                // Basic validation: do not persist if response indicates error or missing tokens
+                boolean hasAccessToken = body.contains("\"access_token\"");
+                boolean hasRefreshToken = body.contains("\"refresh_token\"");
+                boolean hasError = body.contains("\"error\"");
+                if (hasError && !hasAccessToken) {
+                    throw new Exception("Zalo refresh returned error: " + body);
+                }
+                if (!hasAccessToken || !hasRefreshToken) {
+                    throw new Exception("Zalo refresh did not return tokens");
+                }
                 AccessToken accessToken = GsonUtil.fromJson(body, AccessToken.class);
+                if (accessToken.getAccessToken() == null || accessToken.getAccessToken().isEmpty()
+                        || accessToken.getRefreshToken() == null || accessToken.getRefreshToken().isEmpty()) {
+                    throw new Exception("Parsed token is empty");
+                }
                 accessTokenRepo.save(accessToken);
                 return accessToken;
             } else {

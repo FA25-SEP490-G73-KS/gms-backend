@@ -22,20 +22,52 @@ public class ZnsService {
 
     public boolean sendZns(SendZnsPayload payload) throws Exception {
         log.info("sendZns payload: {}", payload);
+
+        // First attempt
+        boolean firstAttempt = trySend(payload, false);
+        if (firstAttempt) {
+            return true;
+        }
+
+        // If first attempt fails due to token issues, refresh and retry once
+        try {
+            accessTokenService.refreshAccessToken();
+        } catch (Exception e) {
+            log.error("Failed to refresh access token before retry", e);
+            return false;
+        }
+
+        return trySend(payload, true);
+    }
+
+    private boolean trySend(SendZnsPayload payload, boolean afterRefresh) throws Exception {
         AccessToken accessToken = accessTokenService.getAccessToken();
-        if (accessToken == null) {
-            log.error("accessToken is null");
+
+        if (accessToken == null || accessToken.getAccessToken() == null || accessToken.getAccessToken().isEmpty()) {
+            log.error("Access token entity or token string is null/empty");
+            // If first attempt and token missing, let caller refresh and retry
+            if (!afterRefresh) {
+                return false;
+            }
             return false;
         }
+
         OkHttpClient okHttpClient = HttpUtils.createInstance();
+
         Request request = buildRequest(payload, accessToken);
+
         Response response = okHttpClient.newCall(request).execute();
-        if (response.isSuccessful()) {
-            log.info("Successfully call refresh token");
-        } else {
-            log.info("Failed to call refresh token");
+
+        if (!response.isSuccessful()) {
+            log.info("ZNS send request not successful: HTTP {}", response.code());
+            // If unauthorized, likely token is invalid/expired
+            if (!afterRefresh && response.code() == 401) {
+                log.warn("Access token possibly invalid/expired (401). Will refresh and retry.");
+                return false;
+            }
             return false;
         }
+
         if (response.body() != null) {
             String body = response.body().string();
             log.info("Response body: {}", body);
@@ -45,6 +77,13 @@ public class ZnsService {
                 return true;
             } else {
                 log.error("Error when send zns: {}", res.getMessage());
+                // Heuristic: if error message indicates token problem, let caller trigger refresh once
+                String msg = res.getMessage() != null ? res.getMessage().toLowerCase() : "";
+                boolean tokenIssue = msg.contains("access token") || msg.contains("token") || msg.contains("expire");
+                if (!afterRefresh && tokenIssue) {
+                    log.warn("Detected token-related error from Zalo response. Will refresh and retry once.");
+                    return false;
+                }
                 return false;
             }
         } else {
