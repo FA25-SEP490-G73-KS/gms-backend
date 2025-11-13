@@ -4,7 +4,9 @@ import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ServiceTicketService {
@@ -14,6 +16,8 @@ public interface ServiceTicketService {
     ServiceTicketResponseDto getServiceTicketById(Long serviceTicketId);
 
     Page<ServiceTicketResponseDto> getAllServiceTicket(int page, int size);
+
+    Page<ServiceTicketResponseDto> getServiceTicketsByCreatedAt(LocalDateTime createdAt, Pageable pageable);
 
     ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
 

@@ -9,9 +9,13 @@ import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @CrossOrigin(origins = "${fe-local-host}")
@@ -39,6 +43,20 @@ public class ServiceTicketController {
 
         return ResponseEntity.status(200)
                 .body(ApiResponse.created("Get service ticket successfully!", dto));
+    }
+
+    @GetMapping("createAt")
+    public ResponseEntity<ApiResponse<Page<ServiceTicketResponseDto>>> getServiceTicketsByCreatedAt(
+            @RequestParam("createdAt") LocalDateTime createdAt,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ServiceTicketResponseDto> responseDtos = serviceTicketService.getServiceTicketsByCreatedAt(createdAt, pageable);
+
+        return ResponseEntity.status(200)
+                .body(ApiResponse.created("Lấy phiếu dịch vụ ngày " + createdAt, responseDtos));
     }
 
     @GetMapping

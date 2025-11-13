@@ -299,5 +299,12 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         return ticketPage.map(serviceTicketMapper::toResponseDto);
     }
 
+    @Override
+    public Page<ServiceTicketResponseDto> getServiceTicketsByCreatedAt(LocalDateTime createdAt, Pageable pageable) {
+
+        Page<ServiceTicket> serviceTicketPage = serviceTicketRepository.findByCreatedAt(createdAt, pageable);
+
+        return serviceTicketPage.map(serviceTicketMapper::toResponseDto);
+    }
 
 }
