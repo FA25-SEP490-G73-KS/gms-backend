@@ -9,10 +9,7 @@ import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
-import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.PartReservationRepository;
-import fpt.edu.vn.gms.repository.PriceQuotationRepository;
-import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
@@ -28,6 +25,7 @@ import java.util.*;
 public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     private final PriceQuotationRepository quotationRepository;
+    private final ServiceTicketRepository serviceTicketRepository;
     private final PartRepository partRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PartReservationRepository partReservationRepository;
@@ -37,18 +35,27 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final PriceQuotationMapper priceQuotationMapper;
 
     @Override
-    public PriceQuotationResponseDto createQuotation() {
+    public PriceQuotationResponseDto createQuotation(Long ticketId) {
 
-        // Tạo price quotation 1-1
+        // Lấy service ticket theo id
+        ServiceTicket serviceTicket = serviceTicketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với id = " + ticketId));
+
+        // Tạo price quotation
         PriceQuotation quotation = PriceQuotation.builder()
                 .status(PriceQuotationStatus.DRAFT)
-                .createdAt(LocalDateTime.now())
                 .estimateAmount(BigDecimal.ZERO)
                 .build();
 
-        PriceQuotation quotationSaved = quotationRepository.save(quotation);
+        // Gán 2 chiều
+        quotation.setServiceTicket(serviceTicket);
+        serviceTicket.setPriceQuotation(quotation);
 
-        return priceQuotationMapper.toResponseDto(quotationSaved);
+        // Lưu (vì cascade = ALL nên chỉ cần save ticket)
+        serviceTicketRepository.save(serviceTicket);
+
+        // Trả về DTO
+        return priceQuotationMapper.toResponseDto(quotation);
     }
 
     @Override

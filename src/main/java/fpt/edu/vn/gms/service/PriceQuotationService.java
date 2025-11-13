@@ -6,7 +6,7 @@ import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 
 public interface PriceQuotationService {
 
-    PriceQuotationResponseDto createQuotation();
+    PriceQuotationResponseDto createQuotation(Long ticketId);
 
     PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto);
 

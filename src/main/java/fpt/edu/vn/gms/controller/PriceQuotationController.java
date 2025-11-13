@@ -49,9 +49,11 @@ public class PriceQuotationController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation() {
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation(
+            @RequestParam("ticketId") Long ticketId
+    ) {
 
-        PriceQuotationResponseDto responseDto = priceQuotationService.createQuotation();
+        PriceQuotationResponseDto responseDto = priceQuotationService.createQuotation(ticketId);
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Tạo phiếu báo giá thành công!!!", responseDto));
     }
