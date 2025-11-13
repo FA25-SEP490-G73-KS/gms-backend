@@ -3,8 +3,6 @@ package fpt.edu.vn.gms.service.impl;
 import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
-import fpt.edu.vn.gms.dto.request.VehicleRequestDto;
-import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
@@ -20,12 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -303,4 +298,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // Trả về Page DTO
         return ticketPage.map(serviceTicketMapper::toResponseDto);
     }
+
+
 }

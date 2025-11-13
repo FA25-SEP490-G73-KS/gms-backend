@@ -24,7 +24,7 @@ public class Customer {
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "phone", unique = true)
+    @Column(name = "phone")
     private String phone;
 
     @Column(name = "zalo_id", length = 50)
@@ -43,4 +43,7 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     @Column(name = "loyalty_level", length = 30)
     private CustomerLoyaltyLevel loyaltyLevel;
+
+    @Column(name = "is_active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean isActive = true;
 }

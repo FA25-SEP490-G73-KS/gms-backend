@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
+import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.response.TimeSlotDto;
 import fpt.edu.vn.gms.entity.*;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,32 +85,32 @@ public class AppointmentServiceImpl implements AppointmentService {
                     // Nếu xe chưa tồn tại thì tạo mới, gán customer vào
                     Vehicle newVehicle = Vehicle.builder()
                             .licensePlate(dto.getLicensePlate())
-                            .customer(customer) // gán đúng customer đã tìm
+                            .customer(customer)
                             .build();
                     return vehicleRepo.save(newVehicle);
                 });
 
-        // Find slot by index
+        // Kiểm tra hợp lệ timeslotId khi truyền từ frontend về
         List<TimeSlot> allSlots = timeSlotRepo.findAll();
         if (dto.getTimeSlotIndex() < 1 || dto.getTimeSlotIndex() > allSlots.size()) {
-            throw new IllegalArgumentException("Time slot index invalid");
+            throw new IllegalArgumentException("Khung giờ không tồn tại!!!");
         }
         TimeSlot slot = allSlots.get(dto.getTimeSlotIndex() - 1);
 
-        // Check availability
+        // Kiểm tra khung giờ
         int booked = appointmentRepo.countByAppointmentDateAndTimeSlot(dto.getAppointmentDate(), slot);
         if (booked >= slot.getMaxCapacity()) {
-            throw new IllegalArgumentException("Time slot is full");
+            throw new IllegalArgumentException("Khung giờ bạn đặt đã đầy!!!");
         }
 
-        // --- Lấy danh sách ServiceType từ danh sách ID ---
+        // Lấy danh sách ServiceType từ danh sách ID
         List<ServiceType> serviceTypes = dto.getServiceType().stream()
-                .map(serviceTypeRepo::getById) // có thể dùng findById nếu muốn kiểm tra tồn tại
+                .map(serviceTypeRepo::getById)
                 .toList();
 
         Appointment appointment = Appointment.builder()
                 .appointmentCode(codeSequenceService.generateCode("APT"))
-                .customer(vehicle.getCustomer())
+                .customer(customer)
                 .customerName(dto.getCustomerName())
                 .vehicle(vehicle)
                 .timeSlot(slot)
@@ -130,11 +133,31 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Page<AppointmentResponseDto> getAppByDate(LocalDate date, int page, int size) {
+    public Page<AppointmentResponseDto> getAppointmentsByStatus(AppointmentStatus status, Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return appointmentRepo.findByAppointmentDate(date, pageable)
-                .map(AppointmentMapper::toDto);
+        Page<Appointment> appointments = appointmentRepo.getByStatus(status, pageable);
+        return appointments.map(AppointmentMapper::toDto);
+
+    }
+
+    @Override
+    public List<AppointmentBySlotResponse> getAppointmentsByDate(LocalDate date) {
+
+        List<Appointment> appointments = appointmentRepo.findByAppointmentDate(date);
+
+        // Nhóm theo slot
+        Map<TimeSlot, List<Appointment>> grouped = appointments.stream()
+                .collect(Collectors.groupingBy(Appointment::getTimeSlot));
+
+        return grouped.entrySet().stream()
+                .map(entry -> new AppointmentBySlotResponse(
+                        entry.getKey().getLabel(),
+                        entry.getKey().getStartTime(),
+                        entry.getKey().getEndTime(),
+                        entry.getValue().size()
+                ))
+                .sorted(Comparator.comparing(AppointmentBySlotResponse::getStartTime))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -147,50 +170,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public AppointmentResponseDto updateStatus(Long id) {
+    public AppointmentResponseDto updateArrivedStatus(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
-
-        // Tránh tạo phiếu dịch vụ 2 lần
-        if (AppointmentStatus.ARRIVED.equals(appointment.getStatus())) {
-            throw new RuntimeException("Appointment is arrived");
-        }
+                .orElseThrow(() -> new RuntimeException("Không có phiếu với id = " + id));
 
         appointment.setStatus(AppointmentStatus.ARRIVED);
         appointmentRepo.save(appointment);
 
-        // 2. Tạo phiếu dịch vụ
-        createServiceTicketFromAppointment(id);
-
         return AppointmentMapper.toDto(appointment);
-    }
-
-    public void createServiceTicketFromAppointment(Long appId) {
-
-        Appointment appointment = appointmentRepo.findById(appId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + appId));
-
-        // Lấy customer và vehicle từ appointment (nếu có)
-        Customer customer = appointment.getCustomer();
-        Vehicle vehicle = appointment.getVehicle();
-
-        // Lấy thông tin cố vấn tạo
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String phoneNumber = authentication.getName();
-        Employee employee = employeeRepo.findByPhone(phoneNumber);
-
-        ServiceTicket newServiceTicket = ServiceTicket.builder()
-                .serviceTicketCode(codeSequenceService.generateCode("STK"))
-                .appointment(appointment)
-                .customer(customer)
-                .vehicle(vehicle)
-                .serviceTypes(appointment.getServiceTypes())
-                .status(ServiceTicketStatus.CREATED)
-                .createdAt(LocalDateTime.now())
-                .createdBy(employee)
-                .build();
-
-        // Lưu phiếu
-        serviceTicketRepo.save(newServiceTicket);
     }
 }

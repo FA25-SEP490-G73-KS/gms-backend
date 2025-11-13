@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.repository;
 
+import fpt.edu.vn.gms.common.AppointmentStatus;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.TimeSlot;
@@ -24,6 +25,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findOverdueAppointments(
             @Param("currentDate") LocalDate currentDate,
             @Param("currentTime") LocalTime currentTime);
+
+    @Query("SELECT a FROM Appointment a JOIN FETCH a.timeSlot WHERE a.appointmentDate = :date")
+    List<Appointment> findByAppointmentDate(@Param("date") LocalDate date);
+
+    Page<Appointment> getByStatus(AppointmentStatus status, Pageable pageable);
 
     Page<Appointment> findByAppointmentDate(LocalDate appointmentDate, Pageable pageable);
 
