@@ -2,9 +2,9 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
-import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.Part;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.PriceQuotationItem;
@@ -12,7 +12,6 @@ import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
@@ -23,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,7 +32,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     private final PriceQuotationRepository quotationRepository;
     private final PriceQuotationMapper priceQuotationMapper;
     private final PriceQuotationItemMapper priceQuotationItemMapper;
-    private final NotificationSocketService notificationSocketService;
     private final NotificationService notificationService;
     private final PartRepository partRepository;
 
@@ -58,7 +55,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             return dto;
         });
     }
-
 
     @Override
     public PriceQuotationItemResponseDto updateWarehouseReview(Long quotationId, WarehouseReviewItemDto dto) {
@@ -101,9 +97,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         return priceQuotationItemMapper.toResponseDto(item);
     }
 
-    /**
-     * Kiểm tra tất cả PART item, gửi WebSocket + notification
-     */
     private void checkAllItemsAndSendNotification(PriceQuotation quotation) {
 
         List<PriceQuotationItem> partItems = quotation.getItems().stream()
@@ -116,28 +109,24 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
         if (!allChecked) return; // vẫn còn pending → không gửi gì
 
-        boolean hasRejected = partItems.stream()
-                .anyMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED);
+        Employee advisor = quotation.getServiceTicket().getCreatedBy();
+        if (advisor == null) return;
 
-        if (hasRejected) {
+        if (partItems.stream().anyMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED)) {
             // Có ít nhất một item reject → báo giá bị kho từ chối
             quotation.setStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
             quotationRepository.save(quotation);
 
-            String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
-            NotificationResponseDto wsNotification = NotificationResponseDto.builder()
-                    .title("Kho đã từ chối một số linh kiện")
-                    .message(String.format("Kho đã từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
-                    .type(NotificationType.QUOTATION_REJECTED)
-                    .build();
-
-            notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
+            // Dùng NotificationTemplate
+            NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_REJECTED;
 
             notificationService.createNotification(
-                    advisorPhone,
-                    wsNotification.getTitle(),
-                    wsNotification.getMessage(),
-                    wsNotification.getType()
+                    advisor.getEmployeeId(),
+                    template.getTitle(),
+                    template.format(quotation.getPriceQuotationId()),
+                    NotificationType.QUOTATION_REJECTED,
+                    quotation.getPriceQuotationId().toString(),
+                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
             );
 
         } else {
@@ -145,24 +134,19 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
             quotationRepository.save(quotation);
 
-            String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
-
-            NotificationResponseDto wsNotification = NotificationResponseDto.builder()
-                    .title("Kho đã xác nhận tất cả linh kiện")
-                    .message(String.format("Kho đã từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
-                    .type(NotificationType.QUOTATION_CONFIRMED)
-                    .build();
-
-            notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
+            NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
             notificationService.createNotification(
-                    advisorPhone,
-                    wsNotification.getTitle(),
-                    wsNotification.getMessage(),
-                    wsNotification.getType()
+                    advisor.getEmployeeId(),
+                    template.getTitle(),
+                    template.format(quotation.getPriceQuotationId()),
+                    NotificationType.QUOTATION_CONFIRMED,
+                    quotation.getPriceQuotationId().toString(),
+                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
             );
         }
     }
+
 
 }
 

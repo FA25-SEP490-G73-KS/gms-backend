@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.NotificationStatus;
 import fpt.edu.vn.gms.common.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,16 +19,32 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String message;
+    // Người nhận thông báo (employee)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id")
+    private Employee receiver;
 
-    @Column(name = "recipient_phone")
-    private String recipientPhone;
-
-    private boolean isRead = false;
-
-    private LocalDateTime createdAt;
-
+    // Loại thông báo
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+
+    // Tiêu đề nổi bật
+    private String title;
+
+    // Nội dung ngắn
+    @Column(length = 500)
+    private String message;
+
+    // Dùng để điều hướng đến màn hình cụ thể
+    private Long referenceId;
+    private String referenceType;
+
+    // Dùng để điều hướng FE (URL hoăc key)
+    private String actionPath;
+
+    // READ, UNREAD
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
+
+    private LocalDateTime createdAt;
 }

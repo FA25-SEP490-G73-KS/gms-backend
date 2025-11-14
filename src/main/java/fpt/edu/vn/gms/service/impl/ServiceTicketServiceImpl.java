@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
@@ -34,7 +33,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final ServiceTypeRepository serviceTypeRepository;
     private final ServiceTicketMapper serviceTicketMapper;
     private final VehicleModelRepository vehicleModelRepository;
-    private final PriceQuotationRepository priceQuotationRepository;
     private final CodeSequenceService codeSequenceService;
 
     @Override
@@ -133,40 +131,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         return serviceTicketMapper.toResponseDto(saved);
     }
-
-    @Override
-    public ServiceTicketResponseDto sendQuotationToCustomer(Long serviceTicketId) {
-
-        // Tìm phiếu dịch vụ
-        ServiceTicket ticket = serviceTicketRepository.findById(serviceTicketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ ID: " + serviceTicketId));
-
-        // Lấy báo giá kèm theo
-        PriceQuotation quotation = ticket.getPriceQuotation();
-        if (quotation == null) {
-            throw new IllegalStateException("Phiếu dịch vụ chưa có báo giá để gửi cho khách hàng.");
-        }
-
-        // Kiểm tra trạng thái hợp lệ
-        if (quotation.getStatus() != PriceQuotationStatus.WAREHOUSE_CONFIRMED) {
-            throw new IllegalStateException("Báo giá chưa được kho xác nhận, không thể gửi cho khách hàng.");
-        }
-
-        // Cập nhật trạng thái báo giá
-        quotation.setStatus(PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
-        quotation.setUpdatedAt(LocalDateTime.now());
-        priceQuotationRepository.save(quotation);
-
-        // (Tùy chọn) Gửi thông báo nội bộ hoặc qua Zalo OA
-        // notificationService.createNotificationForCustomer(
-        //         ticket.getCustomerPhone(),
-        //         "Báo giá từ phiếu dịch vụ " + ticket.getServiceTicketCode() + " đã được gửi, vui lòng kiểm tra Zalo."
-        // );
-
-        // Trả về response DTO
-        return serviceTicketMapper.toResponseDto(ticket);
-    }
-
 
     @Override
     public ServiceTicketResponseDto getServiceTicketById(Long serviceTicketId) {

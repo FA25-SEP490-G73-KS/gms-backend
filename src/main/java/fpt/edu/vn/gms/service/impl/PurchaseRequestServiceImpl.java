@@ -64,13 +64,13 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .getCreatedBy()
                 .getPhone();
 
-        notificationService.createNotification(
-                advisorPhone,
-                "Quản lý từ chối PR",
-                "Item " + item.getPartName() + " trong PR #" +
-                        item.getPurchaseRequest().getCode() + " đã bị từ chối.",
-                NotificationType.QUOTATION_CONFIRMED
-        );
+//        notificationService.createNotification(
+//                advisorPhone,
+//                "Quản lý từ chối PR",
+//                "Item " + item.getPartName() + " trong PR #" +
+//                        item.getPurchaseRequest().getCode() + " đã bị từ chối.",
+//                NotificationType.QUOTATION_CONFIRMED
+//        );
     }
 
     private void updatePurchaseRequestStatus(Long id) {
@@ -105,28 +105,28 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
             return;
         }
 
-        // 1. Gửi cho tất cả nhân viên kho
-        List<Employee> warehouseStaff = employeeRepo.findByEmployeeRole(EmployeeRole.WAREHOUSE);
-        for (Employee staff : warehouseStaff) {
-            notificationService.createNotification(
-                    staff.getPhone(),
-                    title,
-                    message,
-                    NotificationType.PURCHASE_REQUEST_UPDATED
-            );
-        }
+//        // 1. Gửi cho tất cả nhân viên kho
+//        List<Employee> warehouseStaff = employeeRepo.findByEmployeeRole(EmployeeRole.WAREHOUSE);
+//        for (Employee staff : warehouseStaff) {
+//            notificationService.createNotification(
+//                    staff.getPhone(),
+//                    title,
+//                    message,
+//                    NotificationType.PURCHASE_REQUEST_UPDATED
+//            );
+//        }
 
-        // 2. Gửi CC cho cố vấn dịch vụ
-        ServiceTicket st = pr.getRelatedServiceTicket();
-        if (st != null && st.getCreatedBy() != null) {
-            Employee advisor = st.getCreatedBy();
-            notificationService.createNotification(
-                    advisor.getPhone(),
-                    "[CC] " + title,
-                    message,
-                    NotificationType.PURCHASE_REQUEST_UPDATED
-            );
-        }
+//        // 2. Gửi CC cho cố vấn dịch vụ
+//        ServiceTicket st = pr.getRelatedServiceTicket();
+//        if (st != null && st.getCreatedBy() != null) {
+//            Employee advisor = st.getCreatedBy();
+//            notificationService.createNotification(
+//                    advisor.getPhone(),
+//                    "[CC] " + title,
+//                    message,
+//                    NotificationType.PURCHASE_REQUEST_UPDATED
+//            );
+//        }
     }
 
 

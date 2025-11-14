@@ -29,7 +29,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final PartRepository partRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PartReservationRepository partReservationRepository;
-    private final NotificationSocketService notificationSocketService;
     private final NotificationService notificationService;
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
@@ -43,6 +42,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Tạo price quotation
         PriceQuotation quotation = PriceQuotation.builder()
+                .code(codeSequenceService.generateCode("QT"))
                 .status(PriceQuotationStatus.DRAFT)
                 .estimateAmount(BigDecimal.ZERO)
                 .build();
@@ -142,7 +142,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             }
 
             if (part == null) {
-                item.setInventoryStatus(PriceQuotationItemStatus.UNKNOWN);;
+                item.setInventoryStatus(PriceQuotationItemStatus.UNKNOWN);
             } else {
                 double availableQty = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
                         - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -156,10 +156,9 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         } else {
             item.setPart(null);
             item.setInventoryStatus(null);
+            item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
         }
     }
-
-
 
     @Override
     public PriceQuotationResponseDto updateQuotationStatusManual(Long id, ChangeQuotationStatusReqDto reqDto) {
@@ -266,28 +265,27 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // Lưu lại báo giá
         quotationRepository.save(quotation);
 
-        // --- Gửi realtime WebSocket trước khi lưu Notification vào DB ---
-        String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
-        NotificationResponseDto wsNotification = NotificationResponseDto.builder()
-                .title("Khách hàng đã đồng ý phiếu dịch vụ")
-                .message(String.format("Khách hàng đồng ý phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
-                .type(NotificationType.QUOTATION_CONFIRMED)
-                .build();
+        NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
-        notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
+        // Lấy nhân viên phụ trách (advisor)
+        Employee advisor = quotation.getServiceTicket().getCreatedBy();
 
-        // --- Lưu notification vào DB ---
-        notificationService.createNotification(
-                advisorPhone,
-                wsNotification.getTitle(),
-                wsNotification.getMessage(),
-                wsNotification.getType()
+        NotificationResponseDto notiDto = notificationService.createNotification(
+                advisor.getEmployeeId(),
+                template.getTitle(),
+                template.format(quotation.getPriceQuotationId()),
+                NotificationType.QUOTATION_CONFIRMED,
+                quotation.getPriceQuotationId().toString(),
+                "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
         );
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
+    @Override
     public PriceQuotationResponseDto rejectQuotationByCustomer(Long quotationId, String reason) {
+
+        // Lấy báo giá
         PriceQuotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
@@ -295,34 +293,34 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             throw new RuntimeException("Chỉ có thể từ chối khi đang chờ khách xác nhận");
         }
 
+        // Cập nhật trạng thái báo giá
         quotation.setStatus(PriceQuotationStatus.CUSTOMER_REJECTED);
-        quotation.setUpdatedAt(LocalDateTime.now());
         quotation.setRejectReason(reason);
+        quotation.setUpdatedAt(LocalDateTime.now());
 
         quotationRepository.save(quotation);
 
-        String advisorPhone = quotation.getServiceTicket().getCreatedBy().getPhone();
+        // Lấy nhân viên phụ trách (advisor)
+        Employee advisor = quotation.getServiceTicket().getCreatedBy();
+        if (advisor != null) {
+            // Sử dụng NotificationTemplate
+            NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_REJECTED;
 
-        // Gửi realtime WebSocket
-        NotificationResponseDto wsNotification = NotificationResponseDto.builder()
-                .title("Khách hàng từ chối phiếu dịch vụ")
-                .message(String.format("Khách hàng từ chối phiếu dịch vụ #%s", quotation.getServiceTicket().getServiceTicketCode()))
-                .type(NotificationType.QUOTATION_REJECTED)
-                .code(quotation.getServiceTicket().getServiceTicketCode())
-                .build();
+            NotificationResponseDto notificationDto = notificationService.createNotification(
+                    advisor.getEmployeeId(),
+                    template.getTitle(),
+                    template.format(quotation.getPriceQuotationId()),
+                    NotificationType.QUOTATION_REJECTED,
+                    quotation.getPriceQuotationId().toString(),
+                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
+            );
 
-        notificationSocketService.sendToAdvisor(advisorPhone, wsNotification);
-
-        // Lưu notification vào DB
-        notificationService.createNotification(
-                advisorPhone,
-                wsNotification.getTitle(),
-                wsNotification.getMessage(),
-                wsNotification.getType()
-        );
+            // WebSocket realtime đã được push trong createNotification
+        }
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
+
 
     @Override
     public PriceQuotationResponseDto sendQuotationToCustomer(Long quotationId) {

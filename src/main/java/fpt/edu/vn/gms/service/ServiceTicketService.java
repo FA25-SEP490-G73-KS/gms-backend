@@ -21,6 +21,4 @@ public interface ServiceTicketService {
     ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
 
     Page<ServiceTicketResponseDto> getServiceTicketsByStatus(ServiceTicketStatus status, int page, int size);
-
-    ServiceTicketResponseDto sendQuotationToCustomer(Long serviceTicketId);
 }

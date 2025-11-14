@@ -24,6 +24,9 @@ public class PriceQuotation {
     @Column(name = "price_quotation_id")
     private Long priceQuotationId;
 
+    @Column(unique = true, length = 50)
+    private String code;
+
     @OneToOne(mappedBy = "priceQuotation", fetch = FetchType.LAZY)
     private ServiceTicket serviceTicket;
 

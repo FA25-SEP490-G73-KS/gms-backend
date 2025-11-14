@@ -8,14 +8,14 @@ import java.util.List;
 
 public interface NotificationService {
 
-    NotificationResponseDto createNotification(String recipientPhone,
-                                    String title,
-                                    String message,
-                                    NotificationType type);
-
-//    void notifyQuotationRejectedByCustomer(PriceQuotation quotation, String reason);
-//
-//    void notifyQuotationConfirmedByCustomer(PriceQuotation quotation);
+    NotificationResponseDto createNotification(Long receiver,
+                                               String title,
+                                               String message,
+                                               NotificationType type,
+                                               String referenceId,
+                                               String actionPath);
 
     List<NotificationResponseDto> getNotificationsForUser(String recipientPhone);
+
+    void markAsRead(Long notificationId, String recipientPhone);
 }

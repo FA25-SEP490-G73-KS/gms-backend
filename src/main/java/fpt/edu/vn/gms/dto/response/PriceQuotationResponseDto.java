@@ -13,6 +13,7 @@ import java.util.List;
 public class PriceQuotationResponseDto {
 
     private Long priceQuotationId;
+    private String code;
     private String serviceTicketCode;
     private String licensePlate;
     private PriceQuotationStatus status;

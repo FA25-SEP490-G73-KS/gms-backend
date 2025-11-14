@@ -22,9 +22,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
 
-        // Topic để server gửi message đến client
+        // messages to client are sent to /user/... or /topic/...
         registry.enableSimpleBroker("/topic", "/queue");
-        // Prefix để client gửi message đến server
+        // prefix for messages from client to server
         registry.setApplicationDestinationPrefixes("/app");
+        // identify destination for a specific user
+        registry.setUserDestinationPrefix("/user");
     }
 }
