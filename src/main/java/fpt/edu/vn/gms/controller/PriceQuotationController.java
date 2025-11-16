@@ -66,6 +66,15 @@ public class PriceQuotationController {
         return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá thành công!", response));
     }
 
+    @PatchMapping("/{quotationId}/recalculate-estimate")
+    public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> recalculateEstimateAmount(
+            @PathVariable Long quotationId
+    ) {
+
+        PriceQuotationResponseDto updatedQuotation = priceQuotationService.recalculateEstimateAmount(quotationId);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật tổng dự kiến thành công", updatedQuotation));
+    }
+
     @GetMapping("/{quotationId}")
     public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> getById(@PathVariable Long quotationId) {
         PriceQuotationResponseDto response = priceQuotationService.getById(quotationId);
@@ -116,7 +125,5 @@ public class PriceQuotationController {
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Successfully!!", response));
     }
-
-
     
 }

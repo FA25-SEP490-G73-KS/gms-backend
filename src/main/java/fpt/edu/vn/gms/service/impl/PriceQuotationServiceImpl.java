@@ -69,6 +69,25 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     }
 
     @Override
+    public PriceQuotationResponseDto recalculateEstimateAmount(Long quotationId) {
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        // Tính toán lại tổng dự kiến dựa trên items
+        BigDecimal totalEstimate = quotation.getItems().stream()
+                .map(item -> Optional.ofNullable(item.getTotalPrice()).orElse(BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        quotation.setEstimateAmount(totalEstimate);
+        quotation.setUpdatedAt(LocalDateTime.now());
+
+        quotationRepository.save(quotation);
+
+        return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+
+    @Override
     public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
 
         PriceQuotation quotation = quotationRepository.findById(quotationId)
@@ -186,6 +205,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
+
+
 
     @Override
     public PriceQuotationResponseDto confirmQuotationByCustomer(Long quotationId) {

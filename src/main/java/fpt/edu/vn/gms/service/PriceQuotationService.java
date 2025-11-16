@@ -13,6 +13,8 @@ public interface PriceQuotationService {
 
     PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto);
 
+    PriceQuotationResponseDto recalculateEstimateAmount(Long quotationId);
+
     PriceQuotationResponseDto getById(Long id);
 
     PriceQuotationResponseDto updateQuotationStatusManual(Long id, ChangeQuotationStatusReqDto reqDto);

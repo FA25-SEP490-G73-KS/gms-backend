@@ -22,7 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -80,6 +82,12 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
         item.setPart(part);
         item.setUnitPrice(part.getSellingPrice());
+
+        // Tính tổng tiền: unitPrice * quantity
+        double qty = Optional.ofNullable(item.getQuantity()).orElse(0.0);
+        BigDecimal totalPrice = part.getSellingPrice().multiply(BigDecimal.valueOf(qty));
+        item.setTotalPrice(totalPrice);
+
         item.setWarehouseNote(dto.getWarehouseNote());
         item.setWarehouseReviewStatus(dto.isConfirmed()
                 ? WarehouseReviewStatus.CONFIRMED
@@ -127,6 +135,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                         "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
                 );
             }
+
 
             return;
         }
