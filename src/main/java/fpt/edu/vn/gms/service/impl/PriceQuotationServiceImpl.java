@@ -14,6 +14,8 @@ import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +34,14 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final NotificationService notificationService;
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
+
+    @Override
+    public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
+
+        Page<PriceQuotation> quotations = quotationRepository.findAll(pageable);
+
+        return quotations.map(priceQuotationMapper::toResponseDto);
+    }
 
     @Override
     public PriceQuotationResponseDto createQuotation(Long ticketId) {
@@ -143,6 +153,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
             if (part == null) {
                 item.setInventoryStatus(PriceQuotationItemStatus.UNKNOWN);
+                item.setWarehouseReviewStatus(WarehouseReviewStatus.PENDING);
             } else {
                 double availableQty = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
                         - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -224,6 +235,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
             part.setReservedQuantity(currentReserved + item.getQuantity());
             partRepository.save(part);
+
+            item.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
         }
 
         // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
@@ -242,6 +255,9 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
 
             for (PriceQuotationItem item : partsToBuy) {
+
+                item.setExportStatus(ExportStatus.WAITING_PURCHASE);
+
                 PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
                         .part(item.getPart())
                         .partName(item.getItemName())
@@ -255,12 +271,18 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 purchaseRequest.getItems().add(requestItem);
 
                 // Cộng dồn vào tổng
-                totalEstimatedAmount = totalEstimatedAmount.add(requestItem.getEstimatedPurchasePrice());
+                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()));
+
+                totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
+
             }
 
             purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
             purchaseRequestRepository.save(purchaseRequest);
         }
+
+        quotation.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
 
         // Lưu lại báo giá
         quotationRepository.save(quotation);
@@ -295,7 +317,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Cập nhật trạng thái báo giá
         quotation.setStatus(PriceQuotationStatus.CUSTOMER_REJECTED);
-        quotation.setRejectReason(reason);
         quotation.setUpdatedAt(LocalDateTime.now());
 
         quotationRepository.save(quotation);
@@ -321,7 +342,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
-
     @Override
     public PriceQuotationResponseDto sendQuotationToCustomer(Long quotationId) {
 
@@ -339,4 +359,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
+
+
 }

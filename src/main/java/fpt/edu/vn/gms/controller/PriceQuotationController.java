@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.ThreadPoolExecutor;
-
 @CrossOrigin(origins = "${fe-local-host}")
 @RestController
 @RequestMapping("/api/quotations")

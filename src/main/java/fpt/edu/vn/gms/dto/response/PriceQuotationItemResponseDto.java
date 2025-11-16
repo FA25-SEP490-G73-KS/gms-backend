@@ -20,7 +20,6 @@ public class PriceQuotationItemResponseDto {
     private String unit;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
-    private String specification;
     private PriceQuotationItemStatus inventoryStatus;
     private WarehouseReviewStatus warehouseReviewStatus;
     private String warehouseNote;

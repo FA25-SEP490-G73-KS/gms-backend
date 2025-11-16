@@ -6,6 +6,7 @@ import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public interface ServiceTicketService {
@@ -19,6 +20,8 @@ public interface ServiceTicketService {
     Page<ServiceTicketResponseDto> getServiceTicketsByCreatedAt(LocalDateTime createdAt, Pageable pageable);
 
     ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
+
+    ServiceTicketResponseDto updateDeliveryAt(Long serviceTicketId, LocalDate deliveryAt);
 
     Page<ServiceTicketResponseDto> getServiceTicketsByStatus(ServiceTicketStatus status, int page, int size);
 }

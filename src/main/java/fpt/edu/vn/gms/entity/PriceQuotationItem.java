@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ExportStatus;
 import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
 import fpt.edu.vn.gms.common.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.WarehouseReviewStatus;
@@ -7,7 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-
 
 @Entity
 @Table(name = "price_quotation_item")
@@ -39,11 +39,11 @@ public class PriceQuotationItem {
     @Column(name = "quantity")
     private Double quantity;
 
+    @Column(name = "exported_quantity")
+    private Double exportedQuantity;
+
     @Column(name = "unit", length = 20)
     private String unit;
-
-    @Column(name = "specification", length = 255)
-    private String specification;
 
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
@@ -67,4 +67,7 @@ public class PriceQuotationItem {
 
     @Column(name = "warehouse_note", length = 255)
     private String warehouseNote;
+
+    @Enumerated(EnumType.STRING)
+    private ExportStatus exportStatus = ExportStatus.NONE;
 }

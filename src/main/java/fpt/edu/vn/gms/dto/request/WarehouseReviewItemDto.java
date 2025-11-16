@@ -11,8 +11,6 @@ public class WarehouseReviewItemDto {
 
     private Long itemId;
     private Long partId;
-    private String partName;
-    private BigDecimal sellingPrice;
     private boolean confirmed;
     private String warehouseNote;
 }

@@ -26,7 +26,7 @@ INSERT INTO employee (
 
 INSERT INTO account (account_id, phone, password, role_id, employee_id, is_active)
 VALUES
-    (1, '0909123456', '$2a$10$OmknXb/vkYtadnX.YitdNOo1Kgl/X50TzXm0XNShrpq/KdUGysA1u', 1, 1, 1),
+    (1, '0909123456', '$2a$10$5SNClD/XwMT0eXO6YA0EP.DKBQ.i2rTEeJw5Dx8eBpDDlowQ6sq6u', 1, 1, 1),
     (2, '0909988776', '$2a$10$MMR59T4QGrzLKkUsRhSmYeCPjZndSKWZpS1ETCq2odfEl6bi1xql6', 2, NULL, 1);
 
 INSERT INTO part_category (name)

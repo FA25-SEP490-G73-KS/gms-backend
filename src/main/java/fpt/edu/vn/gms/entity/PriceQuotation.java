@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ExportStatus;
 import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,9 +8,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -47,8 +46,12 @@ public class PriceQuotation {
     @Column(name = "status")
     private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
 
-    @Column(name = "reject_reason")
-    private String rejectReason;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "export_status")
+    private ExportStatus exportStatus = ExportStatus.NONE;
+
+//    @Column(name = "reject_reason")
+//    private String rejectReason;
 
     @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceQuotationItem> items = new ArrayList<>();
@@ -60,5 +63,4 @@ public class PriceQuotation {
 
     @PreUpdate
     protected void onUpdate() {updatedAt = LocalDateTime.now();}
-
 }

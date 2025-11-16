@@ -16,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -240,6 +242,16 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         return serviceTicketMapper.toResponseDto(updated);
     }
 
+    @Transactional
+    @Override
+    public ServiceTicketResponseDto updateDeliveryAt(Long serviceTicketId, LocalDate deliveryAt) {
+
+        ServiceTicket serviceTicket = serviceTicketRepository.findById(serviceTicketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với id = " + serviceTicketId));
+
+        serviceTicket.setDeliveryAt(deliveryAt);
+        return serviceTicketMapper.toResponseDto(serviceTicketRepository.save(serviceTicket));
+    }
 
     @Override
     public Page<ServiceTicketResponseDto> getServiceTicketsByStatus(ServiceTicketStatus status, int page, int size) {

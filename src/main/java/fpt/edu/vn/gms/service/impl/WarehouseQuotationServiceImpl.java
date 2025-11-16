@@ -4,6 +4,8 @@ import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
+import fpt.edu.vn.gms.dto.response.StockExportResponse;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.Part;
 import fpt.edu.vn.gms.entity.PriceQuotation;
@@ -12,6 +14,7 @@ import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.PartRepository;
+import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
@@ -30,10 +33,11 @@ import java.util.List;
 public class WarehouseQuotationServiceImpl implements WarehouseQuotationService {
 
     private final PriceQuotationRepository quotationRepository;
-    private final PriceQuotationMapper priceQuotationMapper;
-    private final PriceQuotationItemMapper priceQuotationItemMapper;
-    private final NotificationService notificationService;
     private final PartRepository partRepository;
+    private final NotificationService notificationService;
+    private final PriceQuotationItemMapper priceQuotationItemMapper;
+    private final PriceQuotationMapper priceQuotationMapper;
+    private final PriceQuotationItemMapper itemMapper;
 
     @Override
     public Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size) {
@@ -57,6 +61,33 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     }
 
     @Override
+    public Page<StockExportResponse> getExportingQuotations(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+
+        // Lấy tất cả báo giá có exportStatus = WAITING_TO_EXPORT
+        Page<PriceQuotation> quotations = quotationRepository.findByExportStatus(
+                ExportStatus.WAITING_TO_EXPORT,
+                pageable
+        );
+
+        return quotations.map(priceQuotationMapper::toStockExportResponse);
+    }
+
+    @Override
+    public List<StockExportItemResponse> getExportingQuotationById(Long quotationId) {
+
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        return quotation.getItems().stream()
+                .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
+                .map(itemMapper::toStockExportItemResponse)
+                .toList();
+    }
+
+
+    @Override
     public PriceQuotationItemResponseDto updateWarehouseReview(Long quotationId, WarehouseReviewItemDto dto) {
 
         PriceQuotation quotation = quotationRepository.findById(quotationId)
@@ -76,20 +107,17 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             throw new RuntimeException("Chỉ có thể duyệt các item loại linh kiện (PART)");
         }
 
-        // Lấy part tương ứng với partId
-        Part part = partRepository.findById(dto.getPartId()).orElseThrow();
+        Part part = partRepository.findById(dto.getPartId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + dto.getPartId()));
 
-        // Ghi chú và trạng thái duyệt
         item.setPart(part);
-        item.setItemName(dto.getPartName());
-        item.setUnitPrice(dto.getSellingPrice());
+        item.setUnitPrice(part.getSellingPrice());
         item.setWarehouseNote(dto.getWarehouseNote());
         item.setWarehouseReviewStatus(dto.isConfirmed()
                 ? WarehouseReviewStatus.CONFIRMED
                 : WarehouseReviewStatus.REJECTED);
 
-        quotation.setUpdatedAt(LocalDateTime.now());
-        quotationRepository.save(quotation);
+        quotationRepository.saveAndFlush(quotation);
 
         // --- Kiểm tra tất cả item và gửi WebSocket ---
         checkAllItemsAndSendNotification(quotation);
@@ -107,47 +135,50 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                 .allMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.CONFIRMED
                         || i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED);
 
+        System.out.println("allChecked = " + allChecked); // Debug
+
         if (!allChecked) return; // vẫn còn pending → không gửi gì
 
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
-        if (advisor == null) return;
 
         if (partItems.stream().anyMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED)) {
             // Có ít nhất một item reject → báo giá bị kho từ chối
-            quotation.setStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
+            quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
             quotationRepository.save(quotation);
 
             // Dùng NotificationTemplate
-            NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_REJECTED;
+            if (advisor != null) {
+                NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_REJECTED;
 
-            notificationService.createNotification(
-                    advisor.getEmployeeId(),
-                    template.getTitle(),
-                    template.format(quotation.getPriceQuotationId()),
-                    NotificationType.QUOTATION_REJECTED,
-                    quotation.getPriceQuotationId().toString(),
-                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-            );
+                notificationService.createNotification(
+                        advisor.getEmployeeId(),
+                        template.getTitle(),
+                        template.format(quotation.getPriceQuotationId()),
+                        NotificationType.QUOTATION_REJECTED,
+                        quotation.getPriceQuotationId().toString(),
+                        "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
+                );
+            }
 
-        } else {
+            return;
+        }
             // Tất cả item confirmed → báo giá được kho xác nhận
             quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
             quotationRepository.save(quotation);
 
-            NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
+            if (advisor != null) {
+                NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
-            notificationService.createNotification(
-                    advisor.getEmployeeId(),
-                    template.getTitle(),
-                    template.format(quotation.getPriceQuotationId()),
-                    NotificationType.QUOTATION_CONFIRMED,
-                    quotation.getPriceQuotationId().toString(),
-                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-            );
-        }
+                notificationService.createNotification(
+                        advisor.getEmployeeId(),
+                        template.getTitle(),
+                        template.format(quotation.getPriceQuotationId()),
+                        NotificationType.QUOTATION_CONFIRMED,
+                        quotation.getPriceQuotationId().toString(),
+                        "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
+                );
+            }
     }
-
-
 }
 
 

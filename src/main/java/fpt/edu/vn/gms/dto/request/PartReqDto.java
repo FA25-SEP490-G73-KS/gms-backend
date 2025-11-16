@@ -24,5 +24,4 @@ public class PartReqDto {
     private String unit;
     private boolean specialPart;
     private Double reorderLevel;
-
 }

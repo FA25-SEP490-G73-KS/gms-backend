@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @CrossOrigin(origins = "${fe-local-host}")
@@ -75,6 +76,18 @@ public class ServiceTicketController {
 
         return ResponseEntity.status(200)
                 .body(ApiResponse.created("Update service ticket successfully!", updated));
+    }
+
+    @PatchMapping("/{id}/delivery-at")
+    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateDeliveryAt(
+            @PathVariable Long id,
+            @RequestBody LocalDate deliveryAt
+
+    ) {
+
+        ServiceTicketResponseDto updated = serviceTicketService.updateDeliveryAt(id, deliveryAt);
+        return ResponseEntity.status(200)
+                .body(ApiResponse.success("Cập nhật ngày dự kiến giao xe!!", updated));
     }
 
     @GetMapping("/status/{status}")

@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.repository;
 
+import fpt.edu.vn.gms.common.ExportStatus;
 import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.PriceQuotationItem;
@@ -12,4 +13,8 @@ import java.util.List;
 public interface PriceQuotationRepository extends JpaRepository<PriceQuotation, Long> {
 
     Page<PriceQuotation> findByStatus(PriceQuotationStatus status, Pageable pageable);
+
+    // Lấy tất cả báo giá có exportStatus nằm trong danh sách
+
+    Page<PriceQuotation> findByExportStatus(ExportStatus exportStatus, Pageable pageable);
 }
