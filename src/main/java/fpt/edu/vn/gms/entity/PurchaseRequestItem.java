@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "purchase_request_item")
@@ -46,4 +47,12 @@ public class PurchaseRequestItem {
 
     @Column(name = "note", length = 255)
     private String note;
+
+    private LocalDateTime created;
+    private LocalDateTime updated;
+
+    @PrePersist
+    protected void onCreate() {
+        this.created = LocalDateTime.now();
+    }
 }

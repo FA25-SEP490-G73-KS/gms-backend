@@ -1,15 +1,16 @@
 package fpt.edu.vn.gms.service;
 
+import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface PurchaseRequestService {
 
-    Page<PurchaseRequestResponseDto> getAllRequests(int page, int size);
+    Page<PurchaseRequestResponseDto> getPurchaseRequests(int page, int size);
 
-    void approveRequestItem(Long id, Long itemId);
+    List<PurchaseRequestItemResponseDto> getPurchaseRequestItems(Long prId);
 
-    void rejectRequestItem(Long id, Long itemId, String reason);
-
-//    PurchaseRequestResponseDto getPurchaseRequestById(Long id);
+    PurchaseRequestItemResponseDto confirmPurchaseRequestItem(Long itemId, boolean approved, String note);
 }

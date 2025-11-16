@@ -1,7 +1,10 @@
 package fpt.edu.vn.gms.dto.response;
 
+import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
 import lombok.Builder;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -9,9 +12,8 @@ public class PurchaseRequestItemResponseDto {
 
     private Long itemId;
     private String partName;
-    private Integer quantity;
-    private String vehicleModel;
-    private String origin;
-    private String status;
-    private String warehouseNote;
+    private double quantity;
+    private BigDecimal estimatedPurchasePrice;
+    private PurchaseReqItemStatus status;
+    private String note;
 }

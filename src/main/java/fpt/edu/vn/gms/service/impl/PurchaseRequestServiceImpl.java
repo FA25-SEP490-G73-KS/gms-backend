@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.*;
+import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.PurchaseRequestItemMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.NotificationService;
@@ -12,10 +14,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -24,109 +29,48 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     private final PurchaseRequestRepository purchaseRequestRepo;
     private final PurchaseRequestItemRepository purchaseRequestItemRepo;
-    private final EmployeeRepository employeeRepo;
-    private final NotificationService notificationService;
     private final PurchaseRequestMapper purchaseRequestMapper;
+    private final PurchaseRequestItemMapper purchaseRequestItemMapper;
 
+    public Page<PurchaseRequestResponseDto> getPurchaseRequests(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<PurchaseRequest> prPage = purchaseRequestRepo.findAllByOrderByCreatedAtDesc(pageable);
+        return prPage.map(purchaseRequestMapper::toResponseDto);
+    }
 
-    @Override
-    public Page<PurchaseRequestResponseDto> getAllRequests(int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        return purchaseRequestRepo.findAll(pageable)
-                .map(purchaseRequestMapper::toResponseDto);
+    public List<PurchaseRequestItemResponseDto> getPurchaseRequestItems(Long prId) {
+        List<PurchaseRequestItem> items = purchaseRequestItemRepo.findByPurchaseRequestId(prId);
+        return items.stream().map(purchaseRequestItemMapper::toResponseDto).collect(Collectors.toList());
     }
 
     @Transactional
-    public void approveRequestItem(Long id, Long itemId) {
-        PurchaseRequestItem pr = purchaseRequestItemRepo.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR"));
-        pr.setStatus(PurchaseReqItemStatus.APPROVED);
-        purchaseRequestItemRepo.save(pr);
-
-        // Cập nhật trạng thái tổng thể PR
-        updatePurchaseRequestStatus(id);
-    }
-
-    @Transactional
-    public void rejectRequestItem(Long id, Long itemId, String reason) {
+    public PurchaseRequestItemResponseDto confirmPurchaseRequestItem(Long itemId, boolean approved, String note) {
         PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
-                .orElseThrow();
-        item.setStatus(PurchaseReqItemStatus.REJECTED);
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR item ID: " + itemId));
+
+        item.setStatus(approved ? PurchaseReqItemStatus.APPROVED : PurchaseReqItemStatus.REJECTED);
+        item.setNote(note);
+        item.setUpdated(LocalDateTime.now());
         purchaseRequestItemRepo.save(item);
 
-        updatePurchaseRequestStatus(id);
+        // Cập nhật tổng trạng thái PR
+        updatePurchaseRequestStatus(item.getPurchaseRequest());
 
-        // Gửi notification cho service advisor
-        String advisorPhone = item.getPurchaseRequest().getRelatedQuotation()
-                .getServiceTicket()
-                .getCreatedBy()
-                .getPhone();
-
-//        notificationService.createNotification(
-//                advisorPhone,
-//                "Quản lý từ chối PR",
-//                "Item " + item.getPartName() + " trong PR #" +
-//                        item.getPurchaseRequest().getCode() + " đã bị từ chối.",
-//                NotificationType.QUOTATION_CONFIRMED
-//        );
+        return purchaseRequestItemMapper.toResponseDto(item);
     }
 
-    private void updatePurchaseRequestStatus(Long id) {
-        PurchaseRequest pr = purchaseRequestRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR"));
-
-        List<PurchaseRequestItem> items = pr.getItems();
-
-        boolean allApproved = items.stream()
+    private void updatePurchaseRequestStatus(PurchaseRequest pr) {
+        boolean allApproved = pr.getItems().stream()
                 .allMatch(i -> i.getStatus() == PurchaseReqItemStatus.APPROVED);
-        boolean isRejected = items.stream()
-                .anyMatch(i -> i.getStatus() == PurchaseReqItemStatus.REJECTED);
+
 
         if (allApproved) {
             pr.setStatus(PurchaseRequestStatus.APPROVED);
-        } else if (isRejected) {
-            pr.setStatus(PurchaseRequestStatus.REJECTED);
+        } else {
+            pr.setStatus(PurchaseRequestStatus.PENDING);
         }
 
         purchaseRequestRepo.save(pr);
-
-        String title;
-        String message;
-
-        if (allApproved) {
-            title = "Phiếu yêu cầu mua hàng được phê duyệt";
-            message = "PR #" + pr.getCode() + " đã được phê duyệt.";
-        } else if (isRejected) {
-            title = "Phiếu yêu cầu mua hàng bị từ chối";
-            message = "PR #" + pr.getCode() + " đã bị từ chối.";
-        } else {
-            return;
-        }
-
-//        // 1. Gửi cho tất cả nhân viên kho
-//        List<Employee> warehouseStaff = employeeRepo.findByEmployeeRole(EmployeeRole.WAREHOUSE);
-//        for (Employee staff : warehouseStaff) {
-//            notificationService.createNotification(
-//                    staff.getPhone(),
-//                    title,
-//                    message,
-//                    NotificationType.PURCHASE_REQUEST_UPDATED
-//            );
-//        }
-
-//        // 2. Gửi CC cho cố vấn dịch vụ
-//        ServiceTicket st = pr.getRelatedServiceTicket();
-//        if (st != null && st.getCreatedBy() != null) {
-//            Employee advisor = st.getCreatedBy();
-//            notificationService.createNotification(
-//                    advisor.getPhone(),
-//                    "[CC] " + title,
-//                    message,
-//                    NotificationType.PURCHASE_REQUEST_UPDATED
-//            );
-//        }
     }
 
 

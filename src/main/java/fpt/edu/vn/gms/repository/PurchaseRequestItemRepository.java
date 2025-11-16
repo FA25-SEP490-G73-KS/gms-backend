@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface PurchaseRequestItemRepository extends JpaRepository<PurchaseRequestItem, Long> {
 
-    List<PurchaseRequestItem> findByPurchaseRequest(PurchaseRequest purchaseRequest);
+    List<PurchaseRequestItem> findByPurchaseRequestId(Long prId);
 }

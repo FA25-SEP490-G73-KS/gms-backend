@@ -5,7 +5,6 @@ import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
 import fpt.edu.vn.gms.dto.response.StockExportResponse;
 import fpt.edu.vn.gms.service.StockExportService;
-import fpt.edu.vn.gms.service.WarehouseQuotationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/warehouse/exports")
+@RequestMapping("/api/exports")
 @RequiredArgsConstructor
-public class WarehouseExportController {
+public class StockExportController {
 
     private final StockExportService stockExportService;
 

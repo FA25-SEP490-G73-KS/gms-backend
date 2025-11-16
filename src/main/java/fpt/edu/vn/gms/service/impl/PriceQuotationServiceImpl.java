@@ -264,13 +264,14 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
 
         if (!partsToBuy.isEmpty()) {
+
             PurchaseRequest purchaseRequest = PurchaseRequest.builder()
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
-                    .createdBy(null)
+                    .createdBy(null) // Hệ thống tự tạo
                     .items(new ArrayList<>())
                     .build();
 
@@ -279,12 +280,14 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
                 item.setExportStatus(ExportStatus.WAITING_PURCHASE);
 
+                double quantityToPurchase = getQuantityToPurchase(item);
+
                 PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
                         .part(item.getPart())
                         .partName(item.getItemName())
-                        .quantity(item.getQuantity())
+                        .quantity(quantityToPurchase)
                         .unit(item.getUnit())
-                        .estimatedPurchasePrice(item.getPart().getPurchasePrice())
+                        .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
@@ -323,6 +326,22 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         );
 
         return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+    private static double getQuantityToPurchase(PriceQuotationItem item) {
+        double quantityNeeded = item.getQuantity();
+        Part part = item.getPart();
+
+        double quantityInStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+        double reservedQty = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+        double minStock = Optional.ofNullable(part.getReorderLevel()).orElse(0.0);
+
+        // Số lượng thực sự có thể dùng
+        double availableStock = quantityInStock - reservedQty;
+
+        // Số lượng cần PR
+        double quantityToPurchase = quantityNeeded + minStock - availableStock;
+        return quantityToPurchase;
     }
 
     @Override

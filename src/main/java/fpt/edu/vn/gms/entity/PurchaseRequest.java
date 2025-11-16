@@ -22,7 +22,7 @@ public class PurchaseRequest {
     @Column(name = "purchase_request_id")
     private Long id;
 
-    @Column(name = "code", nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String code;
 
     @Enumerated(EnumType.STRING)
@@ -39,11 +39,6 @@ public class PurchaseRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private Employee createdBy;
-
-    // Liên kết đến phiếu dịch vụ
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_ticket_id")
-    private ServiceTicket relatedServiceTicket;
 
     // Liên kết đến báo giá
     @ManyToOne(fetch = FetchType.LAZY)

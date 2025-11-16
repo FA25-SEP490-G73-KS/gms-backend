@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest, Long> {
 
-//    Page<PurchaseRequest> findALl(Pageable pageable);
+    Page<PurchaseRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

@@ -1,8 +1,10 @@
 package fpt.edu.vn.gms.dto.response;
 
+import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,10 +12,9 @@ import java.util.List;
 @Builder
 public class PurchaseRequestResponseDto {
 
-    private Long purchaseRequestId;
-    private VehicleResponseDto vehicle;
-    private String createdBy;
+    private Long id;
+    private String code;
+    private PurchaseRequestStatus status;
+    private BigDecimal totalEstimatedAmount;
     private LocalDateTime createdAt;
-    private String status;
-    private List<PurchaseRequestItemResponseDto> items;
 }
