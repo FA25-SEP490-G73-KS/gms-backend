@@ -14,8 +14,4 @@ public interface WarehouseQuotationService {
     PriceQuotationItemResponseDto updateWarehouseReview(Long quotationId, WarehouseReviewItemDto reviewItems);
 
     Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size);
-
-    Page<StockExportResponse> getExportingQuotations(int page, int size);
-
-    List<StockExportItemResponse> getExportingQuotationById(Long quotationId);
 }

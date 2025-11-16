@@ -4,8 +4,6 @@ import fpt.edu.vn.gms.common.*;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
-import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
-import fpt.edu.vn.gms.dto.response.StockExportResponse;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.Part;
 import fpt.edu.vn.gms.entity.PriceQuotation;
@@ -14,7 +12,6 @@ import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
@@ -25,19 +22,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class WarehouseQuotationServiceImpl implements WarehouseQuotationService {
 
-    private final PriceQuotationRepository quotationRepository;
     private final PartRepository partRepository;
     private final NotificationService notificationService;
+    private final PriceQuotationRepository quotationRepository;
     private final PriceQuotationItemMapper priceQuotationItemMapper;
     private final PriceQuotationMapper priceQuotationMapper;
-    private final PriceQuotationItemMapper itemMapper;
 
     @Override
     public Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size) {
@@ -59,33 +54,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             return dto;
         });
     }
-
-    @Override
-    public Page<StockExportResponse> getExportingQuotations(int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
-
-        // Lấy tất cả báo giá có exportStatus = WAITING_TO_EXPORT
-        Page<PriceQuotation> quotations = quotationRepository.findByExportStatus(
-                ExportStatus.WAITING_TO_EXPORT,
-                pageable
-        );
-
-        return quotations.map(priceQuotationMapper::toStockExportResponse);
-    }
-
-    @Override
-    public List<StockExportItemResponse> getExportingQuotationById(Long quotationId) {
-
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
-
-        return quotation.getItems().stream()
-                .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
-                .map(itemMapper::toStockExportItemResponse)
-                .toList();
-    }
-
 
     @Override
     public PriceQuotationItemResponseDto updateWarehouseReview(Long quotationId, WarehouseReviewItemDto dto) {

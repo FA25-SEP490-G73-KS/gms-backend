@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.mapper;
 
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
-import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
 import fpt.edu.vn.gms.dto.response.StockExportResponse;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import org.mapstruct.Mapper;
@@ -15,7 +14,10 @@ public interface PriceQuotationMapper {
     @Mapping(target = "licensePlate", source = "serviceTicket.vehicle.licensePlate")
     PriceQuotationResponseDto toResponseDto(PriceQuotation entity);
 
+    @Mapping(target = "priceQuotationId", source = "priceQuotationId")
+    @Mapping(target = "customerName", source = "serviceTicket.customer.fullName")
+    @Mapping(target = "licensePlate", source = "serviceTicket.vehicle.licensePlate")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "exportStatus", source = "exportStatus")
     StockExportResponse toStockExportResponse(PriceQuotation entity);
-
-
 }

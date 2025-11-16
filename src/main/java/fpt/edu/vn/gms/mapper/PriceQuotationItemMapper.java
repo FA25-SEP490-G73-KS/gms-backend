@@ -16,5 +16,11 @@ public interface PriceQuotationItemMapper {
     @Mapping(target = "unit", source = "unit")
     PriceQuotationItemResponseDto toResponseDto(PriceQuotationItem entity);
 
+    @Mapping(target = "itemId", source = "priceQuotationItemId")
+    @Mapping(target = "itemName", source = "itemName")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "quantityInStock", source = "part.quantityInStock")
+    @Mapping(target = "exportedQuantity", source = "exportedQuantity")
+    @Mapping(target = "exportStatus", source = "exportStatus")
     StockExportItemResponse toStockExportItemResponse(PriceQuotationItem entity);
 }
