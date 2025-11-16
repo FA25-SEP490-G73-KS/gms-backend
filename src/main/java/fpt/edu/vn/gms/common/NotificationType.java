@@ -2,5 +2,7 @@ package fpt.edu.vn.gms.common;
 
 public enum NotificationType {
     QUOTATION_CONFIRMED,
-    QUOTATION_REJECTED
+    QUOTATION_REJECTED,
+    PURCHASE_REQUEST_CONFIRMED,
+    PURCHASE_REQUEST_RECEIVED
 }

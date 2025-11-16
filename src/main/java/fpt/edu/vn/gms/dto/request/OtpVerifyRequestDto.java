@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OtpVerifyRequestDto {
+
     private String phone;
     private String otpCode;
     private String purpose; // APPOINTMENT, RESET_PASSWORD, etc.

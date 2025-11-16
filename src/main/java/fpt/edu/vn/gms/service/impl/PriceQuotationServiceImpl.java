@@ -269,6 +269,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
                     .createdBy(null) // Hệ thống tự tạo
@@ -289,17 +290,16 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .unit(item.getUnit())
                         .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
+                        .reviewStatus(ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
 
                 purchaseRequest.getItems().add(requestItem);
 
                 // Cộng dồn vào tổng
-                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity()));
+                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
 
                 totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
-
             }
 
             purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
@@ -340,8 +340,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         double availableStock = quantityInStock - reservedQty;
 
         // Số lượng cần PR
-        double quantityToPurchase = quantityNeeded + minStock - availableStock;
-        return quantityToPurchase;
+        return quantityNeeded + minStock - availableStock;
     }
 
     @Override

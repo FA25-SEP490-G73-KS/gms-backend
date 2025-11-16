@@ -29,6 +29,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     private final PurchaseRequestRepository purchaseRequestRepo;
     private final PurchaseRequestItemRepository purchaseRequestItemRepo;
+    private final AccountRepository accountRepository;
+    private final NotificationService notificationService;
     private final PurchaseRequestMapper purchaseRequestMapper;
     private final PurchaseRequestItemMapper purchaseRequestItemMapper;
 
@@ -48,7 +50,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR item ID: " + itemId));
 
-        item.setStatus(approved ? PurchaseReqItemStatus.APPROVED : PurchaseReqItemStatus.REJECTED);
+        item.setReviewStatus(approved ? ManagerReviewStatus.CONFIRMED : ManagerReviewStatus.REJECTED);
         item.setNote(note);
         item.setUpdated(LocalDateTime.now());
         purchaseRequestItemRepo.save(item);
@@ -61,13 +63,33 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     private void updatePurchaseRequestStatus(PurchaseRequest pr) {
         boolean allApproved = pr.getItems().stream()
-                .allMatch(i -> i.getStatus() == PurchaseReqItemStatus.APPROVED);
+                .allMatch(i -> i.getReviewStatus() == ManagerReviewStatus.CONFIRMED);
 
 
         if (allApproved) {
-            pr.setStatus(PurchaseRequestStatus.APPROVED);
+            pr.setReviewStatus(ManagerReviewStatus.CONFIRMED);
+
+            NotificationTemplate template = NotificationTemplate.PURCHASE_REQUEST_CONFIRMED;
+
+            // Lấy tất cả account có role Warehouse
+            List<Account> warehouseAccounts = accountRepository.findByRoleRoleName("Warehouse");
+
+            // Gửi notification cho từng account
+            warehouseAccounts.forEach(account -> {
+                if (account.getEmployee() != null) {
+                    notificationService.createNotification(
+                            account.getEmployee().getEmployeeId(),
+                            template.getTitle(),
+                            template.format(pr.getId()),
+                            NotificationType.PURCHASE_REQUEST_CONFIRMED,
+                            pr.getId().toString(),
+                            "/purchase-requests/" + pr.getId()
+                    );
+                }
+            });
+
         } else {
-            pr.setStatus(PurchaseRequestStatus.PENDING);
+            pr.setReviewStatus(ManagerReviewStatus.PENDING);
         }
 
         purchaseRequestRepo.save(pr);

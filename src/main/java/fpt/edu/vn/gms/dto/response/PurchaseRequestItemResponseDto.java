@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import fpt.edu.vn.gms.common.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,6 @@ public class PurchaseRequestItemResponseDto {
     private String partName;
     private double quantity;
     private BigDecimal estimatedPurchasePrice;
-    private PurchaseReqItemStatus status;
+    private ManagerReviewStatus reviewStatus;
     private String note;
 }

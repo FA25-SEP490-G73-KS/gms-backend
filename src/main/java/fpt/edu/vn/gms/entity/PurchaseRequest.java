@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,10 +26,6 @@ public class PurchaseRequest {
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -41,13 +38,21 @@ public class PurchaseRequest {
     private Employee createdBy;
 
     // Liên kết đến báo giá
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quotation_id")
     private PriceQuotation relatedQuotation;
 
     // Tổng dự kiến chi phí
     @Column(nullable = true)
     private BigDecimal totalEstimatedAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 30)
+    private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_status", length = 30)
+    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
 
     @Column(nullable = true, length = 255)
     private String reason;
