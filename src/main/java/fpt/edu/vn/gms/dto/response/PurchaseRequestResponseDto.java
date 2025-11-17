@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
 
@@ -15,6 +14,7 @@ public class PurchaseRequestResponseDto {
 
     private Long id;
     private String code;
+    private String licensePlate;
     private PurchaseRequestStatus status;
     private BigDecimal totalEstimatedAmount;
     private LocalDateTime createdAt;

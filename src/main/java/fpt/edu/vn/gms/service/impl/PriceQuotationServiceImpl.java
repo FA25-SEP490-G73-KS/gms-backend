@@ -21,6 +21,7 @@ import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
+import fpt.edu.vn.gms.service.PaymentService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,7 +40,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final ServiceTicketRepository serviceTicketRepository;
     private final PartRepository partRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
-    private final PartReservationRepository partReservationRepository;
+    private final PaymentService paymentService;
     private final NotificationService notificationService;
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
@@ -251,15 +252,15 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             Part part = item.getPart();
             if (part == null) continue;
 
-            // Tạo bản ghi đặt giữ
-            PartReservation reservation = PartReservation.builder()
-                    .part(part)
-                    .quotationItem(item)
-                    .reservedQuantity(item.getQuantity())
-                    .reservedAt(LocalDateTime.now())
-                    .active(true)
-                    .build();
-            partReservationRepository.save(reservation);
+//            // Tạo bản ghi đặt giữ
+//            PartReservation reservation = PartReservation.builder()
+//                    .part(part)
+//                    .quotationItem(item)
+//                    .reservedQuantity(item.getQuantity())
+//                    .reservedAt(LocalDateTime.now())
+//                    .active(true)
+//                    .build();
+//            partReservationRepository.save(reservation);
 
             // Cập nhật số lượng đã giữ
             double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -278,6 +279,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
                     .createdBy(null) // Hệ thống tự tạo
@@ -298,17 +300,16 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .unit(item.getUnit())
                         .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
+                        .reviewStatus(ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
 
                 purchaseRequest.getItems().add(requestItem);
 
                 // Cộng dồn vào tổng
-                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity()));
+                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
 
                 totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
-
             }
 
             purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
@@ -319,6 +320,14 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Lưu lại báo giá
         quotationRepository.save(quotation);
+
+        // TẠO PHIẾU THANH TOÁN: deposit + final (nếu cần)
+        paymentService.createDepositAndFinalVoucherIfNeeded(quotation.getPriceQuotationId(),
+                quotation.getServiceTicket() != null ? quotation.getServiceTicket().getServiceTicketId() : null,
+                // createdBy: tên cố vấn hoặc hệ thống
+                quotation.getServiceTicket() != null && quotation.getServiceTicket().getCreatedBy() != null
+                        ? quotation.getServiceTicket().getCreatedBy().getFullName()
+                        : "system");
 
         NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
@@ -349,8 +358,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         double availableStock = quantityInStock - reservedQty;
 
         // Số lượng cần PR
-        double quantityToPurchase = quantityNeeded + minStock - availableStock;
-        return quantityToPurchase;
+        return quantityNeeded + minStock - availableStock;
     }
 
     @Override

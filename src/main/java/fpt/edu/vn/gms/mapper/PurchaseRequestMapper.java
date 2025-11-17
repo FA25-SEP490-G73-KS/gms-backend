@@ -13,6 +13,7 @@ import java.util.List;
 )
 public interface PurchaseRequestMapper {
 
+    @Mapping(target = "licensePlate", source = "relatedQuotation.serviceTicket.vehicle.licensePlate")
     PurchaseRequestResponseDto toResponseDto(PurchaseRequest request);
 
 }

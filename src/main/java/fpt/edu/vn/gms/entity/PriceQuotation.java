@@ -51,8 +51,6 @@ public class PriceQuotation {
     @Column(name = "export_status")
     private ExportStatus exportStatus = ExportStatus.NONE;
 
-//    @Column(name = "reject_reason")
-//    private String rejectReason;
 
     @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceQuotationItem> items = new ArrayList<>();

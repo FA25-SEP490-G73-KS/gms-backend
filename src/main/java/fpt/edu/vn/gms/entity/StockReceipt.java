@@ -3,7 +3,9 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
@@ -18,25 +20,19 @@ import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 public class StockReceipt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stock_receipt_id")
-    private Long id;
+    private Long receiptId;
 
-    @Column(name = "receipt_code", length = 50, unique = true)
-    private String receiptCode;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchase_request_id")
+    private PurchaseRequest purchaseRequest;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private StockReceiptStatus status = StockReceiptStatus.CREATED;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private Employee createdBy;
 
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "received_at")
-    private LocalDateTime receivedAt;
-
-    @Column(name = "received_by", length = 100)
-    private String receivedBy;
-
     @OneToMany(mappedBy = "stockReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<StockReceiptItem> items = new HashSet<>();
+    @Builder.Default
+    private List<StockReceiptItem> items = new ArrayList<>();
 }
