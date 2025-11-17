@@ -11,6 +11,7 @@ VALUES
 INSERT INTO service_type (name) VALUES ('Sơn');
 INSERT INTO service_type (name) VALUES ('Sửa chữa');
 INSERT INTO service_type (name) VALUES ('Bảo dưỡng');
+INSERT INTO service_type (name) VALUES ('Bảo hành');
 
 INSERT INTO role (role_id, role_name)
 VALUES
@@ -26,8 +27,8 @@ INSERT INTO employee (
 
 INSERT INTO account (account_id, phone, password, role, employee_id, is_active)
 VALUES
-    (1, '0909123456', '$2a$10$0wTxHejWkOEfq6f0xPwWtOnDPMuuIv1ugEwHhedYneGWPBccC8cp.', 'SERVICE_ADVISOR', 1, 1),
-    (2, '0909988776', '$2a$10$0wTxHejWkOEfq6f0xPwWtOnDPMuuIv1ugEwHhedYneGWPBccC8cp.', 'MANAGER', 2, 1);
+    (1, '0909123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'SERVICE_ADVISOR', 1, 1),
+    (2, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 2, 1);
 
 INSERT INTO part_category (name)
 VALUES

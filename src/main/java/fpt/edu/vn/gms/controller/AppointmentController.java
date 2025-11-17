@@ -1,6 +1,8 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.AllowRoles;
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
+import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
@@ -10,6 +12,7 @@ import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -97,20 +100,6 @@ public class AppointmentController {
                 return ResponseEntity.ok(ApiResponse.success("Appointment found", appointment));
         }
 
-        // @GetMapping("/date")
-        // public ResponseEntity<ApiResponse<Page<AppointmentResponseDto>>>
-        // getAppByDate(
-        // @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-        // @RequestParam(defaultValue = "0") int page,
-        // @RequestParam(defaultValue = "6") int size
-        // ) {
-        //
-        // Page<AppointmentResponseDto> appointments = service.getAppByDate(date, page,
-        // size);
-        // return ResponseEntity.ok(ApiResponse.success("Lấy lịch hẹn theo ngày",
-        // appointments));
-        // }
-
         @GetMapping("/date")
         @Operation(summary = "Lấy cuộc hẹn theo ngày", description = "Lấy danh sách các cuộc hẹn trong một ngày cụ thể, được nhóm theo khung giờ.")
         @ApiResponses(value = {
@@ -159,6 +148,26 @@ public class AppointmentController {
                                 ApiResponse.success("Cập nhật & Tạo phiếu dịch vụ # "
                                                 + serviceTicket.getServiceTicketCode()
                                                 + " thành công", updated));
+        }
+
+//        @AllowRoles({ Role.SERVICE_ADVISOR })
+        @GetMapping("/count")
+        @Operation(summary = "Đếm tổng số cuộc hẹn", description = "Đếm tổng số cuộc hẹn hiện có trong hệ thống.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm cuộc hẹn thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Long>> countAppointments(
+                @Parameter(
+                        description = "Ngày cần đếm số lượng lịch hẹn (định dạng yyyy-MM-dd)",
+                        example = "2025-11-17"
+                )
+                @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+        ) {
+                Long count = service.countAppointmentsByDate(date);
+                return ResponseEntity.ok(
+                        ApiResponse.success("Đếm số hẹn thành công", count)
+                );
         }
 
 }

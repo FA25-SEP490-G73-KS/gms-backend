@@ -13,15 +13,15 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +38,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final CodeSequenceService codeSequenceService;
 
     @Override
-    public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto) {
+    public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto, Employee currEmployee) {
 
         Customer customer = null;
 
@@ -64,6 +64,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
         }
 
+        customer = customerRepository.save(customer);
+
         Vehicle vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate()).orElse(null);
 
         VehicleModel vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
@@ -86,10 +88,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             vehicle.setCustomer(customer);
         }
         vehicleRepository.save(vehicle);
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String phone = authentication.getName();
-        Employee creator = employeeRepository.findByPhone(phone);
 
         List<Employee> technicians = List.of();
         if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
@@ -120,7 +118,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .customerName(dto.getCustomer().getFullName())
                 .customerPhone(dto.getCustomer().getPhone())
                 .vehicle(vehicle)
-                .createdBy(creator)
+                .createdBy(currEmployee)
                 .technicians(technicians)
                 .receiveCondition(dto.getReceiveCondition())
                 .createdAt(LocalDateTime.now())
@@ -128,6 +126,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .status(ServiceTicketStatus.CREATED)
                 .appointment(appointment)
                 .build();
+
+        System.out.println(currEmployee);
 
         ServiceTicket saved = serviceTicketRepository.save(ticket);
 
@@ -195,13 +195,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             vehicle.setYear(dto.getVehicle().getYear());
             vehicle.setVin(dto.getVehicle().getVin());
 
-
-//            if (dto.getVehicle().getModelId() != null &&
-//                    !dto.getVehicle().getModelId().equals(vehicle.getVehicleModel().getId())) {
-//
-//                throw new BadRequestException("Không được thay đổi mẫu xe (modelId) khi update service ticket.");
-//            }
-
             vehicleRepository.save(vehicle);
         }
 
@@ -265,4 +258,38 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         return serviceTicketPage.map(serviceTicketMapper::toResponseDto);
     }
 
+    @Override
+    public long countServiceTicketByDate(LocalDate date) {
+        return serviceTicketRepository.countByDate(date);
+    }
+
+    @Override
+    public List<Map<String, Object>> getCompletedTicketsByMonth() {
+
+        List<Object[]> results = serviceTicketRepository.countCompletedTicketsGroupedByMonth("COMPLETED");
+
+        // Convert Object[] -> Map để dễ trả về JSON
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (Object[] row : results) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("year", row[0]);
+            map.put("month", row[1]);
+            map.put("count", row[2]);
+            response.add(map);
+        }
+        return response;
+    }
+
+    @Override
+    public List<Map<String, Object>> getTicketCountsByType(int year, int month) {
+
+        List<Object[]> results = serviceTicketRepository.countTicketsByTypeForMonth(year, month);
+
+        return results.stream().map(obj -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("type", obj[0]);   // String (t.name)
+            map.put("count", obj[1]);  // Long
+            return map;
+        }).toList();
+    }
 }

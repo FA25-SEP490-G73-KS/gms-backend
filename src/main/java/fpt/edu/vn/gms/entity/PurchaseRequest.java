@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ManagerReviewStatus;
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
+import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -52,7 +52,7 @@ public class PurchaseRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)
-    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
+    private StockReceiptStatus.ManagerReviewStatus reviewStatus = StockReceiptStatus.ManagerReviewStatus.PENDING;
 
     @Column(nullable = true, length = 255)
     private String reason;

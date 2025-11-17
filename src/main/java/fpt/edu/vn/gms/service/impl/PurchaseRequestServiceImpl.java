@@ -1,8 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.*;
-import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
+import fpt.edu.vn.gms.common.enums.*;
+import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.entity.*;
@@ -52,7 +51,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR item ID: " + itemId));
 
-        item.setReviewStatus(approved ? ManagerReviewStatus.CONFIRMED : ManagerReviewStatus.REJECTED);
+        item.setReviewStatus(approved ? StockReceiptStatus.ManagerReviewStatus.CONFIRMED : StockReceiptStatus.ManagerReviewStatus.REJECTED);
         item.setNote(note);
         item.setUpdated(LocalDateTime.now());
         purchaseRequestItemRepo.save(item);
@@ -65,16 +64,16 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     private void updatePurchaseRequestStatus(PurchaseRequest pr) {
         boolean allApproved = pr.getItems().stream()
-                .allMatch(i -> i.getReviewStatus() == ManagerReviewStatus.CONFIRMED);
+                .allMatch(i -> i.getReviewStatus() == StockReceiptStatus.ManagerReviewStatus.CONFIRMED);
 
 
         if (allApproved) {
-            pr.setReviewStatus(ManagerReviewStatus.CONFIRMED);
+            pr.setReviewStatus(StockReceiptStatus.ManagerReviewStatus.CONFIRMED);
 
             NotificationTemplate template = NotificationTemplate.PURCHASE_REQUEST_CONFIRMED;
 
             // Lấy tất cả account có role Warehouse
-            List<Account> warehouseAccounts = accountRepository.findByRoleRoleName("Warehouse");
+            List<Account> warehouseAccounts = accountRepository.findByRole(Role.WAREHOUSE);
 
             // Gửi notification cho từng account
             warehouseAccounts.forEach(account -> {
@@ -91,7 +90,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
             });
 
         } else {
-            pr.setReviewStatus(ManagerReviewStatus.PENDING);
+            pr.setReviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING);
         }
 
         purchaseRequestRepo.save(pr);

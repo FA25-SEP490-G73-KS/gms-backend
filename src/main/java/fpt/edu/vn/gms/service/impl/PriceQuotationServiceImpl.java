@@ -1,15 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.*;
-import fpt.edu.vn.gms.common.enums.ExportStatus;
-import fpt.edu.vn.gms.common.enums.NotificationTemplate;
-import fpt.edu.vn.gms.common.enums.NotificationType;
-import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
-import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
-import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
-import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
+import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
@@ -44,6 +35,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private final NotificationService notificationService;
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
+    private final PriceQuotationRepository priceQuotationRepository;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -279,7 +271,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
-                    .reviewStatus(ManagerReviewStatus.PENDING)
+                    .reviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
                     .createdBy(null) // Hệ thống tự tạo
@@ -300,7 +292,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .unit(item.getUnit())
                         .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
-                        .reviewStatus(ManagerReviewStatus.PENDING)
+                        .reviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
 
@@ -417,5 +409,17 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
+    @Override
+    public long countWaitingCustomerConfirm() {
+        return priceQuotationRepository.countByStatus(
+                PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM
+        );
+    }
 
+    @Override
+    public long countVehicleInRepairingStatus() {
+        return priceQuotationRepository.countByStatus(
+                PriceQuotationStatus.CUSTOMER_CONFIRMED
+        );
+    }
 }

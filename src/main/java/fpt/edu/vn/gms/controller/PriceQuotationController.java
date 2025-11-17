@@ -97,7 +97,7 @@ public class PriceQuotationController {
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá thành công!", response));
         }
 
-        @PatchMapping("/{quotationId}/recalculate-estimate")
+        @PatchMapping("/{id}/recalculate-estimate")
         @Operation(summary = "Tính toán lại tổng tiền dự kiến", description = "Tính toán lại tổng số tiền dự kiến của một phiếu báo giá.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật tổng dự kiến thành công"),
@@ -105,22 +105,22 @@ public class PriceQuotationController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> recalculateEstimateAmount(
-                        @PathVariable Long quotationId) {
+                        @PathVariable Long id) {
 
                 PriceQuotationResponseDto updatedQuotation = priceQuotationService
-                                .recalculateEstimateAmount(quotationId);
+                                .recalculateEstimateAmount(id);
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật tổng dự kiến thành công", updatedQuotation));
         }
 
-        @GetMapping("/{quotationId}")
+        @GetMapping("/{id}")
         @Operation(summary = "Lấy báo giá theo ID", description = "Lấy thông tin chi tiết của một phiếu báo giá bằng ID.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy báo giá thành công"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> getById(@PathVariable Long quotationId) {
-                PriceQuotationResponseDto response = priceQuotationService.getById(quotationId);
+        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> getById(@PathVariable Long id) {
+                PriceQuotationResponseDto response = priceQuotationService.getById(id);
                 return ResponseEntity.ok(ApiResponse.success("Lấy báo giá thành công!", response));
         }
 
@@ -187,6 +187,32 @@ public class PriceQuotationController {
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Successfully!!", response));
+        }
+
+        @GetMapping("/count-waiting")
+        @Operation(summary = "Đếm số phiếu báo giá đang chờ khách hàng duyệt", description = "Cố vấn dịch vụ gửi báo giá chờ khách duyệt")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá chờ khách duyệt"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Long>> countWaiting() {
+                long count = priceQuotationService.countWaitingCustomerConfirm();
+                return ResponseEntity.ok(
+                        ApiResponse.success("Số báo giá khách hàng chưa xác nhận", count)
+                );
+        }
+
+        @GetMapping("/count-vehicle-repairing")
+        @Operation(summary = "Đếm số phiếu báo giá của xe đang sửa chữa", description = "Cố vấn dịch vụ đếm số báo giá của xe đang trong quá trình sửa chữa.")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá của xe đang sửa chữa"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Long>> countVehicleRepairing() {
+                long count = priceQuotationService.countVehicleInRepairingStatus();
+                return ResponseEntity.ok(
+                        ApiResponse.success("Số báo giá của xe đang sửa chữa", count)
+                );
         }
 
 }

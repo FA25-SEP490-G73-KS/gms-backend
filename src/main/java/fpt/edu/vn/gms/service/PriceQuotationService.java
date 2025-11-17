@@ -24,4 +24,8 @@ public interface PriceQuotationService {
     PriceQuotationResponseDto rejectQuotationByCustomer(Long quotationId, String reason);
 
     PriceQuotationResponseDto sendQuotationToCustomer(Long quotationId);
+
+    long countWaitingCustomerConfirm();
+
+    long countVehicleInRepairingStatus();
 }

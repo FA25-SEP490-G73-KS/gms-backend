@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.*;
+import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;

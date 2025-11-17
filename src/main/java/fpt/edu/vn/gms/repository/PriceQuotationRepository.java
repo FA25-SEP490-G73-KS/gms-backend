@@ -14,7 +14,7 @@ public interface PriceQuotationRepository extends JpaRepository<PriceQuotation, 
 
     Page<PriceQuotation> findByStatus(PriceQuotationStatus status, Pageable pageable);
 
-    // Lấy tất cả báo giá có exportStatus nằm trong danh sách
-
     Page<PriceQuotation> findByExportStatus(ExportStatus exportStatus, Pageable pageable);
+
+    long countByStatus(PriceQuotationStatus status);
 }

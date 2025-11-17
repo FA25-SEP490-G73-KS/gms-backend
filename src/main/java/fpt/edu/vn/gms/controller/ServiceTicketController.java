@@ -1,17 +1,21 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.SERVICE_TICKETS_PREFIX;
 
@@ -39,15 +45,16 @@ public class ServiceTicketController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Yêu cầu không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createServiceTicket(
-                        @RequestBody ServiceTicketRequestDto req) {
+        public ResponseEntity<ApiResponse<?>> createServiceTicket(
+                @RequestBody ServiceTicketRequestDto req,
+                @CurrentUser Employee employee) {
 
-                ServiceTicketResponseDto created = serviceTicketService.createServiceTicket(req);
+                ServiceTicketResponseDto created = serviceTicketService.createServiceTicket(req, employee);
                 return ResponseEntity.status(201)
                                 .body(ApiResponse.created("Service Ticket Created", created));
         }
 
-        @GetMapping("/{serviceTicketId}")
+        @GetMapping("/{id}")
         @Operation(summary = "Lấy phiếu dịch vụ theo ID", description = "Lấy thông tin chi tiết của một phiếu dịch vụ bằng ID.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
@@ -55,9 +62,9 @@ public class ServiceTicketController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getById(
-                        @PathVariable("serviceTicketId") Long serviceTicketId) {
+                        @PathVariable("id") Long id) {
 
-                ServiceTicketResponseDto dto = serviceTicketService.getServiceTicketById(serviceTicketId);
+                ServiceTicketResponseDto dto = serviceTicketService.getServiceTicketById(id);
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.created("Get service ticket successfully!", dto));
@@ -99,7 +106,7 @@ public class ServiceTicketController {
                                 .body(ApiResponse.created("Get all service tickets", dtos));
         }
 
-        @PutMapping("/{serviceTicketId}")
+        @PatchMapping("/{id}")
         @Operation(summary = "Cập nhật phiếu dịch vụ", description = "Cập nhật thông tin của một phiếu dịch vụ đã có.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật phiếu dịch vụ thành công"),
@@ -108,10 +115,10 @@ public class ServiceTicketController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateServiceTicket(
-                        @PathVariable("serviceTicketId") Long serviceTicketId,
+                        @PathVariable("id") Long id,
                         @RequestBody ServiceTicketRequestDto dto) {
 
-                ServiceTicketResponseDto updated = serviceTicketService.updateServiceTicket(serviceTicketId, dto);
+                ServiceTicketResponseDto updated = serviceTicketService.updateServiceTicket(id, dto);
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.created("Update service ticket successfully!", updated));
@@ -153,4 +160,57 @@ public class ServiceTicketController {
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Service Ticket với " + status, tickets));
         }
+
+        @GetMapping("/count")
+        @Operation(summary = "Đếm tổng số phiếu dịch vụ", description = "Đếm tổng số phiếu dịch vụ hiện có trong hệ thống.")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số dịch vụ thành công"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Long>> countServiceTicket(
+                @Parameter(
+                        description = "Ngày cần đếm số lượng phiếu dịch vụ (định dạng yyyy-MM-dd)",
+                        example = "2025-11-17"
+                )
+                @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+        ) {
+
+                Long count = serviceTicketService.countServiceTicketByDate(date);
+                return ResponseEntity.ok(
+                        ApiResponse.success("Đếm số phiếu dịch vụ thành công", count)
+                );
+        }
+
+
+        @GetMapping("/completed-per-month")
+        @Operation(summary = "Lấy số phiếu dịch vụ hoàn thành theo tháng", description = "Lấy danh sách số phiếu dịch vụ đã hoàn thành, phân theo tháng.")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy số phiếu dịch vụ hoàn thành theo tháng thành công"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getCompletedTicketsPerMonth() {
+                List<Map<String, Object>> data = serviceTicketService.getCompletedTicketsByMonth();
+                return ResponseEntity.ok(
+                        ApiResponse.success("Lấy số phiếu dịch vụ hoàn thành theo tháng thành công", data)
+                );
+        }
+
+        @GetMapping("/count-by-type")
+        @Operation(summary = "Đếm số phiếu dịch vụ theo loại trong một tháng", description = "Đếm số phiếu dịch vụ phân theo loại trong một tháng cụ thể.")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số phiếu dịch vụ theo loại thành công"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> countByType(
+                @RequestParam int year,
+                @RequestParam int month) {
+
+                List<Map<String, Object>> data = serviceTicketService.getTicketCountsByType(year, month);
+
+                return ResponseEntity.ok(
+                        ApiResponse.success("Đếm số phiếu dịch vụ theo loại thành công", data)
+                );
+        }
+
+
 }

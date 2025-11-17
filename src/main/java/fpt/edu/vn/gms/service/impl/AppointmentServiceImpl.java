@@ -179,4 +179,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         return AppointmentMapper.toDto(appointment);
     }
+
+    @Override
+    public long countAppointmentsByDate(LocalDate date) {
+        return appointmentRepo.countByDate(date);
+    }
 }
