@@ -1,9 +1,10 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
+import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

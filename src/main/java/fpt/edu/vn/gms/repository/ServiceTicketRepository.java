@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.repository;
 
-import fpt.edu.vn.gms.common.ServiceTicketStatus;
+import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

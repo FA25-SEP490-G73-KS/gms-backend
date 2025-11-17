@@ -18,16 +18,16 @@ VALUES
     (2, 'USER');
 
 INSERT INTO employee (
-    employee_id, full_name, gender, date_of_birth, phone, address, employee_role, hire_date, status
+    employee_id, full_name, gender, date_of_birth, phone, address, hire_date, status
 ) VALUES
-      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', 'SERVICE_ADVISOR', '2023-05-10 08:00:00', 'ACTIVE'),
-      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', 'TECHNICIAN', '2023-06-01 08:00:00', 'ACTIVE'),
-      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', 'TECHNICIAN', '2024-01-15 08:00:00', 'ACTIVE');
+      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 'ACTIVE'),
+      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 'ACTIVE'),
+      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE');
 
-INSERT INTO account (account_id, phone, password, role_id, employee_id, is_active)
+INSERT INTO account (account_id, phone, password, role, employee_id, is_active)
 VALUES
-    (1, '0909123456', '$2a$10$5SNClD/XwMT0eXO6YA0EP.DKBQ.i2rTEeJw5Dx8eBpDDlowQ6sq6u', 1, 1, 1),
-    (2, '0909988776', '$2a$10$MMR59T4QGrzLKkUsRhSmYeCPjZndSKWZpS1ETCq2odfEl6bi1xql6', 2, NULL, 1);
+    (1, '0909123456', '$2a$10$0wTxHejWkOEfq6f0xPwWtOnDPMuuIv1ugEwHhedYneGWPBccC8cp.', 'SERVICE_ADVISOR', 1, 1),
+    (2, '0909988776', '$2a$10$0wTxHejWkOEfq6f0xPwWtOnDPMuuIv1ugEwHhedYneGWPBccC8cp.', 'MANAGER', 2, 1);
 
 INSERT INTO part_category (name)
 VALUES

@@ -9,5 +9,5 @@ public class AccountResponseDto {
 
     private Long accountId;
     private String phone;
-    private String roleName;
+    private String role;
 }

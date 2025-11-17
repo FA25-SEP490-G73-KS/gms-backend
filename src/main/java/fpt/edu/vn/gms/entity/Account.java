@@ -3,6 +3,8 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import fpt.edu.vn.gms.common.enums.Role;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,8 +21,8 @@ public class Account {
     @Column(name = "phone", length = 20, unique = true)
     private String phone;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "role_id", referencedColumnName = "role_id")
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(name = "password", length = 100)

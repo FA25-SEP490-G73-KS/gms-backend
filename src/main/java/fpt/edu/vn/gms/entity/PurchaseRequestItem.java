@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
 
 @Entity
 @Table(name = "purchase_request_item")

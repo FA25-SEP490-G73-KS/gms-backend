@@ -5,29 +5,38 @@ import fpt.edu.vn.gms.dto.request.OtpVerifyRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.service.OtpService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static fpt.edu.vn.gms.utils.AppRoutes.OTP_PREFIX;
+
+@Tag(name = "otp", description = "Quản lý mã OTP - Tạo và xác thực OTP qua ZNS")
+@CrossOrigin(origins = "${fe-local-host}")
 @RestController
-@RequestMapping("/api/otp")
+@RequestMapping(path = OTP_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@Tag(name = "OTP Management", description = "APIs for OTP generation and verification via ZNS")
 public class OtpController {
 
     private final OtpService otpService;
 
     @PostMapping("/send")
-    @Operation(
-            summary = "Send OTP via ZNS",
-            description = "Generates and sends OTP code to customer's phone number via Zalo Notification Service"
-    )
+    @Operation(summary = "Gửi OTP qua ZNS", description = "Tạo và gửi mã OTP đến số điện thoại của khách hàng qua Zalo Notification Service")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Gửi OTP thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Không thể gửi OTP", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+    })
     public ResponseEntity<ApiResponse<String>> sendOtp(@RequestBody OtpRequestDto request) {
         try {
-            String otpCode = otpService.generateAndSendOtp(request.getPhone(), request.getPurpose());
+            otpService.generateAndSendOtp(request.getPhone(), request.getPurpose());
             return ResponseEntity.ok(ApiResponse.success(
-                    "OTP đã được gửi đến số điện thoại của bạn qua Zalo", 
+                    "OTP đã được gửi đến số điện thoại của bạn qua Zalo",
                     "OTP sent successfully" // In production, don't return actual OTP
             ));
         } catch (Exception e) {
@@ -37,16 +46,17 @@ public class OtpController {
     }
 
     @PostMapping("/verify")
-    @Operation(
-            summary = "Verify OTP",
-            description = "Verifies the OTP code entered by customer"
-    )
+    @Operation(summary = "Xác thực OTP", description = "Xác thực mã OTP do khách hàng nhập")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP hợp lệ"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "OTP không hợp lệ hoặc đã hết hạn", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+    })
     public ResponseEntity<ApiResponse<Boolean>> verifyOtp(@RequestBody OtpVerifyRequestDto request) {
         boolean isValid = otpService.verifyOtp(
-                request.getPhone(), 
-                request.getOtpCode(), 
-                request.getPurpose()
-        );
+                request.getPhone(),
+                request.getOtpCode(),
+                request.getPurpose());
 
         if (isValid) {
             return ResponseEntity.ok(ApiResponse.success("OTP xác thực thành công", true));
@@ -56,4 +66,3 @@ public class OtpController {
         }
     }
 }
-

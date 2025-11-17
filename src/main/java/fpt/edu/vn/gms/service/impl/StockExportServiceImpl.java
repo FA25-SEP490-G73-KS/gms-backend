@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.ExportStatus;
-import fpt.edu.vn.gms.common.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
 import fpt.edu.vn.gms.dto.response.StockExportResponse;
 import fpt.edu.vn.gms.entity.*;

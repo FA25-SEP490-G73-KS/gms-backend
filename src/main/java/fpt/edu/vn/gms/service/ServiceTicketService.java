@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.common.ServiceTicketStatus;
+import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;

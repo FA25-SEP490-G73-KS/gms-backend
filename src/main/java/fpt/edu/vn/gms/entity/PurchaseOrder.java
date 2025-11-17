@@ -1,9 +1,10 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseOrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
+import fpt.edu.vn.gms.common.enums.PurchaseOrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

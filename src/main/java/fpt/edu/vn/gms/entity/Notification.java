@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.NotificationStatus;
-import fpt.edu.vn.gms.common.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+
+import fpt.edu.vn.gms.common.enums.NotificationStatus;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 
 @Entity
 @Table(name = "notification")

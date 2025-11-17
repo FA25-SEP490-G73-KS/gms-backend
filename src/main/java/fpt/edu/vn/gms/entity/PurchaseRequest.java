@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +7,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
 
 @Entity
 @Table(name = "purchase_request")

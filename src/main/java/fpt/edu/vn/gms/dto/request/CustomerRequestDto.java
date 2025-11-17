@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.dto.request;
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.CustomerType;
 import lombok.Builder;
 import lombok.Data;
 

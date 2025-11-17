@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.NotificationStatus;
-import fpt.edu.vn.gms.common.NotificationType;
+import fpt.edu.vn.gms.common.enums.NotificationStatus;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.Notification;

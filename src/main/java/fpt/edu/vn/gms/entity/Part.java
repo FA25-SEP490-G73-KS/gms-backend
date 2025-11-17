@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.Market;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+
+import fpt.edu.vn.gms.common.enums.Market;
 
 @Entity
 @Table(name = "part")

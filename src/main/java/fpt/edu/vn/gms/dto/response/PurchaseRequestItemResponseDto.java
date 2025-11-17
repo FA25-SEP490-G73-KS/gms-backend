@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+
+import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
 
 @Data
 @Builder

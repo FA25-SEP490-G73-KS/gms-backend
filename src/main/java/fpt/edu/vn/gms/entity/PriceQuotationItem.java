@@ -1,13 +1,14 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ExportStatus;
-import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
-import fpt.edu.vn.gms.common.PriceQuotationItemType;
-import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
 
 @Entity
 @Table(name = "price_quotation_item")

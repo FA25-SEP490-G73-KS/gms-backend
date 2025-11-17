@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.PurchaseOrderStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseOrderStatus;
 import fpt.edu.vn.gms.dto.response.PurchaseOrderResponseDto;
 import fpt.edu.vn.gms.entity.CodeSequence;
 import fpt.edu.vn.gms.entity.PurchaseOrder;
