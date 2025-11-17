@@ -1,7 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ExportStatus;
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +7,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 
 @Getter
 @Setter

@@ -4,50 +4,73 @@ import fpt.edu.vn.gms.dto.request.PartReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PartResDto;
 import fpt.edu.vn.gms.service.PartService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static fpt.edu.vn.gms.utils.AppRoutes.PARTS_PREFIX;
+
+@Tag(name = "parts", description = "Quản lý thông tin linh kiện và phụ tùng")
 @CrossOrigin(origins = "${fe-local-host}")
 @RestController
-@RequestMapping("/api/parts")
+@RequestMapping(path = PARTS_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class PartController {
 
-    private final PartService partService;
+        private final PartService partService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<PartResDto>>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size
-            ) {
+        @GetMapping
+        @Operation(summary = "Tìm tất cả linh kiện", description = "Lấy danh sách tất cả các linh kiện với phân trang.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy danh sách linh kiện thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Page<PartResDto>>> findAll(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "6") int size) {
 
-        Page<PartResDto> partList = partService.getAllPart(page, size);
+                Page<PartResDto> partList = partService.getAllPart(page, size);
 
-        return ResponseEntity.status(200)
-                .body(ApiResponse.success("Danh sách linh kiện", partList));
-    }
+                return ResponseEntity.status(200)
+                                .body(ApiResponse.success("Danh sách linh kiện", partList));
+        }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<PartResDto>> createPart(
-            @RequestBody PartReqDto part
-    ) {
+        @PostMapping
+        @Operation(summary = "Tạo linh kiện mới", description = "Tạo một linh kiện mới dựa trên thông tin được cung cấp.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Tạo linh kiện thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Yêu cầu không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<PartResDto>> createPart(
+                        @RequestBody PartReqDto part) {
 
-        PartResDto resDto = partService.createPart(part);
-        return ResponseEntity.status(201)
-                .body(ApiResponse.success("Thêm linh kiện!!!!", resDto));
-    }
+                PartResDto resDto = partService.createPart(part);
+                return ResponseEntity.status(201)
+                                .body(ApiResponse.success("Thêm linh kiện!!!!", resDto));
+        }
 
-    @GetMapping("/category")
-    public ResponseEntity<ApiResponse<Page<PartResDto>>> getPartByCategory(
-            @RequestParam String categoryName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size
-    ) {
+        @GetMapping("/category")
+        @Operation(summary = "Lấy linh kiện theo danh mục", description = "Lấy danh sách các linh kiện theo tên danh mục với phân trang.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy danh sách linh kiện thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Tên danh mục không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<Page<PartResDto>>> getPartByCategory(
+                        @RequestParam String categoryName,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "6") int size) {
 
-        Page<PartResDto> resDtoPage = partService.getPartByCategory(categoryName, page, size);
-        return ResponseEntity.status(200)
-                .body(ApiResponse.success("Part có category " + categoryName, resDtoPage));
-    }
+                Page<PartResDto> resDtoPage = partService.getPartByCategory(categoryName, page, size);
+                return ResponseEntity.status(200)
+                                .body(ApiResponse.success("Part có category " + categoryName, resDtoPage));
+        }
 }

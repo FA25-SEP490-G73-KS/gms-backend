@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.dto.request;
 
-import fpt.edu.vn.gms.common.Market;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Set;
+
+import fpt.edu.vn.gms.common.enums.Market;
 
 @Data
 @Builder

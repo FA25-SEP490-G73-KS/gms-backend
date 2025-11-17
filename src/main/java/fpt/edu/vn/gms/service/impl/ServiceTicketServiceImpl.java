@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.ServiceTicketStatus;
+import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;

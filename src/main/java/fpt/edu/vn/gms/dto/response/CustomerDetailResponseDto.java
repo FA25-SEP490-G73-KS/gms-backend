@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.dto.response;
 
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.CustomerType;
 import fpt.edu.vn.gms.dto.VehicleInfoDto;
 import lombok.Builder;
 import lombok.Data;

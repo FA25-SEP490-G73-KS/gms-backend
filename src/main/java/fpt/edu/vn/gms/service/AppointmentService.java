@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.common.AppointmentStatus;
+import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;

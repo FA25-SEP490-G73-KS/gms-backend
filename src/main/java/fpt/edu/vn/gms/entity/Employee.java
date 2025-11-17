@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.EmployeeRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,11 +35,6 @@ public class Employee {
 
     @Column(name = "address", length = 200)
     private String address;
-
-    // --- Thông tin công việc ---
-    @Enumerated(EnumType.STRING)
-    @Column(length = 50)
-    private EmployeeRole employeeRole;
 
     @Column(name = "hire_date")
     private LocalDateTime hireDate;

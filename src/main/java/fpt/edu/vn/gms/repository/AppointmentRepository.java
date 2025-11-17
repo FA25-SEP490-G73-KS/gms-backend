@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.repository;
 
-import fpt.edu.vn.gms.common.AppointmentStatus;
+import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.TimeSlot;

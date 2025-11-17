@@ -25,7 +25,7 @@ public class AccountDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 account.getPhone(),
                 account.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(account.getRole().getRoleName()))
+                Collections.singletonList(new SimpleGrantedAuthority(account.getRole().getValue()))
         );
     }
 }

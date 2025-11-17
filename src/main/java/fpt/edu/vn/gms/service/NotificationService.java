@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.common.NotificationType;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.entity.Notification;
 

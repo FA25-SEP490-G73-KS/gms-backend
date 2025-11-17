@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 
 @Getter
 @Setter

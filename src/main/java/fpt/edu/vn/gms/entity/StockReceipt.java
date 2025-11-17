@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.StockReceiptStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -8,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 
 @Entity
 @Table(name = "stock_receipt")

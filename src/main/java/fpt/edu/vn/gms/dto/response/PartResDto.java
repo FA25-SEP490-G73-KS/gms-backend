@@ -1,11 +1,12 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.Market;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Set;
+
+import fpt.edu.vn.gms.common.enums.Market;
 
 @Data
 @Builder

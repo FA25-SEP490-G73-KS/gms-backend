@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.repository;
 
-import fpt.edu.vn.gms.common.ExportStatus;
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.PriceQuotationItem;
 import org.springframework.data.domain.Page;

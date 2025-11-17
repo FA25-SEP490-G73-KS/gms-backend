@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 
 @Data
 @Builder

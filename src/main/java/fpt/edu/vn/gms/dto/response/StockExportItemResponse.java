@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.ExportStatus;
+import fpt.edu.vn.gms.common.enums.ExportStatus;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
 import lombok.*;
 
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.CustomerType;
 
 @Getter
 @Setter

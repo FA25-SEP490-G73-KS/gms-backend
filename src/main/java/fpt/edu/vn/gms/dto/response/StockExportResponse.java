@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.ExportStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+
+import fpt.edu.vn.gms.common.enums.ExportStatus;
 
 @Data
 @Builder

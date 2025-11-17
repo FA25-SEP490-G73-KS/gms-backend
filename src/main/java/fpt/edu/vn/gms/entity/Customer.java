@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.CustomerType;
 
 @Getter
 @Setter

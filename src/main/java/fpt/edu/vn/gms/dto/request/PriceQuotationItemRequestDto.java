@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.dto.request;
 
-import fpt.edu.vn.gms.common.PriceQuotationItemType;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 
 @Data
 @Builder

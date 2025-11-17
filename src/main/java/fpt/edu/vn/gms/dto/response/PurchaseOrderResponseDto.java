@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.PurchaseOrderStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseOrderStatus;
 import fpt.edu.vn.gms.entity.PurchaseOrderItem;
 import fpt.edu.vn.gms.entity.PurchaseRequest;
 import lombok.Builder;
