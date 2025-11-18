@@ -21,8 +21,6 @@ public final class AppRoutes {
   public static final String OTP_PREFIX = API_PREFIX + "/otp";
   public static final String PARTS_PREFIX = API_PREFIX + "/parts";
   public static final String PRICE_QUOTATIONS_PREFIX = API_PREFIX + "/price-quotations";
-  public static final String PURCHASE_ORDERS_PREFIX = API_PREFIX + "/purchase-orders";
-  public static final String PURCHASE_REQUESTS_PREFIX = API_PREFIX + "/purchase-requests";
   public static final String QUOTATION_ITEMS_PREFIX = API_PREFIX + "/quotation-items";
   public static final String SERVICE_TICKETS_PREFIX = API_PREFIX + "/service-tickets";
   public static final String STOCK_EXPORTS_PREFIX = API_PREFIX + "/stock-exports";

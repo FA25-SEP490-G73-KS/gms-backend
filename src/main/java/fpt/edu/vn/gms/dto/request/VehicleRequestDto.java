@@ -11,6 +11,7 @@ public class VehicleRequestDto {
     private String licensePlate;
     private Long brandId;
     private Long modelId;
+    private String modelName;
     private Integer year;
     private String vin;
 }

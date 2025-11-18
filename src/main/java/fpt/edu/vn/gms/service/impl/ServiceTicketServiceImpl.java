@@ -10,7 +10,9 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.hibernate.Hibernate;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final ServiceTicketMapper serviceTicketMapper;
     private final VehicleModelRepository vehicleModelRepository;
     private final CodeSequenceService codeSequenceService;
+    private final BrandRepository brandRepository;
 
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto, Employee currEmployee) {
@@ -68,8 +71,32 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         Vehicle vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate()).orElse(null);
 
-        VehicleModel vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
-                .orElseThrow(() -> new RuntimeException("Vehicle model not found"));
+        VehicleModel vehicleModel;
+
+        if (dto.getVehicle().getModelId() != null) {
+            // Nếu client gửi modelId → lấy model có sẵn
+            vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại xe!"));
+        } else {
+            // Nếu không gửi modelId → tự tạo model mới theo brandId
+            Long brandId = dto.getVehicle().getBrandId();
+
+            if (brandId == null) {
+                throw new ResourceNotFoundException("Thiếu brandId để tạo model mới!");
+            }
+
+            Brand brand = brandRepository.findById(brandId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hãng xe!"));
+
+            // Tạo model mới
+            VehicleModel newModel = new VehicleModel();
+            newModel.setBrand(brand);
+
+            // Có thể generate tên model hoặc lấy từ DTO nếu client gửi
+            newModel.setName(dto.getVehicle().getModelName());
+
+            vehicleModel = vehicleModelRepository.save(newModel);
+        }
 
         if (vehicle == null) {
             // Chưa tồn tại → tạo mới
@@ -166,17 +193,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
         if (dto.getCustomer() != null) {
 
-            Customer customer = existing.getCustomer();
-            if (customer == null) {
-                throw new ResourceNotFoundException("Phiếu dịch vụ chưa có khách hàng, không thể update.");
-            }
-
-            // Chỉ update các field cho phép
-            customer.setFullName(dto.getCustomer().getFullName());
-            customer.setPhone(dto.getCustomer().getPhone());
-            customer.setAddress(dto.getCustomer().getAddress());
-            customer.setCustomerType(dto.getCustomer().getCustomerType());
-            customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
+            Customer customer = getCustomer(dto, existing);
 
             customerRepository.save(customer);
 
@@ -214,6 +231,22 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         serviceTicketRepository.save(existing);
 
         return serviceTicketMapper.toResponseDto(existing);
+    }
+
+    @NotNull
+    private static Customer getCustomer(ServiceTicketRequestDto dto, ServiceTicket existing) {
+        Customer customer = existing.getCustomer();
+        if (customer == null) {
+            throw new ResourceNotFoundException("Phiếu dịch vụ chưa có khách hàng, không thể update.");
+        }
+
+        // Chỉ update các field cho phép
+        customer.setFullName(dto.getCustomer().getFullName());
+        customer.setPhone(dto.getCustomer().getPhone());
+        customer.setAddress(dto.getCustomer().getAddress());
+        customer.setCustomerType(dto.getCustomer().getCustomerType());
+        customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
+        return customer;
     }
 
 
@@ -292,4 +325,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             return map;
         }).toList();
     }
+
+
 }
