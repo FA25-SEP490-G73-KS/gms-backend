@@ -19,8 +19,9 @@ public class PaymentTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "payment_voucher_id")
-    private Long paymentVoucherId;
+    @ManyToOne
+    @JoinColumn(name = "payment_voucher_id")
+    private Payment paymentVoucher;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "method", length = 30)
@@ -32,21 +33,17 @@ public class PaymentTransaction {
     @Column(name = "amount", precision = 18, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    @Column(name = "customer_phone")
+    private String customerPhone;
 
-    @Column(name = "received_by")
-    private String receivedBy;
+    @Column(name = "customer_full_name")
+    private String customerFullName;
 
-    @Column(name = "received_at")
-    private LocalDateTime receivedAt;
+    @Column(name = "customer_address")
+    private String customerAddress;
 
-//    @Type(type = "jsonb")
     @Column(columnDefinition = "JSON")
     private String payload;
-
-    @Column(name = "idempotency_key")
-    private String idempotencyKey;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

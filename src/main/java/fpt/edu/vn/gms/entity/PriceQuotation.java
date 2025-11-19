@@ -33,9 +33,8 @@ public class PriceQuotation {
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_policy_id")
-    private DiscountPolicy discountPolicy;
+    @Column(name = "labor_cost", precision = 18, scale = 2)
+    private BigDecimal laborCost;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

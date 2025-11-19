@@ -12,29 +12,67 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Payment")
+@Table(name = "payment")
 public class Payment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
-    private Long paymentId;
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "ticket_id", referencedColumnName = "service_ticket_id")
-    private ServiceTicket ticket;
+    // link to PriceQuotation.priceQuotationId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "price_quotation_id")
+    private PriceQuotation quotationId;
 
-    @Column(name = "payment_method", length = 50)
-    private String paymentMethod;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_ticket_id")
+    private ServiceTicket serviceTicketId;
 
-    @Column(name = "amount", precision = 18, scale = 2)
-    private BigDecimal amount;
+    // Tổng tiền hàng
+    @Column(name = "item_total", precision = 18, scale = 2)
+    private BigDecimal itemTotal;
 
-    @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
+    // Tiền công
+    @Column(name = "labor_cost", precision = 18, scale = 2)
+    private BigDecimal laborCost;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    // Chiết khấu (mặc định)
+    @Column(name = "discount", precision = 18, scale = 2)
+    private BigDecimal discount;
 
-    @Column(name = "reference_code", length = 50)
-    private String referenceCode;
+    // Công nợ cũ
+    @Column(name = "previous_debt", precision = 18, scale = 2)
+    private BigDecimal previousDebt;
+
+    // Tiền cọc đã nhận
+    @Column(name = "deposit_received", precision = 18, scale = 2)
+    private BigDecimal depositReceived;
+
+    // Tổng số tiền khách cần trả
+    @Column(name = "final_amount", precision = 18, scale = 2)
+    private BigDecimal finalAmount;
+
+    @Column(length = 8)
+    private String currency;
+
+    @Column(columnDefinition = "JSON")
+    private String metadata;
+
+    // Hình thức thanh toán
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", length = 30)
+    private PaymentMethod paymentMethod;
+
+    // Loại thanh toán
+    @Column(name = "payment_type", length = 30)
+    private PaymentType paymentType;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Người tạo
+    private String createdBy;
+
+    public enum PaymentMethod { CASH, CARD, TRANSFER  }
+    public enum PaymentType { PAYMENT, DEPOSIT, FINAL, DEBT, REFUND }
 }

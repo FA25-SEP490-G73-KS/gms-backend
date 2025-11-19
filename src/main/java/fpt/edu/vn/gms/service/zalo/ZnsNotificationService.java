@@ -75,7 +75,7 @@ public class ZnsNotificationService {
         templateData.put("customer_name", appointment.getCustomer().getFullName() != null
                 ? appointment.getCustomer().getFullName() : "Quý khách");
 
-        templateData.put("booking_code", appointment.getAppointmentId().toString());
+        templateData.put("booking_code", appointment.getAppointmentCode());
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
 
@@ -115,7 +115,7 @@ public class ZnsNotificationService {
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
 
-        templateData.put("booking_code", appointment.getAppointmentId().toString());
+        templateData.put("booking_code", appointment.getAppointmentCode());
 
         SendZnsPayload payload = SendZnsPayload.builder()
                 .phone(phone)

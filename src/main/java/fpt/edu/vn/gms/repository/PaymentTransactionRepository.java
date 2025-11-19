@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long> {
 
-    Optional<PaymentTransaction> findByIdempotencyKey(String key);
+//    Optional<PaymentTransaction> findByIdempotencyKey(String key);
 }
 
