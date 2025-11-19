@@ -7,7 +7,7 @@ package fpt.edu.vn.gms.common.enums;
 
 public enum CustomerLoyaltyLevel {
     BRONZE,
-    GOLD,
-    DIAMOND
+    SLIVER,
+    GOLD
 }
 

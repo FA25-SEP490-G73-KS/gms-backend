@@ -5,9 +5,11 @@ import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
+import fpt.edu.vn.gms.entity.DiscountPolicy;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
+import fpt.edu.vn.gms.repository.DiscountPolicyRepository;
 import fpt.edu.vn.gms.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final DiscountPolicyRepository discountPolicyRepository;
     private final CustomerMapper customerMapper;
 
     @Override
@@ -81,11 +84,15 @@ public class CustomerServiceImpl implements CustomerService {
             throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");
         }
 
+        DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
+
+
         existing.setFullName(dto.getFullName());
         existing.setPhone(dto.getPhone());
         existing.setAddress(dto.getAddress());
         existing.setCustomerType(dto.getCustomerType());
-        existing.setLoyaltyLevel(dto.getLoyaltyLevel());
+        existing.setDiscountPolicy(discountPolicy);
 
         Customer updated = customerRepository.save(existing);
 

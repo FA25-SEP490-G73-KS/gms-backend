@@ -19,6 +19,7 @@ public interface CustomerMapper {
     CustomerDetailResponseDto toDetailDto(Customer customer);
 
     // Map 1 entity sang DTO
+    @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
     CustomerResponseDto toDto(Customer customer);
 
     // Map list entity sang list DTO

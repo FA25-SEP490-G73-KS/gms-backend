@@ -21,12 +21,12 @@ public class Payment {
 
     // link to PriceQuotation.priceQuotationId
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "price_quotation_id")
-    private PriceQuotation quotationId;
+    @JoinColumn(name = "price_quotation")
+    private PriceQuotation quotation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_ticket_id")
-    private ServiceTicket serviceTicketId;
+    @JoinColumn(name = "service_ticket")
+    private ServiceTicket serviceTicket;
 
     // Tổng tiền hàng
     @Column(name = "item_total", precision = 18, scale = 2)

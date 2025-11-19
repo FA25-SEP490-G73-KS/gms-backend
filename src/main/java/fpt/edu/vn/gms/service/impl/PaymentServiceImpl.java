@@ -43,19 +43,19 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ResourceNotFoundException("Phiếu dịch vụ chưa gắn khách hàng!");
         }
 
-        BigDecimal itemTotal = priceQuotation.getEstimateAmount();
-        BigDecimal laborCost = priceQuotation.getLaborCost();
-        BigDecimal discountRate = customer.getDiscountPolicy() != null
+        BigDecimal itemTotal = priceQuotation.getEstimateAmount() != null ? priceQuotation.getEstimateAmount() : BigDecimal.ZERO;
+        BigDecimal laborCost = priceQuotation.getLaborCost() != null ? priceQuotation.getLaborCost() : BigDecimal.ZERO;
+        BigDecimal discountRate = customer.getDiscountPolicy() != null && customer.getDiscountPolicy().getDiscountRate() != null
                 ? customer.getDiscountPolicy().getDiscountRate()
                 : BigDecimal.ZERO;
+
         BigDecimal discount = itemTotal
                 .add(laborCost)
                 .multiply(discountRate)
                 .divide(BigDecimal.valueOf(100));
 
         // Lấy tiền cọc (nếu không có cọc -> 0)
-        BigDecimal depositAmount = paymentRepo.sumDepositByTicket(serviceTicket.getServiceTicketId())
-                .orElse(BigDecimal.ZERO);
+        BigDecimal depositAmount = BigDecimal.ZERO;
 
         // Lấy công nợ cũ = tổng các payment chưa thanh toán hết
         BigDecimal previousDebt = paymentRepo.sumUnpaidByCustomer(customer.getCustomerId())
@@ -71,8 +71,8 @@ public class PaymentServiceImpl implements PaymentService {
         // Tạo payment
 
         Payment payment = Payment.builder()
-                .serviceTicketId(serviceTicket)
-                .quotationId(priceQuotation)
+                .serviceTicket(serviceTicket)
+                .quotation(priceQuotation)
                 .itemTotal(itemTotal)
                 .laborCost(laborCost)
                 .discount(discount)
@@ -81,6 +81,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .finalAmount(amountPaid)
                 .paymentMethod(null)        // vì khách chưa thanh toán
                 .paymentType(Payment.PaymentType.PAYMENT)
+                .currency("VND")
                 .createdBy("hệ thống")
                 .createdAt(LocalDateTime.now())
                 .build();
