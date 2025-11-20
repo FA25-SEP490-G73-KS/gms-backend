@@ -1,10 +1,8 @@
 package fpt.edu.vn.gms.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.dto.PaymentVoucherDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
-import fpt.edu.vn.gms.repository.PaymentTransactionRepository;
 import fpt.edu.vn.gms.repository.PaymentVoucherRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
@@ -25,17 +23,16 @@ import java.util.stream.Collectors;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentVoucherRepository voucherRepository;
-    private final PaymentTransactionRepository txnRepository;
     private final PriceQuotationRepository quotationRepository;
     private final ServiceTicketRepository serviceTicketRepository;
-    private final ObjectMapper objectMapper;
 
     @Value("${app.payment.deposit-rate}")
     private BigDecimal depositRate;
 
     @Override
     @Transactional
-    public PaymentVoucher createDepositAndFinalVoucherIfNeeded(Long quotationId, Long serviceTicketId, String createdBy) {
+    public PaymentVoucher createDepositAndFinalVoucherIfNeeded(Long quotationId, Long serviceTicketId,
+            String createdBy) {
         PriceQuotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quotation not found: " + quotationId));
 
@@ -48,7 +45,8 @@ public class PaymentServiceImpl implements PaymentService {
         boolean hasSpecial = false;
 
         for (PriceQuotationItem item : quotation.getItems()) {
-            if (item.getItemType() != null && item.getItemType().name().equals("PART") && item.getPart() != null && item.getPart().isSpecialPart()) {
+            if (item.getItemType() != null && item.getItemType().name().equals("PART") && item.getPart() != null
+                    && item.getPart().isSpecialPart()) {
                 BigDecimal lineTotal = Optional.ofNullable(item.getTotalPrice()).orElse(BigDecimal.ZERO);
                 specialPartsTotal = specialPartsTotal.add(lineTotal);
                 hasSpecial = true;
@@ -61,7 +59,8 @@ public class PaymentServiceImpl implements PaymentService {
             BigDecimal depositAmount = specialPartsTotal.multiply(depositRate).setScale(2, BigDecimal.ROUND_HALF_UP);
 
             // if already exists, skip creating duplicate
-            Optional<PaymentVoucher> existingDeposit = voucherRepository.findByQuotationIdAndType(quotationId, PaymentVoucher.VoucherType.DEPOSIT);
+            Optional<PaymentVoucher> existingDeposit = voucherRepository.findByQuotationIdAndType(quotationId,
+                    PaymentVoucher.VoucherType.DEPOSIT);
             if (existingDeposit.isPresent()) {
                 depositVoucher = existingDeposit.get();
                 // if still DRAFT or PENDING, update amount if changed
@@ -88,10 +87,13 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // create final voucher (remaining amount)
-        Optional<PaymentVoucher> existingFinal = voucherRepository.findByQuotationIdAndType(quotationId, PaymentVoucher.VoucherType.FINAL);
+        Optional<PaymentVoucher> existingFinal = voucherRepository.findByQuotationIdAndType(quotationId,
+                PaymentVoucher.VoucherType.FINAL);
         BigDecimal finalTotal = totalQuotation;
-        if (depositVoucher != null) finalTotal = finalTotal.subtract(depositVoucher.getTotalAmount());
-        if (finalTotal.compareTo(BigDecimal.ZERO) < 0) finalTotal = BigDecimal.ZERO;
+        if (depositVoucher != null)
+            finalTotal = finalTotal.subtract(depositVoucher.getTotalAmount());
+        if (finalTotal.compareTo(BigDecimal.ZERO) < 0)
+            finalTotal = BigDecimal.ZERO;
 
         PaymentVoucher finalVoucher;
         if (existingFinal.isPresent()) {
@@ -121,7 +123,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentTransaction handleSepayWebhook(String providerTxnId, String payload) {
+    public Transaction handleSepayWebhook(String providerTxnId, String payload) {
         return null;
     }
 
@@ -153,7 +155,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // TODO: logic thanh toán
         voucher.setAmountPaid(voucher.getAmountPaid().add(amountPaid));
-        if(voucher.getAmountPaid().compareTo(voucher.getAmountPaid()) >= 0){
+        if (voucher.getAmountPaid().compareTo(voucher.getAmountPaid()) >= 0) {
             voucher.setStatus(PaymentVoucher.VoucherStatus.PAID);
         } else {
             voucher.setStatus(PaymentVoucher.VoucherStatus.PARTIALLY_PAID);
@@ -185,7 +187,6 @@ public class PaymentServiceImpl implements PaymentService {
                 voucher.getTotalAmount(),
                 voucher.getAmountPaid(),
                 voucher.getType().toString(),
-                voucher.getStatus().toString()
-        );
+                voucher.getStatus().toString());
     }
 }
