@@ -27,6 +27,7 @@ public final class AppRoutes {
   public static final String VEHICLES_PREFIX = API_PREFIX + "/vehicles";
   public static final String PAYMENT_PREFIX = API_PREFIX + "/payments";
   public static final String ZNS_NOTIFICATIONS_PREFIX = API_PREFIX + "/zns-notifications";
+  public static final String TRANSACTIONS_PREFIX = API_PREFIX + "/transactions";
 
   public static final List<String> whitelistedRoutes = List.of(
       API_PREFIX + "/docs/**",
