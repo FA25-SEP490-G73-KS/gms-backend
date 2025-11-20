@@ -26,7 +26,7 @@ public interface ServiceTicketMapper {
     @Mapping(target = "phone", source = "phone")
     @Mapping(target = "address", source = "address")
     @Mapping(target = "customerType", source = "customerType")
-    @Mapping(target = "loyaltyLevel", source = "loyaltyLevel")
+    @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
     CustomerResponseDto toCustomerDto(Customer customer);
 
     @Mapping(target = "vehicleId", source = "vehicleId")

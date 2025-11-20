@@ -12,8 +12,10 @@ import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import fpt.edu.vn.gms.service.CodeSequenceService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,16 +33,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AppointmentServiceImpl implements AppointmentService {
 
-    private final VehicleRepository vehicleRepo;
-    private final CustomerRepository customerRepo;
-    private final TimeSlotRepository timeSlotRepo;
-    private final AppointmentRepository appointmentRepo;
-    private final ServiceTicketRepository serviceTicketRepo;
-    private final ServiceTypeRepository serviceTypeRepo;
-    private final EmployeeRepository employeeRepo;
-    private final CodeSequenceService codeSequenceService;
+    VehicleRepository vehicleRepo;
+    CustomerRepository customerRepo;
+    TimeSlotRepository timeSlotRepo;
+    AppointmentRepository appointmentRepo;
+    ServiceTypeRepository serviceTypeRepo;
+    DiscountPolicyRepository discountPolicyRepo;
+    CodeSequenceService codeSequenceService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
 
@@ -62,13 +64,17 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     public AppointmentResponseDto createAppointment(AppointmentRequestDto dto) {
 
+        // Lấy giảm giá mặc định
+        DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
+
         // Check customer theo số điện thoại
         Customer customer = customerRepo.findByPhone(dto.getPhoneNumber())
                 .orElseGet(() -> {
                     // Nếu chưa có thì tạo mới customer
                     Customer newCustomer = Customer.builder()
                             .phone(dto.getPhoneNumber())
-                            .loyaltyLevel(CustomerLoyaltyLevel.BRONZE)
+                            .discountPolicy(defaultPolicy)
                             .build();
                     return customerRepo.save(newCustomer);
                 });

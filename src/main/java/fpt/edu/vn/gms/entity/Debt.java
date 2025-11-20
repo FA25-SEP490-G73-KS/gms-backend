@@ -17,16 +17,18 @@ import java.time.LocalDateTime;
 public class Debt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "debt_id")
-    private Long debtId;
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
-    private Customer customer;
+    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
+    private PriceQuotation quotation;
 
     @ManyToOne
     @JoinColumn(name = "service_ticket_id", referencedColumnName = "service_ticket_id")
     private ServiceTicket serviceTicket;
+
+    @Column(name = "amount", precision = 18, scale = 2)
+    private BigDecimal amount;
 
     @Column(name = "amount_due", precision = 18, scale = 2)
     private BigDecimal amountDue;

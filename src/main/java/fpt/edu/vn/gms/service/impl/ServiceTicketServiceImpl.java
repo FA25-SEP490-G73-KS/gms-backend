@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
@@ -10,7 +11,6 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.hibernate.Hibernate;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
@@ -37,6 +37,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     private final ServiceTypeRepository serviceTypeRepository;
     private final ServiceTicketMapper serviceTicketMapper;
     private final VehicleModelRepository vehicleModelRepository;
+    private final DiscountPolicyRepository discountPolicyRepo;
     private final CodeSequenceService codeSequenceService;
     private final BrandRepository brandRepository;
 
@@ -50,6 +51,10 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .orElse(null);
         }
 
+        // Lấy giảm giá mặc định
+        DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
+
         if (customer == null) {
             // Chưa tồn tại → tạo mới
             customer = Customer.builder()
@@ -57,14 +62,13 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .phone(dto.getCustomer().getPhone())
                     .address(dto.getCustomer().getAddress())
                     .customerType(dto.getCustomer().getCustomerType())
-                    .loyaltyLevel(dto.getCustomer().getLoyaltyLevel())
+                    .discountPolicy(defaultPolicy)
                     .build();
         } else {
             // Đã tồn tại → cập nhật thông tin (nếu có thay đổi)
             customer.setFullName(dto.getCustomer().getFullName());
             customer.setAddress(dto.getCustomer().getAddress());
             customer.setCustomerType(dto.getCustomer().getCustomerType());
-            customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
         }
 
         customer = customerRepository.save(customer);
@@ -245,7 +249,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         customer.setPhone(dto.getCustomer().getPhone());
         customer.setAddress(dto.getCustomer().getAddress());
         customer.setCustomerType(dto.getCustomer().getCustomerType());
-        customer.setLoyaltyLevel(dto.getCustomer().getLoyaltyLevel());
         return customer;
     }
 

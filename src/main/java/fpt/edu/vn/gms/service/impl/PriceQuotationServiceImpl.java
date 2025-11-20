@@ -313,14 +313,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // Lưu lại báo giá
         quotationRepository.save(quotation);
 
-        // TẠO PHIẾU THANH TOÁN: deposit + final (nếu cần)
-        paymentService.createDepositAndFinalVoucherIfNeeded(quotation.getPriceQuotationId(),
-                quotation.getServiceTicket() != null ? quotation.getServiceTicket().getServiceTicketId() : null,
-                // createdBy: tên cố vấn hoặc hệ thống
-                quotation.getServiceTicket() != null && quotation.getServiceTicket().getCreatedBy() != null
-                        ? quotation.getServiceTicket().getCreatedBy().getFullName()
-                        : "system");
-
         NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
         // Lấy nhân viên phụ trách (advisor)

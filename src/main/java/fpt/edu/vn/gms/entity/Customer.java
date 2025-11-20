@@ -3,10 +3,10 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.enums.CustomerType;
 
 @Getter
@@ -41,9 +41,12 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "loyalty_level", length = 30)
-    private CustomerLoyaltyLevel loyaltyLevel;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "discount_policy_id")
+    private DiscountPolicy discountPolicy;
+
+    @Column(name = "total_spending", precision = 18, scale = 2)
+    private BigDecimal totalSpending = BigDecimal.ZERO;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean isActive = true;

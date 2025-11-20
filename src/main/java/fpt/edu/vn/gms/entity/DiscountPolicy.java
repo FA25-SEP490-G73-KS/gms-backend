@@ -28,6 +28,8 @@ public class DiscountPolicy {
     @Column(name = "discount_rate", precision = 5, scale = 2, nullable = false)
     private BigDecimal discountRate; // % giảm giá, ví dụ 5.00 = 5%
 
+    private BigDecimal requiredSpending; // tổng chi tiêu cần để lên level
+
     @Column(name = "description", length = 255)
     private String description;
 }

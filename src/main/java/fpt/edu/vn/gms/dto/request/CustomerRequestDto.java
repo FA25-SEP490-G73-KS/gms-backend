@@ -14,5 +14,5 @@ public class CustomerRequestDto {
      private String phone;
      private String address;
      private CustomerType customerType;
-     private CustomerLoyaltyLevel loyaltyLevel;
+     private Long discountPolicyId;
 }

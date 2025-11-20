@@ -62,11 +62,17 @@ INSERT INTO part (
       ('Đèn pha LED', 'EU', false, 700000, 950000, 0.00, 15, 0, 5, true),
       ('Cảm biến ABS', 'JP', false, 450000, 600000, 0.00, 10, 0, 3, true);
 
-INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, loyalty_level)
+INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
 VALUES
-    ('Nguyễn Văn A', '0123456789', 'zalo_001', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 'BRONZE'),
-    ('Trần Thị B', '0123987654', 'zalo_002', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 'BRONZE'),
-    ('Lê Văn C', '0987654321', 'zalo_003', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 'GOLD');
+    ('BRONZE', 0.00,   0.00,  'Mức cơ bản'),
+    ('SLIVER', 5.00,  5000.00, 'Chi tiêu trên 5 triệu'),
+    ('GOLD', 10.00, 10000.00, 'Chi tiêu trên 10 triệu');
+
+INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, discount_policy_id)
+VALUES
+    ('Nguyễn Văn A', '0123456789', 'zalo_001', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 1),
+    ('Trần Thị B', '0123987654', 'zalo_002', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 1),
+    ('Lê Văn C', '0987654321', 'zalo_003', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 1);
 
 INSERT INTO brand (name) VALUES
                              ('Toyota'),
@@ -87,4 +93,10 @@ VALUES
     (1, 1, '30A-1001', 'VIN1001', 2021),
     (2, 1, '30A-1002', 'VIN1002', 2022),
     (3, 1, '30A-1003', 'VIN1003', 2023);
+
+INSERT INTO zalo_access_token (access_token, refresh_token)
+VALUES (
+           "JBN5E2WaidnAlySmB2gsV4cxmZ0kDyy1JlxQ1c0z_XzQriiIEHoz20sEl0q-7PTFMEhgQMO7x7Hx_-1mNMdFKsUgy5r2HUHXMAAGT6jmkZ9pXCa-5Kky73RTlGmgFfvEIVQYULKyeqfbzhLAIZ2lULdmsbzh2zj0SftA1cuAva5FuCnXVYlTJ6JAgt5XN8jDPOkVU4XCbLfMtUTDMKx5O4M8-aTQOVXhG9MCSNDHv4vpffD-5KAPSYQfdqv1QhGFNOM47ZeHy2q_nk5l9WV1A0d2nILhKUadJ8hl47rRt3rWp-WZUm_8PqVRl7PRByXmNVZrPsytmcHtoiruR0h7LMdjvaDsFCbx6CV4Uda6r6fQYTeeJdZgAtljv2L1FkqVVjV1CaT5tHnzgweXU3chU5Mih6DNTzzGLw95T2yviti",
+           "1De-78C8yMm2q3mKXmRrR07KEHI56_K60vTI3uSvzYjTacyDjaBLVq_pO5AYLVvtS_mqK8zac6PGiZ9jWI2iNtsLENUgFF1-BBLF3VjcwYejq2GurMQF3I2t40hb5ua28wuH4CW9k20NfNHJbJtHUq25ObwHEybqTAjE0eWRwN88hsDQp0N8RXI2SHlCE_XsDxvCUSiQucWrgNaVrN_X1HZrUYpzGSqrFVX_6-9iyWaLopOVot3vD4syO0ND6SScD"
+       );
 
