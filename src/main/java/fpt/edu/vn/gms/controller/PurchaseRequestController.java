@@ -1,10 +1,12 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.ConfirmPRItemRequest;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import fpt.edu.vn.gms.service.StockReceiptService;
 import lombok.RequiredArgsConstructor;
@@ -47,10 +49,11 @@ public class PurchaseRequestController {
 
     @PostMapping("/items/{prItemId}/receive")
     public ResponseEntity<ApiResponse<StockReceiptItemResponseDto>> receiveItem(
-            @PathVariable Long prItemId
-           ) {
+            @PathVariable Long prItemId,
+            @CurrentUser Employee employee
+            ) {
 
-        StockReceiptItemResponseDto responseDto = stockReceiptService.receiveItem(prItemId);
+        StockReceiptItemResponseDto responseDto = stockReceiptService.receiveItem(prItemId, employee);
 
         return ResponseEntity.status(200)
                 .body(ApiResponse.success(" Nhập kho thành công", responseDto));

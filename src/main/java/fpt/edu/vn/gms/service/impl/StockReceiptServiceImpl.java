@@ -24,7 +24,6 @@ public class StockReceiptServiceImpl implements StockReceiptService {
     private final StockReceiptItemRepository stockReceiptItemRepo;
     private final PurchaseRequestRepository purchaseRequestRepo;
     private final PurchaseRequestItemRepository purchaseRequestItemRepo;
-    private final EmployeeRepository employeeRepository;
     private final PartRepository partRepository;
     private final PriceQuotationItemRepository priceQuotationItemRepository;
     private final NotificationService notificationService;
@@ -32,16 +31,12 @@ public class StockReceiptServiceImpl implements StockReceiptService {
 
     @Transactional
     @Override
-    public StockReceiptItemResponseDto receiveItem(Long prItemId) {
+    public StockReceiptItemResponseDto receiveItem(Long prItemId, Employee employee) {
 
         PurchaseRequestItem prItem = purchaseRequestItemRepo.findById(prItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu mua hàng!!"));
 
         PurchaseRequest pr = prItem.getPurchaseRequest();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String phone = authentication.getName();
-        Employee employee = employeeRepository.findByPhone(phone);
 
         // Lấy StockReceipt nếu đã có, nếu chưa tạo mới
         StockReceipt receipt = stockReceiptRepo.findByPurchaseRequest(pr)
@@ -59,7 +54,7 @@ public class StockReceiptServiceImpl implements StockReceiptService {
                 .stockReceipt(receipt)
                 .purchaseRequestItem(prItem)
                 .quantityReceived(prItem.getQuantity())
-                .note("Nhập kho đầy đủ")
+                .note("Nhập linh kiện cho báo giá: " + pr.getRelatedQuotation().getCode())
                 .build();
 
         receipt.getItems().add(receiptItem);

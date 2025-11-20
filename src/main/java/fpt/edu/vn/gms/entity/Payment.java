@@ -19,13 +19,14 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // link to PriceQuotation.priceQuotationId
+    private String code;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "price_quotation")
+    @JoinColumn(name = "price_quotation_id")
     private PriceQuotation quotation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_ticket")
+    @JoinColumn(name = "service_ticket_id")
     private ServiceTicket serviceTicket;
 
     // Tổng tiền hàng
@@ -55,17 +56,13 @@ public class Payment {
     @Column(length = 8)
     private String currency;
 
-    @Column(columnDefinition = "JSON")
-    private String metadata;
-
     // Hình thức thanh toán
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 30)
     private PaymentMethod paymentMethod;
 
-    // Loại thanh toán
-    @Column(name = "payment_type", length = 30)
-    private PaymentType paymentType;
+    @Column(columnDefinition = "JSON")
+    private String metadata;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -74,5 +71,4 @@ public class Payment {
     private String createdBy;
 
     public enum PaymentMethod { CASH, CARD, TRANSFER  }
-    public enum PaymentType { PAYMENT, DEPOSIT, FINAL, DEBT, REFUND }
 }

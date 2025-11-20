@@ -1,18 +1,17 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.entity.Customer;
-import fpt.edu.vn.gms.entity.Payment;
-import fpt.edu.vn.gms.entity.PriceQuotation;
-import fpt.edu.vn.gms.entity.ServiceTicket;
+import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.repository.PaymentRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,8 +24,10 @@ public class PaymentServiceImpl implements PaymentService {
     ServiceTicketRepository serviceTicketRepo;
     PriceQuotationRepository priceQuotationRepo;
     PaymentRepository paymentRepo;
+    CodeSequenceService codeSequenceService;
 
     @Override
+    @Transactional
     public void createPayment(Long serviceTicketId, Long quotationId) {
 
         // Lấy service ticket
@@ -69,8 +70,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .add(previousDebt);
 
         // Tạo payment
-
         Payment payment = Payment.builder()
+                .code(codeSequenceService.generateCode("PAY"))
                 .serviceTicket(serviceTicket)
                 .quotation(priceQuotation)
                 .itemTotal(itemTotal)
@@ -79,8 +80,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .depositReceived(depositAmount)
                 .previousDebt(previousDebt)
                 .finalAmount(amountPaid)
-                .paymentMethod(null)        // vì khách chưa thanh toán
-                .paymentType(Payment.PaymentType.PAYMENT)
+                .paymentMethod(null)
                 .currency("VND")
                 .createdBy("hệ thống")
                 .createdAt(LocalDateTime.now())
@@ -88,4 +88,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepo.save(payment);
     }
+
+
+
 }
