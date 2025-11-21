@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
@@ -212,6 +213,24 @@ public class PriceQuotationController {
                 long count = priceQuotationService.countVehicleInRepairingStatus();
                 return ResponseEntity.ok(
                         ApiResponse.success("Số báo giá của xe đang sửa chữa", count)
+                );
+        }
+
+        @PatchMapping("/{id}/labor-cost")
+        @Operation(summary = "Cập nhật tiền công", description = "Cập nhật chi phí tiền công của một phiếu báo giá.")
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật tiền công thành công"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá", content = @Content(schema = @Schema(hidden = true))),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateLaborCost(
+                @PathVariable Long id,
+                @RequestBody ChangeLaborCostReqDto dto) {
+
+                PriceQuotationResponseDto updatedQuotation = priceQuotationService.updateLaborCost(id, dto);
+
+                return ResponseEntity.ok(
+                        ApiResponse.success("Cập nhật tiền công thành công!", updatedQuotation)
                 );
         }
 

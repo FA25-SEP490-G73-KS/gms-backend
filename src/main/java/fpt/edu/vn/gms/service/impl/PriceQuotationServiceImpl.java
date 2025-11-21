@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
+import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
@@ -14,7 +15,10 @@ import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PaymentService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,17 +29,19 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class PriceQuotationServiceImpl implements PriceQuotationService {
 
-    private final PriceQuotationRepository quotationRepository;
-    private final ServiceTicketRepository serviceTicketRepository;
-    private final PartRepository partRepository;
-    private final PurchaseRequestRepository purchaseRequestRepository;
-    private final PaymentService paymentService;
-    private final NotificationService notificationService;
-    private final CodeSequenceService codeSequenceService;
-    private final PriceQuotationMapper priceQuotationMapper;
-    private final PriceQuotationRepository priceQuotationRepository;
+    PriceQuotationRepository quotationRepository;
+    ServiceTicketRepository serviceTicketRepository;
+    PartRepository partRepository;
+    PurchaseRequestRepository purchaseRequestRepository;
+    PaymentService paymentService;
+    NotificationService notificationService;
+    CodeSequenceService codeSequenceService;
+    PriceQuotationMapper priceQuotationMapper;
+    PriceQuotationRepository priceQuotationRepository;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -413,5 +419,32 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationRepository.countByStatus(
                 PriceQuotationStatus.CUSTOMER_CONFIRMED
         );
+    }
+
+    @Override
+    public PriceQuotationResponseDto updateLaborCost(Long id, ChangeLaborCostReqDto dto) {
+        log.info("Updating laborCost for quotationId={}, newLaborCost={}", id, dto.getLaborCost());
+
+        PriceQuotation quotation = priceQuotationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("PriceQuotation not found id={}", id);
+                    return new ResourceNotFoundException("Không tìm thấy báo giá!");
+                });
+
+        quotation.setLaborCost(dto.getLaborCost());
+
+        // Nếu bạn muốn update estimateAmount theo laborCost
+        quotation.setEstimateAmount(
+                quotation.getItems().stream()
+                        .map(i -> i.getTotalPrice())
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .add(dto.getLaborCost())
+        );
+
+        priceQuotationRepository.save(quotation);
+
+        log.info("Updated laborCost successfully for quotationId={}", id);
+
+        return priceQuotationMapper.toResponseDto(quotation);
     }
 }
