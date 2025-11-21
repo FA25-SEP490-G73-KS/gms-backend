@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.request;
 
+import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,9 @@ public class CreatePaymentLinkRequestDto {
 
   @NotBlank
   private String customerAddress;
+
+  @NotBlank
+  private PaymentTransactionType type;
 
   @NotBlank
   private String description;

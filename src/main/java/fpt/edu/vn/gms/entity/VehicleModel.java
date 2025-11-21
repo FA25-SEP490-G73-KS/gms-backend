@@ -29,5 +29,4 @@ public class VehicleModel {
 
     @ManyToMany(mappedBy = "compatibleVehicles")
     private Set<Part> parts = new HashSet<>();
-
 }

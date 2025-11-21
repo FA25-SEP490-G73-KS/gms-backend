@@ -56,8 +56,7 @@ public class TransactionServiceImpl implements TransactionService {
             .customerAddress(customerAddress)
             .customerPhone(customerPhone)
             .amount(price)
-            .method(Method.BANK_TRANSFER)
-            .isActive(false)
+            .method(Method.BANK_TRANSFER).type(request.getType()).isActive(false)
             .build());
 
     return payOSResponse;

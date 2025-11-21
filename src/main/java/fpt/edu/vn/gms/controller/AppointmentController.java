@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
@@ -116,6 +117,7 @@ public class AppointmentController {
                                 .body(ApiResponse.success("Khung giờ theo ngày", service.getAppointmentsByDate(date)));
         }
 
+        @Public
         @PostMapping
         @Operation(summary = "Tạo cuộc hẹn mới", description = "Tạo một cuộc hẹn mới dựa trên thông tin được cung cấp.")
         @ApiResponses(value = {

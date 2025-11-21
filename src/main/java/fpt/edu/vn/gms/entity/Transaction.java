@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -34,6 +35,10 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(name = "method", length = 30)
     private Method method;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 30)
+    private PaymentTransactionType type;
 
     @Column(name = "amount")
     private Long amount;

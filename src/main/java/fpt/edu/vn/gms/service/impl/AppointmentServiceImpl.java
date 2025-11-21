@@ -78,6 +78,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseGet(() -> {
                     // Nếu chưa có thì tạo mới customer
                     Customer newCustomer = Customer.builder()
+                            .fullName(dto.getCustomerName())
                             .phone(dto.getPhoneNumber())
                             .discountPolicy(defaultPolicy)
                             .build();

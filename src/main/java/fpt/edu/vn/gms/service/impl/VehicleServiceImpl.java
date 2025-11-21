@@ -8,18 +8,21 @@ import fpt.edu.vn.gms.repository.BrandRepository;
 import fpt.edu.vn.gms.repository.VehicleModelRepository;
 import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.VehicleService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VehicleServiceImpl implements VehicleService {
 
-    private final VehicleRepository vehicleRep;
-    private final VehicleModelRepository vehicleModelRepository;
-    private final BrandRepository brandRepository;
+    VehicleRepository vehicleRep;
+    VehicleModelRepository vehicleModelRepository;
+    BrandRepository brandRepository;
 
     public List<BrandDto> getAllBrands() {
         return brandRepository.findAll()
@@ -50,4 +53,6 @@ public class VehicleServiceImpl implements VehicleService {
                 .year(vehicle.getYear())
                 .build();
     }
+
+
 }
