@@ -20,8 +20,8 @@ public class Debt {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "price_quotation_id", referencedColumnName = "price_quotation_id")
-    private PriceQuotation quotation;
+    @JoinColumn(name = "customer_id", referencedColumnName = "customer_id")
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "service_ticket_id", referencedColumnName = "service_ticket_id")
@@ -29,9 +29,6 @@ public class Debt {
 
     @Column(name = "amount", precision = 18, scale = 2)
     private BigDecimal amount;
-
-    @Column(name = "amount_due", precision = 18, scale = 2)
-    private BigDecimal amountDue;
 
     @Column(name = "due_date")
     private LocalDate dueDate;
@@ -42,6 +39,19 @@ public class Debt {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

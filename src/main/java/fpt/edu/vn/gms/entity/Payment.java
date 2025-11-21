@@ -56,12 +56,7 @@ public class Payment {
     @Column(length = 8)
     private String currency;
 
-    // Hình thức thanh toán
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", length = 30)
-    private PaymentMethod paymentMethod;
-
-    @Column(columnDefinition = "JSON")
+//    @Column(columnDefinition = "JSON")
     private String metadata;
 
     private LocalDateTime createdAt;
@@ -69,6 +64,4 @@ public class Payment {
 
     // Người tạo
     private String createdBy;
-
-    public enum PaymentMethod { CASH, CARD, TRANSFER  }
 }

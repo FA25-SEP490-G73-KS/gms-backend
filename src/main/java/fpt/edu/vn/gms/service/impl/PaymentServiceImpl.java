@@ -1,7 +1,11 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.dto.response.PaymentDetailResDto;
+import fpt.edu.vn.gms.dto.response.PaymentListResDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.PaymentMapper;
+import fpt.edu.vn.gms.repository.DebtRepository;
 import fpt.edu.vn.gms.repository.PaymentRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
@@ -10,6 +14,11 @@ import fpt.edu.vn.gms.service.PaymentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +28,15 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     ServiceTicketRepository serviceTicketRepo;
     PriceQuotationRepository priceQuotationRepo;
     PaymentRepository paymentRepo;
+    DebtRepository debtRepo;
     CodeSequenceService codeSequenceService;
+    PaymentMapper mapper;
 
     @Override
     @Transactional
@@ -59,8 +71,7 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal depositAmount = BigDecimal.ZERO;
 
         // Lấy công nợ cũ = tổng các payment chưa thanh toán hết
-        BigDecimal previousDebt = paymentRepo.sumUnpaidByCustomer(customer.getCustomerId())
-                .orElse(BigDecimal.ZERO);
+        BigDecimal previousDebt = debtRepo.getTotalDebt(customer.getCustomerId());
 
         // Tổng số tiền cần trả = hàng + công - giảm giá - cọc + công nợ cũ
         BigDecimal amountPaid = itemTotal
@@ -80,7 +91,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .depositReceived(depositAmount)
                 .previousDebt(previousDebt)
                 .finalAmount(amountPaid)
-                .paymentMethod(null)
                 .currency("VND")
                 .createdBy("hệ thống")
                 .createdAt(LocalDateTime.now())
@@ -89,6 +99,40 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepo.save(payment);
     }
 
+    @Override
+    public Page<PaymentListResDto> getPaymentList(int page, int size, String sort) {
 
+        log.info("Fetching payment list with paging: page={}, size={}, sort={}", page, size, sort);
 
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+
+        Page<Payment> payments = paymentRepo.findAllWithRelations(pageable);
+
+        return payments.map(payment -> {
+            PaymentListResDto dto = mapper.toListDto(payment);
+
+            Long customerId = payment.getServiceTicket().getCustomer().getCustomerId();
+            BigDecimal totalDebt = debtRepo.getTotalDebt(customerId);
+
+            dto.setPreviousDebt(totalDebt);
+
+            return dto;
+        });
+    }
+
+    @Override
+    public PaymentDetailResDto getPaymentDetail(Long paymentId) {
+
+        log.info("Fetching payment detail, paymentId={}", paymentId);
+
+        Payment payment = paymentRepo.findById(paymentId)
+                .orElseThrow(() -> {
+                    log.warn("Payment not found, id={}", paymentId);
+                    return new ResourceNotFoundException("Không tìm thấy phiếu thanh toán!");
+                });
+
+        return mapper.toDetailDto(payment);
+    }
 }

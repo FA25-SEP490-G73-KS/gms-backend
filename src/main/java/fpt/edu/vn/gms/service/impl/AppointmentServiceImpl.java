@@ -8,14 +8,17 @@ import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
 import fpt.edu.vn.gms.dto.response.TimeSlotDto;
 import fpt.edu.vn.gms.entity.*;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import fpt.edu.vn.gms.service.CodeSequenceService;
+import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class AppointmentServiceImpl implements AppointmentService {
 
     VehicleRepository vehicleRepo;
@@ -45,6 +49,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     CodeSequenceService codeSequenceService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
+    ZnsNotificationService znsNotificationService;
 
     public List<TimeSlotDto> getTimeSlotsByDate(LocalDate date) {
         List<TimeSlot> slots = timeSlotRepo.findAll();
@@ -128,6 +133,17 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment saved = appointmentRepo.save(appointment);
 
+        // Send appointment confirmation via ZNS
+        try {
+            znsNotificationService.sendAppointmentConfirmation(saved);
+            log.info("Appointment confirmation sent via ZNS for appointment ID: {}", saved.getAppointmentId());
+        } catch (Exception e) {
+            log.error("Failed to send appointment confirmation via ZNS for appointment ID: {}",
+                    saved.getAppointmentId(), e);
+            // Don't fail the appointment creation if notification fails
+        }
+
+
         return AppointmentMapper.toDto(saved);
     }
 
@@ -190,4 +206,37 @@ public class AppointmentServiceImpl implements AppointmentService {
     public long countAppointmentsByDate(LocalDate date) {
         return appointmentRepo.countByDate(date);
     }
+
+    @Override
+    public AppointmentResponseDto updateStatus(Long id, AppointmentStatus status) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+
+        // Validate allowed transitions (simple example)
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new RuntimeException("Cannot change status of a cancelled appointment");
+        }
+
+        appointment.setStatus(status);
+        appointmentRepo.save(appointment);
+        return AppointmentMapper.toDto(appointment);
+    }
+
+    @Override
+    public AppointmentResponseDto confirmAppointment(Long id) {
+        Appointment appointment = appointmentRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new RuntimeException("Chỉ có thể xác nhận những lịch hẹn đang chờ.");
+        }
+
+        if (appointment.getConfirmedAt() == null) {
+            appointment.setConfirmedAt(LocalDateTime.now());
+            appointmentRepo.save(appointment);
+        }
+
+        return AppointmentMapper.toDto(appointment);
+    }
+
 }

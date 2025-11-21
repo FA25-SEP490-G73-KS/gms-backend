@@ -1,8 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.common.annotations.AllowRoles;
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
-import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
@@ -18,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,10 +36,11 @@ import static fpt.edu.vn.gms.utils.AppRoutes.APPOINTMENTS_PREFIX;
 @RestController
 @RequestMapping(path = APPOINTMENTS_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class AppointmentController {
 
-        private final AppointmentService service;
-        private final ServiceTicketRepository serviceTicketRepo;
+        AppointmentService service;
+        ServiceTicketRepository serviceTicketRepo;
 
         @GetMapping
         @Operation(summary = "Lấy tất cả các cuộc hẹn", description = "Lấy danh sách tất cả các cuộc hẹn với phân trang.")
@@ -130,7 +130,7 @@ public class AppointmentController {
                                 .body(ApiResponse.created("Appointment created successfully", response));
         }
 
-        @PatchMapping("/{id}/status")
+        @PatchMapping("/{id}/arrived")
         @Operation(summary = "Cập nhật trạng thái đến của khách hàng", description = "Cập nhật trạng thái của cuộc hẹn thành 'ĐÃ ĐẾN' và tạo một phiếu dịch vụ mới.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),
@@ -170,5 +170,31 @@ public class AppointmentController {
                 );
         }
 
+        @PatchMapping("/{id}/status")
+        @Operation(
+                summary = "Cập nhật trạng thái cuộc hẹn",
+                description = "Cập nhật trạng thái mới cho một cuộc hẹn dựa trên ID được cung cấp."
+        )
+        public ResponseEntity<ApiResponse<AppointmentResponseDto>> updateStatus(
+                @Parameter(description = "Mã định danh (ID) của cuộc hẹn", example = "1")
+                @PathVariable Long id,
+                @Parameter(description = "Trạng thái mới của cuộc hẹn", example = "CONFIRMED")
+                @RequestParam AppointmentStatus status
+        ) {
+                AppointmentResponseDto updated = service.updateStatus(id, status);
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái cuộc hẹn thành công", updated));
+        }
 
+        @PostMapping("/{id}/confirm")
+        @Operation(
+                summary = "Xác nhận cuộc hẹn",
+                description = "Đánh dấu cuộc hẹn là đã được khách hàng xác nhận."
+        )
+        public ResponseEntity<ApiResponse<AppointmentResponseDto>> confirmAppointment(
+                @Parameter(description = "Mã định danh (ID) của cuộc hẹn", example = "1")
+                @PathVariable Long id
+        ) {
+                AppointmentResponseDto confirmed = service.confirmAppointment(id);
+                return ResponseEntity.ok(ApiResponse.success("Xác nhận cuộc hẹn thành công", confirmed));
+        }
 }

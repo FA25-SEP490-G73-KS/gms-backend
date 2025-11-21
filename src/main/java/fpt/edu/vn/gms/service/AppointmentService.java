@@ -28,4 +28,9 @@ public interface AppointmentService {
     AppointmentResponseDto updateArrivedStatus(Long id);
 
     long countAppointmentsByDate(LocalDate date);
+
+    AppointmentResponseDto updateStatus(Long id, AppointmentStatus status);
+
+    AppointmentResponseDto confirmAppointment(Long id);
+
 }

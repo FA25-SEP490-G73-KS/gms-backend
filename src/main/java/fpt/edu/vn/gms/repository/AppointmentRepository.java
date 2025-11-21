@@ -18,14 +18,6 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    @Query("SELECT a FROM Appointment a " +
-            "WHERE a.status = 'PENDING' " +
-            "AND a.appointmentDate = :currentDate " +
-            "AND a.timeSlot.endTime < :currentTime")
-    List<Appointment> findOverdueAppointments(
-            @Param("currentDate") LocalDate currentDate,
-            @Param("currentTime") LocalTime currentTime);
-
     @Query("SELECT a FROM Appointment a JOIN FETCH a.timeSlot WHERE a.appointmentDate = :date")
     List<Appointment> findByAppointmentDate(@Param("date") LocalDate date);
 
@@ -41,4 +33,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     int countByAppointmentDateAndTimeSlot(LocalDate appointmentDate, TimeSlot timeSlot);
 
     int countByCustomerAndAppointmentDate(Customer customer, LocalDate appointmentDate);
+
+    List<Appointment> findByAppointmentDateAndStatus(LocalDate appointmentDate, AppointmentStatus status);
+
+    List<Appointment> findByStatusAndConfirmedAtIsNullAndAppointmentDate(
+            AppointmentStatus status,
+            LocalDate date
+    );
+
 }

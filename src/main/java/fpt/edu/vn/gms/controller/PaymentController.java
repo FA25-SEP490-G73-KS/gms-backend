@@ -21,6 +21,28 @@ public class PaymentController {
 
     PaymentService paymentService;
 
+    @GetMapping
+    @Operation(summary = "Lấy danh sách phiếu thanh toán (phân trang + sort)")
+    public ResponseEntity<ApiResponse<?>> getPaymentList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Lấy danh sách phiếu thanh toán thành công",
+                        paymentService.getPaymentList(page, size, sort)
+                )
+        );
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy chi tiết phiếu thanh toán")
+    public ResponseEntity<ApiResponse<?>> getPaymentDetail(@PathVariable Long id) {
+        var result = paymentService.getPaymentDetail(id);
+        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết phiếu thanh toán thành công", result));
+    }
+
     @PostMapping
     @Operation(summary = "Tạo phiếu thanh toán", description = "Tạo phiếu thanh toán cho phiếu dịch vụ và báo giá đã cho.")
     @ApiResponses(value = {
