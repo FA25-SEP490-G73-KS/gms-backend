@@ -16,7 +16,7 @@ public final class AppRoutes {
   public static final String AUTH_PREFIX = API_PREFIX + "/auth";
   public static final String APPOINTMENTS_PREFIX = API_PREFIX + "/appointments";
   public static final String SERVICE_TYPES_PREFIX = API_PREFIX + "/services";
-  public static final String BRAND_PREFIX = API_PREFIX + "/brands";
+  public static final String PART_CATEGORY_PREFIX = API_PREFIX + "/part-category";
   public static final String CUSTOMERS_PREFIX = API_PREFIX + "/customers";
   public static final String EMPLOYEES_PREFIX = API_PREFIX + "/employees";
   public static final String NOTIFICATIONS_PREFIX = API_PREFIX + "/notifications";
