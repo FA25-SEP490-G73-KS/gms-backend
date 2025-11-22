@@ -179,15 +179,18 @@ public class PaymentServiceImpl implements PaymentService {
             newDebtAmount = BigDecimal.ZERO;
         }
 
+        if (newDebtAmount.compareTo(BigDecimal.ZERO) == 0) {
+            log.info("Payment {} has no remaining amount, skip creating debt", paymentId);
+            return null;
+        }
+
         if (dueDate == null) {
             // Nếu FE không gửi dueDate, mặc định +30 ngày
             dueDate = LocalDate.now().plusDays(30);
         }
 
         // Nếu không còn nợ -> có thể không tạo Debt, tuỳ nghiệp vụ
-        DebtStatus status = newDebtAmount.compareTo(BigDecimal.ZERO) == 0
-                ? DebtStatus.DA_TAT_TOAN
-                : DebtStatus.CON_NO;
+        DebtStatus status = DebtStatus.CON_NO;
 
         Debt debt = Debt.builder()
                 .customer(customer)

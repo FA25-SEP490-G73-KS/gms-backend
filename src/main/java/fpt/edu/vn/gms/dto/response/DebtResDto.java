@@ -24,6 +24,9 @@ public class DebtResDto {
     @Schema(description = "Phiếu dịch vụ liên quan")
     private Long serviceTicketId;
 
+    @Schema(description = "Mã phiếu dịch vụ liên quan")
+    private String serviceTicketCode;
+
     @Schema(description = "Số tiền công nợ")
     private BigDecimal amount;
 

@@ -10,6 +10,7 @@ public interface DebtMapper {
 
     @Mapping(source = "customer.customerId", target = "customerId")
     @Mapping(source = "serviceTicket.serviceTicketId", target = "serviceTicketId")
+    @Mapping(source = "serviceTicket.serviceTicketCode", target = "serviceTicketCode")
     @Mapping(target = "statusLabel", expression = "java(debt.getStatus().getLabel())")
     DebtResDto toDto(Debt debt);
 }

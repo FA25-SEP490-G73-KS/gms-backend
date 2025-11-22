@@ -93,6 +93,10 @@ public class PaymentController {
 
         DebtResDto debt = paymentService.createDebtFromPayment(paymentId, request.getDueDate());
 
+        if (debt == null) {
+            return ResponseEntity.ok(ApiResponse.success("Không còn công nợ cần tạo", null));
+        }
+
         return ResponseEntity
                 .status(201)
                 .body(ApiResponse.success("Tạo công nợ thành công", debt));
