@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.request.PartReqDto;
+import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.PartResDto;
+import fpt.edu.vn.gms.dto.request.PartResDto;
 import fpt.edu.vn.gms.service.PartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,11 +32,11 @@ public class PartController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy danh sách linh kiện thành công"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<Page<PartResDto>>> findAll(
+        public ResponseEntity<ApiResponse<Page<PartReqDto>>> findAll(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "6") int size) {
 
-                Page<PartResDto> partList = partService.getAllPart(page, size);
+                Page<PartReqDto> partList = partService.getAllPart(page, size);
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Danh sách linh kiện", partList));
@@ -49,10 +49,10 @@ public class PartController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Yêu cầu không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<PartResDto>> createPart(
-                        @RequestBody PartReqDto part) {
+        public ResponseEntity<ApiResponse<PartReqDto>> createPart(
+                        @RequestBody PartResDto part) {
 
-                PartResDto resDto = partService.createPart(part);
+                PartReqDto resDto = partService.createPart(part);
                 return ResponseEntity.status(201)
                                 .body(ApiResponse.success("Thêm linh kiện!!!!", resDto));
         }
@@ -64,12 +64,13 @@ public class PartController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Tên danh mục không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<Page<PartResDto>>> getPartByCategory(
+        public ResponseEntity<ApiResponse<Page<PartReqDto>>> getPartByCategory(
                         @RequestParam String categoryName,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "6") int size) {
 
-                Page<PartResDto> resDtoPage = partService.getPartByCategory(categoryName, page, size);
+                Page<PartReqDto> resDtoPage = partService.getPartByCategory(categoryName, page, size);
+
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Part có category " + categoryName, resDtoPage));
         }

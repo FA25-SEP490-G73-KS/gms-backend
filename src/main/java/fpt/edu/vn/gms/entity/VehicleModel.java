@@ -26,7 +26,4 @@ public class VehicleModel {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
-
-    @ManyToMany(mappedBy = "compatibleVehicles")
-    private Set<Part> parts = new HashSet<>();
 }

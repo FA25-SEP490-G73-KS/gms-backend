@@ -7,8 +7,6 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-import fpt.edu.vn.gms.common.enums.Market;
-
 @Entity
 @Table(name = "part")
 @Getter
@@ -30,20 +28,13 @@ public class Part {
     @JoinColumn(name = "category_id")
     private PartCategory category;
 
-    @ManyToMany
-    @JoinTable(
-            name = "part_vehicle_model",
-            joinColumns = @JoinColumn(name = "part_id"),
-            inverseJoinColumns = @JoinColumn(name = "vehicle_model_id")
-    )
-    private Set<VehicleModel> compatibleVehicles = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "vehicle_model")
+    private VehicleModel vehicleModel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "market", length = 20)
+    @ManyToOne
+    @JoinColumn(name = "market")
     private Market market;
-
-    @Column(name = "is_universal", nullable = false)
-    private boolean isUniversal = false;
 
     @Column(name = "purchase_price", precision = 12, scale = 2)
     private BigDecimal purchasePrice;
@@ -57,8 +48,9 @@ public class Part {
     @Column(name = "quantity_in_stock")
     private Double quantityInStock;
 
-    @Column(name = "unit", length = 20)
-    private String unit; // đơn vị đo, ví dụ: "chai", "bộ", "lít", "cái"
+    @ManyToOne
+    @JoinColumn(name = "unit")
+    private Unit unit;
 
     @Column(name = "reserved_quantity")
     private Double reservedQuantity;
@@ -66,8 +58,14 @@ public class Part {
     @Column(name = "reorder_level")
     private Double reorderLevel;
 
+    @Column(name = "is_universal", nullable = false)
+    private boolean isUniversal = false;
+
     @Column(nullable = false)
     private boolean specialPart = false;
+
+    @Column(length = 100, nullable = true)
+    private String note;
 
     @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();

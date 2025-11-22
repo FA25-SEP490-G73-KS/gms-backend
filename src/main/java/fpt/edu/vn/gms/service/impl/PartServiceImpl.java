@@ -1,39 +1,36 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.dto.request.PartReqDto;
-import fpt.edu.vn.gms.dto.response.PartResDto;
-import fpt.edu.vn.gms.entity.Part;
-import fpt.edu.vn.gms.entity.PartCategory;
-import fpt.edu.vn.gms.entity.VehicleModel;
+import fpt.edu.vn.gms.dto.response.PartReqDto;
+import fpt.edu.vn.gms.dto.request.PartResDto;
+import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PartMapper;
-import fpt.edu.vn.gms.repository.CategoryRepository;
-import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.VehicleModelRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.PartService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PartServiceImpl implements PartService {
 
     private final PartRepository partRepository;
-    private final VehicleModelRepository modelRepo;
     private final CategoryRepository categoryRepo;
+    private final MarketRepository marketRepo;
+    private final UnitRepository unitRepo;
+    private final VehicleModelRepository vehicleModelRepo;
     private final PartMapper partMapper;
 
     @Override
-    public Page<PartResDto> getAllPart(int page, int size) {
+    public Page<PartReqDto> getAllPart(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -43,47 +40,61 @@ public class PartServiceImpl implements PartService {
         return parts.map(partMapper::toDto);
     }
 
-    @Transactional
     @Override
-    public PartResDto createPart(PartReqDto dto) {
+    @Transactional
+    public PartReqDto createPart(PartResDto dto) {
 
-        // --- Kiểm tra danh mục (nếu có) ---
+        log.info("Creating new part with name={}", dto.getName());
+
+        // --- Category ---
         PartCategory category = null;
         if (dto.getCategoryId() != null) {
             category = categoryRepo.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục linh kiện ID: " + dto.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy danh mục với ID: " + dto.getCategoryId()));
         }
 
-        // --- Lấy các model xe tương thích (nếu có) ---
-        Set<VehicleModel> compatibleModels = new HashSet<>();
-        if (dto.getCompatibleVehicleModelIds() != null && !dto.getCompatibleVehicleModelIds().isEmpty()) {
-            compatibleModels.addAll(modelRepo.findAllById(dto.getCompatibleVehicleModelIds()));
-        }
+        // --- Market ---
+        Market market = marketRepo.findById(dto.getMarketId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường!"));
 
-        // --- Tạo đối tượng Part ---
-        Part newPart = Part.builder()
+        // --- Unit ---
+        Unit unit = unitRepo.findById(dto.getUnitId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính!"));
+
+        // --- Vehicle Model ---
+        VehicleModel vehicleModel = vehicleModelRepo.findById(dto.getVehicleModel())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe!"));
+
+        // --- Tính giá bán ---
+        BigDecimal purchase = dto.getPurchasePrice();
+        BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10));
+
+        // --- Build entity ---
+        Part part = Part.builder()
                 .name(dto.getName())
                 .category(category)
-                .compatibleVehicles(compatibleModels)
-                .market(dto.getMarket())
+                .vehicleModel(vehicleModel)
+                .market(market)
+                .purchasePrice(purchase)
+                .sellingPrice(selling)
+                .quantityInStock(dto.getQuantity())
+                .discountRate(BigDecimal.valueOf(10.0))
+                .unit(unit)
                 .isUniversal(dto.isUniversal())
-                .purchasePrice(dto.getPurchasePrice())
-                .sellingPrice(dto.getSellingPrice())
-                .discountRate(dto.getDiscountRate())
-                .unit(dto.getUnit())
-                .reorderLevel(dto.getReorderLevel() != null ? dto.getReorderLevel() : 0.0)
-                .quantityInStock(0.0) // chưa nhập, để 0
-                .reservedQuantity(0.0) // chưa giữ, để 0
-                .specialPart(dto.isSpecialPart()) // vì là linh kiện unknown
+                .specialPart(dto.isSpecialPart())
+                .note(dto.getNote())
                 .build();
 
-        Part saved = partRepository.save(newPart);
+        Part saved = partRepository.save(part);
+
+        log.info("Created part id={} name={}", saved.getPartId(), saved.getName());
 
         return partMapper.toDto(saved);
     }
 
     @Override
-    public Page<PartResDto> getPartByCategory(String categoryName, int page, int size) {
+    public Page<PartReqDto> getPartByCategory(String categoryName, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 

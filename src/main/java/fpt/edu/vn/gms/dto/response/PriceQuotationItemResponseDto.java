@@ -16,11 +16,11 @@ public class PriceQuotationItemResponseDto {
     private Long priceQuotationItemId;
     private Long partId;
     private String partName;
-    private PriceQuotationItemType itemType;
     private Integer quantity;
     private String unit;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
+    private PriceQuotationItemType itemType;
     private PriceQuotationItemStatus inventoryStatus;
     private WarehouseReviewStatus warehouseReviewStatus;
     private String warehouseNote;

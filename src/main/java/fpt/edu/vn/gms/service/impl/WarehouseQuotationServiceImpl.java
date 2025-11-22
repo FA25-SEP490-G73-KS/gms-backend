@@ -55,7 +55,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             var dto = priceQuotationMapper.toResponseDto(quotation);
             if (dto.getItems() != null) {
                 dto.setItems(dto.getItems().stream()
-                        .filter(item -> item.getItemType() == PriceQuotationItemType.PART && item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN)
+                        .filter(item -> item.getItemType() == PriceQuotationItemType.PART && item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN || item.getInventoryStatus() == PriceQuotationItemStatus.OUT_OF_STOCK)
                         .toList());
             }
             return dto;

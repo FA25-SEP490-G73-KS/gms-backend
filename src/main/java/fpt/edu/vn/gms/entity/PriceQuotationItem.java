@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
@@ -40,17 +41,14 @@ public class PriceQuotationItem {
     @Column(name = "quantity")
     private Double quantity;
 
-    @Column(name = "exported_quantity")
-    private Double exportedQuantity;
-
     @Column(name = "unit", length = 20)
     private String unit;
 
-    @Column(name = "discount_rate", precision = 5, scale = 2)
-    private BigDecimal discountRate;
-
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
+
+    @Column(name = "exported_quantity")
+    private Double exportedQuantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)
@@ -71,4 +69,17 @@ public class PriceQuotationItem {
 
     @Enumerated(EnumType.STRING)
     private ExportStatus exportStatus = ExportStatus.NONE;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -30,49 +30,25 @@ VALUES
     (1, '0909123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'SERVICE_ADVISOR', 1, 1),
     (2, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 2, 1);
 
-INSERT INTO part_category (name)
-VALUES
-    ('Dầu, dung dịch'),
-    ('Lọc'),
-    ('Đèn / Phanh'),
-    ('Điện'),
-    ('Phụ kiện tiêu hao');
+INSERT INTO part_category (name) VALUES
+                                     ('Động cơ'),
+                                     ('Truyền động – Hộp số'),
+                                     ('Hệ thống treo – khung gầm'),
+                                     ('Hệ thống phanh'),
+                                     ('Hệ thống làm mát'),
+                                     ('Điều hòa – HVAC'),
+                                     ('Điện – Điện tử'),
+                                     ('Thân vỏ – Ngoại thất'),
+                                     ('Nội thất'),
+                                     ('Dầu – Hóa chất'),
+                                     ('Vật tư tiêu hao');
 
-INSERT INTO part (
-    part_name,
-    market,
-    is_universal,
-    purchase_price,
-    selling_price,
-    discount_rate,
-    quantity_in_stock,
-    reserved_quantity,
-    reorder_level,
-    special_part
-) VALUES
-      ('Lọc nhớt động cơ', 'VN', false, 80000, 120000, 0.00, 50, 0, 10, true),
-      ('Lọc nhớt động cơ', 'VN', false, 80000, 120000, 0.00, 50, 0, 10, true),
-      ('Dầu động cơ 10W-40', 'VN', true, 250000, 320000, 5.00, 100, 5, 20, true),
-      ('Bugi đánh lửa', 'JP', false, 40000, 80000, 0.00, 80, 2, 15, true),
-      ('Phanh đĩa trước', 'JP', false, 300000, 450000, 0.00, 30, 0, 10, true),
-      ('Ắc quy GS 12V-45Ah', 'JP', true, 950000, 1200000, 3.00, 20, 1, 5, true),
-      ('Dây curoa tổng', 'VN', false, 180000, 250000, 0.00, 40, 0, 10, true),
-      ('Lọc gió điều hoà', 'US', true, 50000, 90000, 0.00, 60, 0, 15, true),
-      ('Gạt mưa trước', 'VN', true, 30000, 60000, 0.00, 120, 0, 30, true),
-      ('Đèn pha LED', 'EU', false, 700000, 950000, 0.00, 15, 0, 5, true),
-      ('Cảm biến ABS', 'JP', false, 450000, 600000, 0.00, 10, 0, 3, true);
-
-INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
+INSERT INTO market (name)
 VALUES
-    ('BRONZE', 0.00,   0.00,  'Mức cơ bản'),
-    ('SLIVER', 5.00,  5000.00, 'Chi tiêu trên 5 triệu'),
-    ('GOLD', 10.00, 10000.00, 'Chi tiêu trên 10 triệu');
-
-INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, discount_policy_id)
-VALUES
-    ('Nguyễn Văn A', '0123456789', 'zalo_001', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 1),
-    ('Trần Thị B', '0123987654', 'zalo_002', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 1),
-    ('Lê Văn C', '0987654321', 'zalo_003', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 1);
+    ('VN'),
+    ('JP'),
+    ('US'),
+    ('EU');
 
 INSERT INTO brand (name) VALUES
                              ('Toyota'),
@@ -86,6 +62,46 @@ INSERT INTO vehicle_model (brand_id, name) VALUES
                                                (2, 'City'),
                                                (3, 'Focus'),
                                                (3, 'Ranger');
+
+
+INSERT INTO part (
+    part_name,
+    category_id,
+    market,
+    is_universal,
+    purchase_price,
+    selling_price,
+    discount_rate,
+    quantity_in_stock,
+    reserved_quantity,
+    reorder_level,
+    special_part,
+    vehicle_model
+) VALUES
+      ('Lọc nhớt động cơ',        10, 1, false, 80000, 120000, 0.00, 50, 0, 10, false, 1),
+      ('Lọc nhớt động cơ',        10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2),
+      ('Dầu động cơ 10W-40',      10, 1, true , 250000, 320000, 5.00, 100, 5, 20, false, 3),
+      ('Bugi đánh lửa',            1, 2, false, 40000 , 80000 , 0.00, 80, 2, 15, false, 4),
+      ('Phanh đĩa trước',          4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5),
+      ('Ắc quy GS 12V-45Ah',       7, 2, true , 950000,1200000, 3.00, 20, 1, 5, false, 1),
+      ('Dây curoa tổng',           1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2),
+      ('Lọc gió điều hoà',         6, 3, true , 50000 , 90000 , 0.00, 60, 0, 15, false, 3),
+      ('Gạt mưa trước',            8, 1, true , 30000 , 60000 , 0.00,120, 0, 30, false, 4),
+      ('Đèn pha LED',              8, 3, false, 700000, 950000, 0.00, 15, 0, 5, false,5 ),
+      ('Cảm biến ABS',             7, 4, false, 450000, 600000, 0.00, 10, 0, 3, false, 1);
+
+INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
+VALUES
+    ('BRONZE', 0.00,   0.00,  'Mức cơ bản'),
+    ('SLIVER', 5.00,  5000.00, 'Chi tiêu trên 5 triệu'),
+    ('GOLD', 10.00, 10000.00, 'Chi tiêu trên 10 triệu');
+
+INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, discount_policy_id)
+VALUES
+    ('Nguyễn Văn A', '0123456789', 'zalo_001', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 1),
+    ('Trần Thị B', '0123987654', 'zalo_002', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 1),
+    ('Lê Văn C', '0987654321', 'zalo_003', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 1);
+
 
 INSERT INTO vehicle (customer_id, vehicle_model_id, license_plate, vin, year)
 VALUES
