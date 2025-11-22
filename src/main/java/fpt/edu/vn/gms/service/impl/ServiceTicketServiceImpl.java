@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.service.impl;
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
+import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
@@ -10,7 +11,10 @@ import fpt.edu.vn.gms.mapper.ServiceTicketMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.ServiceTicketService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,19 +30,21 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ServiceTicketServiceImpl implements ServiceTicketService {
 
-    private final ServiceTicketRepository serviceTicketRepository;
-    private final AppointmentRepository appointmentRepository;
-    private final CustomerRepository customerRepository;
-    private final VehicleRepository vehicleRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ServiceTypeRepository serviceTypeRepository;
-    private final ServiceTicketMapper serviceTicketMapper;
-    private final VehicleModelRepository vehicleModelRepository;
-    private final DiscountPolicyRepository discountPolicyRepo;
-    private final CodeSequenceService codeSequenceService;
-    private final BrandRepository brandRepository;
+    ServiceTicketRepository serviceTicketRepository;
+    AppointmentRepository appointmentRepository;
+    CustomerRepository customerRepository;
+    VehicleRepository vehicleRepository;
+    EmployeeRepository employeeRepository;
+    ServiceTypeRepository serviceTypeRepository;
+    ServiceTicketMapper serviceTicketMapper;
+    VehicleModelRepository vehicleModelRepository;
+    DiscountPolicyRepository discountPolicyRepo;
+    CodeSequenceService codeSequenceService;
+    BrandRepository brandRepository;
 
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto, Employee currEmployee) {
@@ -191,104 +197,123 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
 
     @Transactional
     @Override
-    public ServiceTicketResponseDto updateServiceTicket(Long id, ServiceTicketRequestDto dto) {
+    public ServiceTicketResponseDto updateServiceTicket(Long id, TicketUpdateReqDto dto) {
+
+        log.info("Update service ticket start, ticketId={}", id);
+        log.debug("Incoming request DTO: {}", dto);
 
         ServiceTicket existing = serviceTicketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với ID: " + id));
+                .orElseThrow(() -> {
+                    log.error("Service ticket not found, id={}", id);
+                    return new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với ID: " + id);
+                });
 
-        // --- CUSTOMER ---
+        // ==========================
+        // 1. UPDATE CUSTOMER
+        // ==========================
+        log.info("Updating customer info for ticketId={}", id);
+
         Customer customer = existing.getCustomer();
-        if (dto.getCustomer() != null) {
-            if (customer == null) {
-                // Chưa có customer → tạo mới
-                DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
+        log.debug("Customer before update: {}", customer);
 
-                customer = Customer.builder()
-                        .fullName(dto.getCustomer().getFullName())
-                        .phone(dto.getCustomer().getPhone())
-                        .address(dto.getCustomer().getAddress())
-                        .customerType(dto.getCustomer().getCustomerType())
-                        .discountPolicy(defaultPolicy)
-                        .build();
-            } else {
-                // Cập nhật thông tin khách hàng
-                customer.setFullName(dto.getCustomer().getFullName());
-                customer.setPhone(dto.getCustomer().getPhone());
-                customer.setAddress(dto.getCustomer().getAddress());
-                customer.setCustomerType(dto.getCustomer().getCustomerType());
-            }
-            customer = customerRepository.save(customer);
+        customer.setFullName(dto.getCustomerName());
+        customer.setPhone(dto.getCustomerPhone());
+        customerRepository.save(customer);
 
-            existing.setCustomer(customer);
-            existing.setCustomerName(customer.getFullName());
-            existing.setCustomerPhone(customer.getPhone());
+        existing.setCustomerName(customer.getFullName());
+        existing.setCustomerPhone(customer.getPhone());
+
+        log.debug("Customer after update: {}", customer);
+
+        // ==========================
+        // 2. UPDATE VEHICLE
+        // ==========================
+        Vehicle currentVehicle = existing.getVehicle();
+        log.debug("Current vehicle: {}", currentVehicle);
+
+        // CASE 1: FE gửi vehicleId → đổi xe khác
+        if (dto.getVehicleId() != null) {
+
+            log.info("Switching vehicle, new vehicleId={}", dto.getVehicleId());
+
+            Vehicle newVehicle = vehicleRepository.findById(dto.getVehicleId())
+                    .orElseThrow(() -> {
+                        log.error("Vehicle not found, id={}", dto.getVehicleId());
+                        return new ResourceNotFoundException("Không tìm thấy xe với ID: " + dto.getVehicleId());
+                    });
+
+            existing.setVehicle(newVehicle);
+            existing.setVehicleLicensePlate(newVehicle.getLicensePlate());
+
+            log.info("Switched to vehicleId={} with plate={}",
+                    newVehicle.getVehicleId(), newVehicle.getLicensePlate());
         }
 
-        // --- VEHICLE, BRAND, VEHICLE MODEL ---
-        if (dto.getVehicle() != null) {
-            Vehicle vehicle = existing.getVehicle();
-            VehicleModel vehicleModel;
-            Brand brand;
+        // CASE 2: Không có vehicleId nhưng có biển số → update vào vehicle hiện tại
+        else if (dto.getLicensePlate() != null) {
 
-            // Xử lý brand
-            if (dto.getVehicle().getBrandId() != null) {
-                brand = brandRepository.findById(dto.getVehicle().getBrandId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hãng xe!"));
-            } else {
-                brand = Brand.builder().name(dto.getVehicle().getBrandName()).build();
-                brand = brandRepository.save(brand);
+            log.info("Updating license plate on current vehicle, new plate={}", dto.getLicensePlate());
+
+            if (currentVehicle == null) {
+                log.error("Ticket has no vehicle assigned, cannot update license plate");
+                throw new IllegalArgumentException("Không thể cập nhật biển số vì ticket chưa gắn xe!");
             }
 
-            // Xử lý vehicle model
-            if (dto.getVehicle().getModelId() != null) {
-                vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại xe!"));
-            } else {
-                VehicleModel newModel = VehicleModel.builder()
-                        .brand(brand)
-                        .name(dto.getVehicle().getModelName())
-                        .build();
-                vehicleModel = vehicleModelRepository.save(newModel);
-            }
+            log.debug("Vehicle before update: {}", currentVehicle);
 
-            // Tạo hoặc cập nhật vehicle
-            if (vehicle == null) {
-                vehicle = Vehicle.builder()
-                        .licensePlate(dto.getVehicle().getLicensePlate())
-                        .vehicleModel(vehicleModel)
-                        .year(dto.getVehicle().getYear())
-                        .vin(dto.getVehicle().getVin())
-                        .customer(customer)
-                        .build();
-            } else {
-                vehicle.setVehicleModel(vehicleModel);
-                vehicle.setLicensePlate(dto.getVehicle().getLicensePlate());
-                vehicle.setYear(dto.getVehicle().getYear());
-                vehicle.setVin(dto.getVehicle().getVin());
-                vehicle.setCustomer(customer);
-            }
-            vehicleRepository.save(vehicle);
-            existing.setVehicle(vehicle);
+            currentVehicle.setLicensePlate(dto.getLicensePlate());
+
+            if (dto.getVin() != null)
+                currentVehicle.setVin(dto.getVin());
+
+            vehicleRepository.save(currentVehicle);
+
+            existing.setVehicle(currentVehicle);
+            existing.setVehicleLicensePlate(currentVehicle.getLicensePlate());
+
+            log.info("Updated current vehicle license plate successfully, vehicleId={}, plate={}",
+                    currentVehicle.getVehicleId(), currentVehicle.getLicensePlate());
         }
 
-        // --- TECHNICIANS ---
-        if (dto.getAssignedTechnicianIds() != null) {
-            List<Employee> technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
-            existing.setTechnicians(technicians);
+        // ==========================
+        // 3. UPDATE TECHNICIAN
+        // ==========================
+        if (dto.getAssignedTechnicianId() != null) {
+
+            log.info("Updating technician, technicianId={}", dto.getAssignedTechnicianId());
+
+            Employee tech = employeeRepository.findById(dto.getAssignedTechnicianId())
+                    .orElseThrow(() -> {
+                        log.error("Technician not found, id={}", dto.getAssignedTechnicianId());
+                        return new ResourceNotFoundException("Không tìm thấy kỹ thuật viên");
+                    });
+
+            existing.setTechnicians(List.of(tech));
+
+            log.info("Technician updated to {} for ticketId={}", tech.getFullName(), id);
         }
 
-        // --- SERVICE TYPES ---
+        // ==========================
+        // 4. UPDATE SERVICE TYPES
+        // ==========================
         if (dto.getServiceTypeIds() != null) {
+
+            log.info("Updating service types: {}", dto.getServiceTypeIds());
+
             List<ServiceType> serviceTypes = serviceTypeRepository.findAllById(dto.getServiceTypeIds());
             existing.setServiceTypes(serviceTypes);
+
+            log.info("Updated {} service types for ticketId={}", serviceTypes.size(), id);
         }
 
-        // Lưu lại phiếu dịch vụ
+        // SAVE
         serviceTicketRepository.save(existing);
+
+        log.info("Update service ticket completed successfully, ticketId={}", id);
 
         return serviceTicketMapper.toResponseDto(existing);
     }
+
 
     @Transactional
     @Override

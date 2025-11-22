@@ -75,12 +75,38 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Check customer theo số điện thoại
         Customer customer = customerRepo.findByPhone(dto.getPhoneNumber())
+                .map(existing -> {
+
+                    // Nếu FE gửi isActive=false -> nghĩa là số này đã đổi chủ
+                    if (!dto.isActive()) {
+                        log.info("Phone {} is reused by a new customer. Marking old customer inactive.", dto.getPhoneNumber());
+
+                        // 1. disable customer cũ
+                        existing.setActive(false);
+                        customerRepo.save(existing);
+
+                        // 2. tạo customer mới
+                        Customer newCustomer = Customer.builder()
+                                .fullName(dto.getCustomerName())
+                                .phone(dto.getPhoneNumber())
+                                .discountPolicy(defaultPolicy)
+                                .isActive(true)
+                                .build();
+
+                        return customerRepo.save(newCustomer);
+                    }
+
+                    // Nếu không đổi chủ, dùng customer cũ
+                    return existing;
+
+                })
                 .orElseGet(() -> {
-                    // Nếu chưa có thì tạo mới customer
+                    // Chưa có customer -> tạo mới
                     Customer newCustomer = Customer.builder()
                             .fullName(dto.getCustomerName())
                             .phone(dto.getPhoneNumber())
                             .discountPolicy(defaultPolicy)
+                            .isActive(true)
                             .build();
                     return customerRepo.save(newCustomer);
                 });

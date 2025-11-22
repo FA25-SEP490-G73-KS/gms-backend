@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
+import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
@@ -116,7 +117,7 @@ public class ServiceTicketController {
         })
         public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateServiceTicket(
                         @PathVariable("id") Long id,
-                        @RequestBody ServiceTicketRequestDto dto) {
+                        @RequestBody TicketUpdateReqDto dto) {
 
                 ServiceTicketResponseDto updated = serviceTicketService.updateServiceTicket(id, dto);
 

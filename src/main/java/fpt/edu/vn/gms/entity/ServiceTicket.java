@@ -52,6 +52,8 @@ public class ServiceTicket {
     @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id")
     private Vehicle vehicle;
 
+    private String vehicleLicensePlate;
+
     @ManyToMany
     @JoinTable(
             name = "service_ticket_technicians",

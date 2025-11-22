@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = {PriceQuotationMapper.class})
+@Mapper(componentModel = "spring", uses = {PriceQuotationMapper.class, CustomerMapper.class, VehicleMapper.class})
 public interface ServiceTicketMapper {
 
     // ----------- ENTITY -> RESPONSE -----------
@@ -18,26 +18,9 @@ public interface ServiceTicketMapper {
     @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "createdBy", source = "createdBy.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh sách tên
+    @Mapping(target = "customer", source = "customer")
+    @Mapping(target = "vehicle", source = "vehicle")
     ServiceTicketResponseDto toResponseDto(ServiceTicket serviceTicket);
-
-    // ----------- CUSTOMER & VEHICLE NESTED MAPPING -----------
-    @Mapping(target = "customerId", source = "customerId")
-    @Mapping(target = "fullName", source = "fullName")
-    @Mapping(target = "phone", source = "phone")
-    @Mapping(target = "address", source = "address")
-    @Mapping(target = "customerType", source = "customerType")
-    @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
-    CustomerResponseDto toCustomerDto(Customer customer);
-
-    @Mapping(target = "vehicleId", source = "vehicleId")
-    @Mapping(target = "licensePlate", source = "licensePlate")
-    @Mapping(target = "vin", source = "vin")
-    @Mapping(target = "year", source = "year")
-    @Mapping(target = "customerId", source = "customer.customerId")
-    @Mapping(target = "vehicleModelId", source = "vehicleModel.vehicleModelId")
-    @Mapping(target = "vehicleModelName", source = "vehicleModel.name")
-    @Mapping(target = "brandName", source = "vehicleModel.brand.name")
-    VehicleResponseDto toVehicleDto(Vehicle vehicle);
 
     // ----------- SUPPORT FUNCTION -----------
     default List<String> mapTechnicianNames(List<Employee> technicians) {

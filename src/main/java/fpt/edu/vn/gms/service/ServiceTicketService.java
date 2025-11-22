@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
+import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,7 @@ public interface ServiceTicketService {
 
     Page<ServiceTicketResponseDto> getServiceTicketsByCreatedAt(LocalDateTime createdAt, Pageable pageable);
 
-    ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, ServiceTicketRequestDto dto);
+    ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, TicketUpdateReqDto dto);
 
     ServiceTicketResponseDto updateDeliveryAt(Long serviceTicketId, LocalDate deliveryAt);
 

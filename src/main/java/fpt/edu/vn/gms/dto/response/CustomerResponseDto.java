@@ -19,6 +19,5 @@ public class CustomerResponseDto {
     private String phone;
     private String address;
     private CustomerType customerType;
-    private List<String> licensePlates;
     private CustomerLoyaltyLevel loyaltyLevel;
 }

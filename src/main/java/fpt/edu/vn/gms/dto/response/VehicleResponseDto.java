@@ -11,7 +11,6 @@ public class VehicleResponseDto {
     private String licensePlate;
     private String vin;
     private Integer year;
-    private Long customerId;
     private Long vehicleModelId;
     private String vehicleModelName;
     private String brandName;
