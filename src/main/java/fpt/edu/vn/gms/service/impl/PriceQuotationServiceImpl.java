@@ -184,12 +184,18 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             } else {
                 double availableQty = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
                         - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+
+                boolean available = availableQty >= item.getQuantity();
+
+                // AVAILABLE → inventory = AVAILABLE, review = CONFIRMED
+                // OUT_OF_STOCK → inventory = OUT_OF_STOCK, review = PENDING
                 item.setInventoryStatus(
-                        availableQty >= item.getQuantity()
-                                ? PriceQuotationItemStatus.AVAILABLE
-                                : PriceQuotationItemStatus.OUT_OF_STOCK
+                        available ? PriceQuotationItemStatus.AVAILABLE : PriceQuotationItemStatus.OUT_OF_STOCK
                 );
-                item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
+
+                item.setWarehouseReviewStatus(
+                        available ? WarehouseReviewStatus.CONFIRMED : WarehouseReviewStatus.PENDING
+                );
             }
         } else {
             item.setPart(null);

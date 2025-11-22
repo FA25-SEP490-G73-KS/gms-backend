@@ -25,7 +25,7 @@ public class TicketUpdateReqDto {
     private String vin;
 
     // --- TECHNICIAN ---
-    private Long assignedTechnicianId;
+    private List<Long> assignedTechnicianId;
 
     // --- SERVICE TYPE ---
     private List<Long> serviceTypeIds;

@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service;
 
+import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.request.PartResDto;
 import org.springframework.data.domain.Page;
@@ -11,4 +12,6 @@ public interface PartService {
     PartReqDto createPart(PartResDto part);
 
     Page<PartReqDto> getPartByCategory(String categoryName, int page, int size);
+
+    PartReqDto updatePart(Long id, PartUpdateReqDto dto);
 }

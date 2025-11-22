@@ -278,19 +278,20 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // ==========================
         // 3. UPDATE TECHNICIAN
         // ==========================
-        if (dto.getAssignedTechnicianId() != null) {
+        if (dto.getAssignedTechnicianId() != null && !dto.getAssignedTechnicianId().isEmpty()) {
 
-            log.info("Updating technician, technicianId={}", dto.getAssignedTechnicianId());
+            log.info("Updating technicians, technicianIds={}", dto.getAssignedTechnicianId());
 
-            Employee tech = employeeRepository.findById(dto.getAssignedTechnicianId())
-                    .orElseThrow(() -> {
-                        log.error("Technician not found, id={}", dto.getAssignedTechnicianId());
-                        return new ResourceNotFoundException("Không tìm thấy kỹ thuật viên");
-                    });
+            List<Employee> technicians = employeeRepository.findAllById(dto.getAssignedTechnicianId());
 
-            existing.setTechnicians(List.of(tech));
+            if (technicians.size() != dto.getAssignedTechnicianId().size()) {
+                log.warn("Some technician IDs do not exist. Requested={}, Found={}",
+                        dto.getAssignedTechnicianId().size(), technicians.size());
+            }
 
-            log.info("Technician updated to {} for ticketId={}", tech.getFullName(), id);
+            existing.setTechnicians(technicians);
+
+            log.info("Updated {} technicians for ticketId={}", technicians.size(), id);
         }
 
         // ==========================

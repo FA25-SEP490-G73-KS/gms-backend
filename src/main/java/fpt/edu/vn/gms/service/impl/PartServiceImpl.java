@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.request.PartResDto;
 import fpt.edu.vn.gms.entity.*;
@@ -89,6 +90,54 @@ public class PartServiceImpl implements PartService {
         Part saved = partRepository.save(part);
 
         log.info("Created part id={} name={}", saved.getPartId(), saved.getName());
+
+        return partMapper.toDto(saved);
+    }
+
+    @Transactional
+    @Override
+    public PartReqDto updatePart(Long id, PartUpdateReqDto dto) {
+
+        log.info("Updating part id={}", id);
+
+        Part part = partRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + id));
+
+        log.debug("Part before update: {}", part);
+
+        // Category
+        PartCategory category = categoryRepo.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+
+        // Market
+        Market market = marketRepo.findById(dto.getMarketId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
+
+        // Unit
+        Unit unit = unitRepo.findById(dto.getUnitId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
+
+        // Vehicle Model
+        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
+
+        // Update data
+        part.setName(dto.getName());
+        part.setCategory(category);
+        part.setMarket(market);
+        part.setVehicleModel(model);
+        part.setUnit(unit);
+
+        part.setPurchasePrice(dto.getPurchasePrice());
+        part.setSellingPrice(dto.getSellingPrice());   // FE cho nhập giá bán
+        part.setUniversal(dto.isUniversal());
+        part.setSpecialPart(dto.isSpecialPart());
+        part.setNote(dto.getNote());
+
+        Part saved = partRepository.save(part);
+
+        log.info("Updated part id={} successfully", id);
+        log.debug("Part after update: {}", saved);
 
         return partMapper.toDto(saved);
     }
