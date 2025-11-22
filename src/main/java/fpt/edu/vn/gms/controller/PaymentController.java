@@ -1,14 +1,18 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.dto.request.CreateDebtFromPaymentReq;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.DebtResDto;
 import fpt.edu.vn.gms.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import static fpt.edu.vn.gms.utils.AppRoutes.PAYMENT_PREFIX;
 
@@ -17,6 +21,7 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PAYMENT_PREFIX;
 @RequestMapping(path = PAYMENT_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class PaymentController {
 
     PaymentService paymentService;
@@ -56,6 +61,41 @@ public class PaymentController {
             @RequestParam Long quotationId) {
         paymentService.createPayment(serviceTicketId, quotationId);
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu thanh toán thành công", null));
+    }
+
+
+    @PostMapping("/{paymentId}/debt")
+    @Operation(
+            summary = "Tạo công nợ mới từ phiếu thanh toán",
+            description = "Dùng khi bảng giao dịch đã có (PayOS callback xong). " +
+                    "API sẽ tính công nợ mới = finalAmount - tổng các transaction SUCCESS, " +
+                    "tạo Debt và trả về thông tin công nợ cùng ngày hẹn trả."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "Tạo công nợ thành công"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Yêu cầu không hợp lệ"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Không tìm thấy phiếu thanh toán / khách hàng liên quan"
+            )
+    })
+    public ResponseEntity<ApiResponse<?>> createDebtFromPayment(
+            @PathVariable Long paymentId,
+            @RequestBody @Validated CreateDebtFromPaymentReq request
+    ) {
+        log.info("Request create debt from paymentId={} dueDate={}", paymentId, request.getDueDate());
+
+        DebtResDto debt = paymentService.createDebtFromPayment(paymentId, request.getDueDate());
+
+        return ResponseEntity
+                .status(201)
+                .body(ApiResponse.success("Tạo công nợ thành công", debt));
     }
 
 }

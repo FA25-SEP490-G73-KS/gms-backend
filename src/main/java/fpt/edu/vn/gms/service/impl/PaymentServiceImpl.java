@@ -1,14 +1,14 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.DebtStatus;
+import fpt.edu.vn.gms.dto.response.DebtResDto;
 import fpt.edu.vn.gms.dto.response.PaymentDetailResDto;
 import fpt.edu.vn.gms.dto.response.PaymentListResDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.DebtMapper;
 import fpt.edu.vn.gms.mapper.PaymentMapper;
-import fpt.edu.vn.gms.repository.DebtRepository;
-import fpt.edu.vn.gms.repository.PaymentRepository;
-import fpt.edu.vn.gms.repository.PriceQuotationRepository;
-import fpt.edu.vn.gms.repository.ServiceTicketRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.PaymentService;
 import lombok.AccessLevel;
@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +37,9 @@ public class PaymentServiceImpl implements PaymentService {
     PriceQuotationRepository priceQuotationRepo;
     PaymentRepository paymentRepo;
     DebtRepository debtRepo;
+    TransactionRepository transactionRepo;
     CodeSequenceService codeSequenceService;
+    DebtMapper debtMapper;
     PaymentMapper mapper;
 
     @Override
@@ -135,4 +139,76 @@ public class PaymentServiceImpl implements PaymentService {
 
         return mapper.toDetailDto(payment);
     }
+
+    @Override
+    @Transactional
+    public DebtResDto createDebtFromPayment(Long paymentId, LocalDate dueDate) {
+        log.info("Creating debt from paymentId={} with dueDate={}", paymentId, dueDate);
+
+        Payment payment = paymentRepo.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thanh toán: " + paymentId));
+
+        ServiceTicket serviceTicket = payment.getServiceTicket();
+        if (serviceTicket == null || serviceTicket.getCustomer() == null) {
+            throw new ResourceNotFoundException("Phiếu thanh toán chưa gắn khách hàng / phiếu dịch vụ hợp lệ");
+        }
+
+        Customer customer = serviceTicket.getCustomer();
+
+        // Tổng phải thu từ payment (finalAmount đã bao gồm công nợ cũ + giảm giá + cọc)
+        BigDecimal totalAmount = payment.getFinalAmount() != null
+                ? payment.getFinalAmount()
+                : BigDecimal.ZERO;
+
+        // Lấy các transaction đã tạo (PayOS callback thành công)
+        // Nếu repo đã có findByPaymentAndStatus thì dùng trực tiếp cho nhẹ DB:
+        var transactions = transactionRepo.findByPaymentAndIsActiveTrue(payment);
+
+        BigDecimal collectedAmount = transactions.stream()
+                .map(Transaction::getAmount)
+                .filter(Objects::nonNull)
+                .map(BigDecimal::valueOf)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Công nợ mới = tổng phải thu - số tiền đã thu
+        BigDecimal newDebtAmount = totalAmount.subtract(collectedAmount);
+        if (newDebtAmount.compareTo(BigDecimal.ZERO) < 0) {
+            // không cho âm, log để dễ debug
+            log.warn("Computed newDebtAmount < 0 for paymentId={} (total={}, collected={}), force to 0",
+                    paymentId, totalAmount, collectedAmount);
+            newDebtAmount = BigDecimal.ZERO;
+        }
+
+        if (dueDate == null) {
+            // Nếu FE không gửi dueDate, mặc định +30 ngày
+            dueDate = LocalDate.now().plusDays(30);
+        }
+
+        // Nếu không còn nợ -> có thể không tạo Debt, tuỳ nghiệp vụ
+        DebtStatus status = newDebtAmount.compareTo(BigDecimal.ZERO) == 0
+                ? DebtStatus.DA_TAT_TOAN
+                : DebtStatus.CON_NO;
+
+        Debt debt = Debt.builder()
+                .customer(customer)
+                .serviceTicket(serviceTicket)
+                .amount(newDebtAmount)
+                .paidAmount(BigDecimal.ZERO) // đây là nợ mới, chưa thu gì
+                .status(status)
+                .dueDate(dueDate)
+                .build();
+
+        debt = debtRepo.save(debt);
+
+        log.info("Created debt id={} for customer={} paymentId={} amount={} dueDate={}",
+                debt.getId(), customer.getCustomerId(), paymentId, newDebtAmount, dueDate);
+
+        DebtResDto dto = debtMapper.toDto(debt);
+        // remaining = amount - paidAmount (hiện bằng amount)
+        dto.setAmount(newDebtAmount);
+        dto.setPaidAmount(debt.getPaidAmount());
+
+        return dto;
+    }
+
 }

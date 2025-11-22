@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.DebtStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,8 +37,9 @@ public class Debt {
     @Column(name = "paid_amount", precision = 18, scale = 2)
     private BigDecimal paidAmount;
 
-    @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 30)
+    private DebtStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
