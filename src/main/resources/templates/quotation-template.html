@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Báo giá sửa chữa</title>
+
+  <style>
+    body {
+      font-family: DejaVu Sans, Arial, sans-serif;
+      margin: 30px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    /* ===== HEADER ===== */
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    .header-left {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.4;
+      vertical-align: top;
+    }
+
+    /* ===== TITLE ===== */
+    .title-wrapper {
+      text-align: center;
+      margin: 15px 0 25px;
+    }
+
+    .quotation-title {
+      font-size: 28px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #d32f2f;
+      margin-bottom: 3px;
+    }
+
+    .title-line {
+      width: 140px;
+      height: 3px;
+      background: #d32f2f;
+      margin: 0 auto;
+    }
+
+    /* ===== TABLE GENERAL ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #0d3b66;
+      color: #fff;
+      padding: 6px;
+    }
+
+    td {
+      padding: 6px;
+      border: 1px solid #ccc;
+    }
+
+    /* ===== CONDITIONS BOX ===== */
+    .conditions-box {
+      background: #f5f7fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+
+    /* ===== FOOTER SIGN ===== */
+    .footer-sign {
+      width: 100%;
+      margin-top: 60px;
+    }
+
+    .sign-cell {
+      width: 50%;
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .note {
+      font-style: italic;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ============ HEADER ============ -->
+<table class="header-table">
+  <tr>
+    <td class="header-left">
+      Đ/C: Khu CN Đông Lĩnh - TP Thanh Hóa <br/>
+      ĐT: 0373.691.999 - 0912.603.603
+    </td>
+    <td class="header-right">
+      <strong>Ngày lập:</strong> {{date}} <br/>
+      <strong>Mã báo giá:</strong> {{quotationCode}}
+    </td>
+  </tr>
+</table>
+
+<!-- ============ TITLE ============ -->
+<div class="title-wrapper">
+  <div class="quotation-title">Báo giá sửa chữa</div>
+  <div class="title-line"></div>
+</div>
+
+<!-- ============ CUSTOMER INFO ============ -->
+<table>
+  <tr>
+    <td><strong>Tên khách hàng:</strong> {{customerName}}</td>
+    <td><strong>Loại xe:</strong> {{carModel}}</td>
+  </tr>
+  <tr>
+    <td><strong>Địa chỉ:</strong> {{customerAddress}}</td>
+    <td><strong>Số khung:</strong> {{vin}}</td>
+  </tr>
+  <tr>
+    <td><strong>Mã số thuế:</strong> {{taxCode}}</td>
+    <td><strong>Số máy:</strong> {{engineNo}}</td>
+  </tr>
+  <tr>
+    <td><strong>Lý do sửa chữa:</strong> {{reason}}</td>
+    <td><strong>Biển số xe:</strong> {{licensePlate}}</td>
+  </tr>
+</table>
+
+<!-- ============ ITEMS TABLE ============ -->
+<table>
+  <thead>
+  <tr>
+    <th>TT</th>
+    <th>Nội dung công việc</th>
+    <th>Đơn vị</th>
+    <th>SL</th>
+    <th>Đơn giá (VND)</th>
+    <th>Thành tiền (VND)</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  {{#items}}
+  <tr>
+    <td>{{index}}</td>
+    <td>{{name}}</td>
+    <td>{{unit}}</td>
+    <td>{{quantity}}</td>
+    <td>{{unitPrice}}</td>
+    <td>{{total}}</td>
+  </tr>
+  {{/items}}
+
+  <tr>
+    <td colspan="5" style="text-align:right; font-weight:bold;">Tổng cộng</td>
+    <td style="font-weight:bold;">{{grandTotal}}</td>
+  </tr>
+  </tbody>
+</table>
+
+<!-- ============ TOTAL IN WORDS ============ -->
+<div style="margin-top:20px;">
+  <strong>BẰNG CHỮ:</strong> {{grandTotalInWords}} (chưa bao gồm thuế VAT)
+</div>
+
+<!-- ============ CONDITIONS ============ -->
+<h3 style="color:#0d3b66; margin-top:20px;">Điều khoản dịch vụ</h3>
+
+<div class="conditions-box">
+  <ul>
+    <li>Phụ tùng chính hãng 100%</li>
+    <li>Phát sinh ngoài báo giá sẽ được thông báo trước</li>
+    <li>Báo giá có hiệu lực trong vòng 07 ngày</li>
+    <li>Đặt cọc 50% trước khi tiến hành sửa chữa</li>
+    <li>Phụ tùng đặc biệt cần đặt trước 100%</li>
+  </ul>
+</div>
+
+<!-- ============ SIGNATURES ============ -->
+<table class="footer-sign">
+  <tr>
+    <td class="sign-cell">
+      <strong>Giám đốc</strong>
+      <div class="note">(Ký và ghi rõ họ tên)</div>
+    </td>
+    <td class="sign-cell">
+      <strong>Khách hàng xác nhận</strong>
+      <div class="note">(Ký và ghi rõ họ tên)</div>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
