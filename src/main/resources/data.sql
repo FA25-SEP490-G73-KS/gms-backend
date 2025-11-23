@@ -2,10 +2,10 @@ USE gms;
 -- TimeSlot
 INSERT INTO time_slot(label, start_time, end_time, max_capacity)
 VALUES
-    ('08:00-10:00','08:00:00','10:00:00',3),
-    ('10:00-12:00','10:00:00','12:00:00',3),
-    ('13:00-15:00','13:00:00','15:00:00',3),
-    ('15:00-17:00','15:00:00','17:00:00',3);
+    ('07:30-09:30','07:30:00','09:30:00',3),
+    ('09:30-11:30','09:30:00','11:30:00',3),
+    ('13:30-15:30','13:30:00','15:30:00',3),
+    ('15:30-17:30','15:30:00','17:30:00',3);
 
 -- === SERVICE TYPES ===
 INSERT INTO service_type (name) VALUES ('Sơn');
@@ -23,12 +23,15 @@ INSERT INTO employee (
 ) VALUES
       (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 'ACTIVE'),
       (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 'ACTIVE'),
-      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE');
+      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE'),
+      (4, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0123456789', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE');
 
 INSERT INTO account (account_id, phone, password, role, employee_id, is_active)
 VALUES
     (1, '0909123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'SERVICE_ADVISOR', 1, 1),
-    (2, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 2, 1);
+    (2, '0987123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'ACCOUNTANT', 3, 1),
+    (3, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 2, 1),
+    (4, '0123456789', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'WAREHOUSE', 4, 1);
 
 INSERT INTO part_category (name) VALUES
                                      ('Động cơ'),
@@ -48,7 +51,8 @@ VALUES
     ('VN'),
     ('JP'),
     ('US'),
-    ('EU');
+    ('EU'),
+    ('OTHER');
 
 INSERT INTO brand (name) VALUES
                              ('Toyota'),
