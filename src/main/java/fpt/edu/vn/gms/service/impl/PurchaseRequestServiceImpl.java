@@ -48,7 +48,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     @Transactional
     @Override
-    public PurchaseRequestItemResponseDto reviewItem(Long itemId, boolean approve, String note) {
+    public PurchaseRequestItemResponseDto reviewItem(Long itemId, boolean approve, String note, Employee currentUser) {
 
         PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PurchaseRequestItem ID: " + itemId));
@@ -59,6 +59,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
         item.setNote(note);
         item.setUpdatedAt(LocalDateTime.now());
+        item.setUpdatedBy(currentUser.getEmployeeId());
 
         purchaseRequestItemRepo.save(item);
 

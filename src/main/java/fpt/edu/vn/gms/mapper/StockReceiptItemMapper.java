@@ -8,6 +8,14 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface StockReceiptItemMapper {
 
+    @Mapping(target = "receiptItemId", source = "id")
+    @Mapping(target = "receiptId", source = "stockReceipt.receiptId")
     @Mapping(target = "purchaseRequestItemId", source = "purchaseRequestItem.itemId")
-    StockReceiptItemResponseDto toDto(StockReceiptItem stockReceiptItem);
+    @Mapping(target = "purchaseRequestCode", source = "stockReceipt.purchaseRequest.code")
+    @Mapping(target = "partName", source = "purchaseRequestItem.partName")
+    @Mapping(target = "unit", source = "purchaseRequestItem.unit")
+    @Mapping(target = "requestedQuantity", source = "requestedQuantity")
+    @Mapping(target = "quantityReceived", source = "quantityReceived")
+    @Mapping(target = "totalQuantityReceived", source = "purchaseRequestItem.quantityReceived")
+    StockReceiptItemResponseDto toDto(StockReceiptItem entity);
 }

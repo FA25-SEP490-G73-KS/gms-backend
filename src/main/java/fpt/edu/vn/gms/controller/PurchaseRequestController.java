@@ -1,6 +1,9 @@
 package fpt.edu.vn.gms.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
+import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +39,7 @@ public class PurchaseRequestController {
 
     private final PurchaseRequestService prService;
     private final StockReceiptService stockReceiptService;
+    private final ObjectMapper objectMapper;
 
     @Operation(
             summary = "Lấy danh sách yêu cầu mua hàng (PR)",
@@ -81,29 +86,47 @@ public class PurchaseRequestController {
 
 
     @Operation(
-            summary = "Xác nhận nhập kho một item trong PR",
-            description = "Kho tiến hành nhập hàng cho một item trong yêu cầu mua hàng."
+            summary = "Nhập kho cho từng item trong Purchase Request",
+            description = """
+                Chức năng nhập kho linh kiện theo yêu cầu mua hàng (PR).
+                
+                - Upload file chứng từ (ảnh, pdf, ...).
+                - Nhập số lượng thực nhận (có thể nhận từng phần).
+                - Cập nhật tồn kho.
+                - Gửi thông báo đến Service Advisor & Kế toán.
+                
+                **Multipart form-data gồm 2 phần:**
+                
+                - `data`: JSON string (StockReceiveRequest)
+                - `file`: File upload (optional)
+                """
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Nhập kho thành công",
-                    content = @Content(schema = @Schema(implementation = StockReceiptItemResponseDto.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy PR Item"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Không có quyền nhập kho"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi server nội bộ")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Nhập kho thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy PR item")
     })
-    @PostMapping("/items/{prItemId}/receive")
-    public ResponseEntity<ApiResponse<StockReceiptItemResponseDto>> receiveItem(
-            @Parameter(description = "ID của Purchase Request Item cần nhập kho")
+    @PostMapping(
+            path = "/items/{prItemId}/receive",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ApiResponse<StockReceiptItemResponseDto>> receive(
             @PathVariable Long prItemId,
-            @Parameter(hidden = true) @CurrentUser Employee employee
-    ) {
+            @RequestPart("data") String jsonData,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @CurrentUser Employee employee
+    ) throws Exception {
 
-        log.info("[PR] Stock receiving for itemId={} by employee={}", prItemId, employee.getEmployeeId());
+        StockReceiveRequest request = objectMapper.readValue(jsonData, StockReceiveRequest.class);
 
-        StockReceiptItemResponseDto responseDto = stockReceiptService.receiveItem(prItemId, employee);
+        log.info("[RECEIVE] prItemId={} data={} file={}", prItemId, request, file != null);
 
-        return ResponseEntity.status(200)
-                .body(ApiResponse.success("Nhập kho thành công", responseDto));
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Nhập kho thành công",
+                        stockReceiptService.receiveItem(prItemId, request, file, employee)
+                )
+        );
     }
 
 }

@@ -294,6 +294,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .status(PurchaseReqItemStatus.PENDING)
                         .reviewStatus(ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
+                        .quotationItem(item)
                         .build();
 
                 purchaseRequest.getItems().add(requestItem);

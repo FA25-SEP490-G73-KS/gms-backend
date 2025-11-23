@@ -1,7 +1,9 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import fpt.edu.vn.gms.utils.AppRoutes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,12 +34,13 @@ public class PurchaseRequestItemController {
     public ResponseEntity<ApiResponse<PurchaseRequestItemResponseDto>> reviewItem(
             @PathVariable Long itemId,
             @RequestParam boolean approved,
-            @RequestParam(required = false) String note
+            @RequestParam(required = false) String note,
+            @CurrentUser Employee currentUser
     ) {
         log.info("[PR-ITEM] Manager reviewing itemId={} approved={} note={}", itemId, approved, note);
 
         PurchaseRequestItemResponseDto dto =
-                purchaseRequestService.reviewItem(itemId, approved, note);
+                purchaseRequestService.reviewItem(itemId, approved, note, currentUser);
 
         return ResponseEntity.ok(ApiResponse.success("Review item thành công", dto));
     }

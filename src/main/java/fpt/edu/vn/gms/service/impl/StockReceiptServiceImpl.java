@@ -1,98 +1,238 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
+import fpt.edu.vn.gms.common.enums.Role;
+import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
 import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.StockReceiptItemMapper;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.StockReceiptService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class StockReceiptServiceImpl implements StockReceiptService {
 
-    private final StockReceiptRepository stockReceiptRepo;
-    private final StockReceiptItemRepository stockReceiptItemRepo;
-    private final PurchaseRequestRepository purchaseRequestRepo;
-    private final PurchaseRequestItemRepository purchaseRequestItemRepo;
-    private final PartRepository partRepository;
-    private final PriceQuotationItemRepository priceQuotationItemRepository;
-    private final NotificationService notificationService;
-    private final StockReceiptItemMapper stockReceiptItemMapper;
+    StockReceiptRepository stockReceiptRepo;
+    StockReceiptItemRepository stockReceiptItemRepo;
+    PurchaseRequestRepository purchaseRequestRepo;
+    PurchaseRequestItemRepository purchaseRequestItemRepo;
+    PartRepository partRepository;
+    PriceQuotationItemRepository quotationItemRepo;
+    AccountRepository accountRepository;
+    NotificationService notificationService;
+    CodeSequenceService codeSequenceService;
+    FileStorageService fileStorageService;
+    StockReceiptItemMapper stockReceiptItemMapper;
+
+    // =======================================================================
+    //  MAIN FUNCTION
+    // =======================================================================
 
     @Transactional
     @Override
-    public StockReceiptItemResponseDto receiveItem(Long prItemId, Employee employee) {
+    public StockReceiptItemResponseDto receiveItem(
+            Long prItemId,
+            StockReceiveRequest request,
+            MultipartFile file,
+            Employee employee
+    ) {
 
-        PurchaseRequestItem prItem = purchaseRequestItemRepo.findById(prItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu mua hàng!!"));
+        log.info("[RECEIVE-ITEM] prItemId={} qtyReceived={} byEmployee={}",
+                prItemId, request.getQuantityReceived(), employee.getEmployeeId());
 
+        PurchaseRequestItem prItem = loadPurchaseRequestItem(prItemId);
         PurchaseRequest pr = prItem.getPurchaseRequest();
 
-        // Lấy StockReceipt nếu đã có, nếu chưa tạo mới
-        StockReceipt receipt = stockReceiptRepo.findByPurchaseRequest(pr)
+        validateReceivedQuantity(prItem, request);
+
+        String fileUrl = fileStorageService.upload(file);
+
+        StockReceipt receipt = loadOrCreateReceipt(pr, employee);
+        StockReceiptItem receiptItem = createReceiptItem(prItem, request, fileUrl, employee, receipt);
+
+        updatePartStock(prItem, request);
+        updatePurchaseRequestItem(prItem, request);
+        updatePurchaseRequestStatus(pr);
+
+        updateQuotationItemInventory(prItem);
+
+        sendNotificationToAdvisor(prItem, pr);
+        sendNotificationToAccountant(prItem, pr, receiptItem);
+
+        return stockReceiptItemMapper.toDto(receiptItem);
+    }
+
+    // =======================================================================
+    //  STEP FUNCTIONS
+    // =======================================================================
+
+    private PurchaseRequestItem loadPurchaseRequestItem(Long id) {
+        return purchaseRequestItemRepo.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Không tìm thấy PR Item id={}", id);
+                    return new ResourceNotFoundException("Không tìm thấy chi tiết yêu cầu mua hàng");
+                });
+    }
+
+    private void validateReceivedQuantity(PurchaseRequestItem prItem, StockReceiveRequest request) {
+
+        double alreadyReceived = Optional.ofNullable(prItem.getQuantityReceived()).orElse(0.0);
+        double remaining = prItem.getQuantity() - alreadyReceived;
+
+        if (request.getQuantityReceived() <= 0) {
+            throw new IllegalArgumentException("Số lượng nhận phải > 0");
+        }
+
+        if (request.getQuantityReceived() > remaining) {
+            throw new IllegalArgumentException("Số lượng nhận vượt quá còn lại");
+        }
+    }
+
+    private StockReceipt loadOrCreateReceipt(PurchaseRequest pr, Employee employee) {
+
+        return stockReceiptRepo.findByPurchaseRequest(pr)
                 .orElseGet(() -> {
-                    StockReceipt r = StockReceipt.builder()
+                    StockReceipt newReceipt = StockReceipt.builder()
+                            .code(codeSequenceService.generateCode("SR"))
                             .purchaseRequest(pr)
                             .createdBy(employee)
                             .createdAt(LocalDateTime.now())
+                            .status(StockReceiptStatus.CREATED)
+                            .totalAmount(BigDecimal.ZERO)
                             .build();
-                    return stockReceiptRepo.save(r);
+                    return stockReceiptRepo.save(newReceipt);
                 });
+    }
 
-        // Tạo StockReceiptItem (nhập đủ số lượng PR item)
-        StockReceiptItem receiptItem = StockReceiptItem.builder()
+    private StockReceiptItem createReceiptItem(
+            PurchaseRequestItem prItem,
+            StockReceiveRequest req,
+            String fileUrl,
+            Employee employee,
+            StockReceipt receipt
+    ) {
+        StockReceiptItem item = StockReceiptItem.builder()
                 .stockReceipt(receipt)
                 .purchaseRequestItem(prItem)
-                .quantityReceived(prItem.getQuantity())
-                .note("Nhập linh kiện cho báo giá: " + pr.getRelatedQuotation().getCode())
+                .requestedQuantity(prItem.getQuantity())
+                .quantityReceived(req.getQuantityReceived())
+                .note(req.getNote())
+                .attachmentUrl(fileUrl)
+                .receivedAt(LocalDateTime.now())
+                .receivedById(employee.getEmployeeId())
+                .receivedByName(employee.getFullName())
                 .build();
 
-        receipt.getItems().add(receiptItem);
-        stockReceiptItemRepo.save(receiptItem);
+        return stockReceiptItemRepo.save(item);
+    }
 
-        // ----------------------------
-        // (1) Tăng quantityInStock của Part
-        // ----------------------------
+
+    private void updateReceiptTotalAmount(
+            StockReceipt receipt,
+            PurchaseRequestItem prItem,
+            StockReceiveRequest request
+    ) {
+
+        if (prItem.getEstimatedPurchasePrice() == null
+                || prItem.getQuantity() == null || prItem.getQuantity() == 0) return;
+
+        BigDecimal unitPrice = prItem.getEstimatedPurchasePrice()
+                .divide(BigDecimal.valueOf(prItem.getQuantity()), 2, RoundingMode.HALF_UP);
+
+        BigDecimal lineAmount = unitPrice.multiply(
+                BigDecimal.valueOf(request.getQuantityReceived()));
+
+        receipt.setTotalAmount(
+                Optional.ofNullable(receipt.getTotalAmount()).orElse(BigDecimal.ZERO).add(lineAmount)
+        );
+
+        stockReceiptRepo.save(receipt);
+    }
+
+    private void updatePartStock(PurchaseRequestItem prItem, StockReceiveRequest request) {
+
         Part part = prItem.getPart();
-        if (part != null) {
-            double newQty = part.getQuantityInStock() + prItem.getQuantity();
-            part.setQuantityInStock(newQty);
-            part.setReservedQuantity(prItem.getQuantity());
-            partRepository.save(part);
-        }
+        if (part == null) return;
 
-        // ----------------------------
-        // (2) Chuyển status của PriceQuotationItem sang AVAILABLE
-        // ----------------------------
-        PriceQuotationItem quotationItem = prItem.getQuotationItem();
-        if (quotationItem != null) {
-            quotationItem.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
-            priceQuotationItemRepository.save(quotationItem);
-        }
+        double newInStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
+                + request.getQuantityReceived();
 
-        // Cập nhật PR item
-        prItem.setQuantityReceived(prItem.getQuantity());
-        prItem.setStatus(PurchaseReqItemStatus.RECEIVED);
+        double newReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0)
+                + request.getQuantityReceived();
+
+        part.setQuantityInStock(newInStock);
+        part.setReservedQuantity(newReserved);
+
+        partRepository.save(part);
+    }
+
+    private void updatePurchaseRequestItem(PurchaseRequestItem prItem, StockReceiveRequest request) {
+
+        double alreadyReceived = Optional.ofNullable(prItem.getQuantityReceived()).orElse(0.0);
+        double updated = alreadyReceived + request.getQuantityReceived();
+
+        prItem.setQuantityReceived(updated);
+
+        prItem.setStatus(
+                updated >= prItem.getQuantity()
+                        ? PurchaseReqItemStatus.RECEIVED
+                        : PurchaseReqItemStatus.PENDING
+        );
+
         purchaseRequestItemRepo.save(prItem);
+    }
 
-        // Cập nhật PR tổng thể nếu tất cả item đã nhập
-        if (pr.getItems().stream().allMatch(i -> i.getStatus() == PurchaseReqItemStatus.RECEIVED)) {
-            pr.setStatus(PurchaseRequestStatus.COMPLETED);
-            purchaseRequestRepo.save(pr);
+    private void updatePurchaseRequestStatus(PurchaseRequest pr) {
+
+        boolean allReceived = pr.getItems().stream()
+                .allMatch(i -> i.getStatus() == PurchaseReqItemStatus.RECEIVED);
+
+        pr.setStatus(allReceived
+                ? PurchaseRequestStatus.COMPLETED
+                : PurchaseRequestStatus.PENDING);
+
+        purchaseRequestRepo.save(pr);
+    }
+
+    private void updateQuotationItemInventory(PurchaseRequestItem prItem) {
+
+        PriceQuotationItem quotationItem = prItem.getQuotationItem();
+        if (quotationItem == null) return;
+
+        if (prItem.getQuantityReceived() >= prItem.getQuantity()) {
+            quotationItem.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
+            quotationItemRepo.save(quotationItem);
         }
+    }
 
-        // Notification đến Service Advisor
-        Employee advisor = pr.getRelatedQuotation().getServiceTicket().getCreatedBy();
+    // =======================================================================
+    //  NOTIFICATION
+    // =======================================================================
+
+    private void sendNotificationToAdvisor(PurchaseRequestItem prItem, PurchaseRequest pr) {
+
+        Employee advisor = pr.getRelatedQuotation()
+                .getServiceTicket()
+                .getCreatedBy();
+
         notificationService.createNotification(
                 advisor.getEmployeeId(),
                 NotificationTemplate.STOCK_RECEIPT_ITEM_RECEIVED.getTitle(),
@@ -101,10 +241,35 @@ public class StockReceiptServiceImpl implements StockReceiptService {
                         pr.getRelatedQuotation().getPriceQuotationId()
                 ),
                 NotificationType.STOCK_RECEIVED,
-                prItem.getItemId().toString(),
-                "/quotations/" + pr.getRelatedQuotation().getPriceQuotationId()
+                pr.getId().toString(),
+                "/service-tickets/" + pr.getRelatedQuotation().getServiceTicket().getServiceTicketId()
         );
 
-        return stockReceiptItemMapper.toDto(receiptItem);
+        log.info("Advisor {} notified for stock receipt.", advisor.getEmployeeId());
+    }
+
+    private void sendNotificationToAccountant(
+            PurchaseRequestItem prItem,
+            PurchaseRequest pr,
+            StockReceiptItem receiptItem
+    ) {
+
+        accountRepository.findByRole(Role.ACCOUNTANT)
+                .forEach(acc -> {
+
+                    if (acc.getEmployee() == null) return;
+
+                    notificationService.createNotification(
+                            acc.getEmployee().getEmployeeId(),
+                            "Phiếu nhập kho mới",
+                            String.format("Linh kiện %s đã được nhập kho. Vui lòng xử lý phiếu thu/chi.",
+                                    prItem.getPartName()),
+                            NotificationType.STOCK_RECEIVED,
+                            pr.getId().toString(),
+                            "/stock-receipts/" + receiptItem.getStockReceipt().getReceiptId()
+                    );
+                });
+
+        log.info("Accountant notified for stock receipt.");
     }
 }
