@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.dto.response;
 
 import lombok.Data;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -25,4 +26,9 @@ public class StockReceiptItemResponseDto {
     private String note;
 
     private LocalDateTime receivedAt;
+
+    private BigDecimal actualUnitPrice;
+    private BigDecimal actualTotalPrice;
+
+    private boolean isPaid;
 }

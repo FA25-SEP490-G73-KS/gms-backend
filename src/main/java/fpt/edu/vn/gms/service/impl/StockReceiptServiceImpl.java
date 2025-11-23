@@ -4,9 +4,11 @@ import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
 import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
+import fpt.edu.vn.gms.dto.response.StockReceiptResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.StockReceiptItemMapper;
+import fpt.edu.vn.gms.mapper.StockReceiptMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
@@ -15,6 +17,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -41,6 +47,7 @@ public class StockReceiptServiceImpl implements StockReceiptService {
     CodeSequenceService codeSequenceService;
     FileStorageService fileStorageService;
     StockReceiptItemMapper stockReceiptItemMapper;
+    StockReceiptMapper stockReceiptMapper;
 
     // =======================================================================
     //  MAIN FUNCTION
@@ -78,6 +85,26 @@ public class StockReceiptServiceImpl implements StockReceiptService {
         sendNotificationToAccountant(prItem, pr, receiptItem);
 
         return stockReceiptItemMapper.toDto(receiptItem);
+    }
+
+    @Override
+    public Page<StockReceiptResponseDto> getReceiptsForAccounting(int page, int size, String search) {
+        log.info("[ACCOUNTING][STK] list receipts page={} size={} search={}", page, size, search);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StockReceipt> pageEntity = stockReceiptRepo.searchForAccounting(search, pageable);
+
+        return pageEntity.map(stockReceiptMapper::toDto);
+    }
+
+    @Override
+    public List<StockReceiptItemResponseDto> getReceiptItems(Long receiptId) {
+        log.info("[ACCOUNTING][STK] list items receiptId={}", receiptId);
+
+        StockReceipt receipt = stockReceiptRepo.findById(receiptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
+
+        return stockReceiptItemMapper.toDtos(stockReceiptItemRepo.findByStockReceipt(receipt));
     }
 
     // =======================================================================

@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 public class PurchaseRequestItemResponseDto {
 
     private Long itemId;
+    private Long partId;
     private String partName;
     private double quantity;
     private BigDecimal estimatedPurchasePrice;

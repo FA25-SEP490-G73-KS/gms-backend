@@ -34,6 +34,12 @@ public class StockReceiptItem {
     @Column(name = "quantity_received")
     private Double quantityReceived;       // Số lượng thực nhận đợt này
 
+    @Column(name = "actual_unit_price", precision = 18, scale = 2)
+    private BigDecimal actualUnitPrice;
+
+    @Column(name = "actual_total_price", precision = 18, scale = 2)
+    private BigDecimal actualTotalPrice;
+
     @Column(name = "attachment_url", length = 255)
     private String attachmentUrl;          // File đính kèm (hóa đơn / phiếu giao hàng)
 
@@ -45,4 +51,7 @@ public class StockReceiptItem {
 
     private String receivedByName;
     private Long receivedById;
+
+    @Column(name = "is_paid")
+    private Boolean paid = false;
 }

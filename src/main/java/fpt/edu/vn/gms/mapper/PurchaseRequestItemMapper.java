@@ -3,11 +3,13 @@ package fpt.edu.vn.gms.mapper;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.entity.PurchaseRequestItem;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 
 @Mapper(componentModel = "spring")
 public interface PurchaseRequestItemMapper {
 
+    @Mapping(target = "partId", source = "part.partId")
     PurchaseRequestItemResponseDto toResponseDto(PurchaseRequestItem item);
 
 }

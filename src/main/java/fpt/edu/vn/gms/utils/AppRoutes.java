@@ -34,6 +34,7 @@ public final class AppRoutes {
   public static final String TRANSACTIONS_PREFIX = API_PREFIX + "/transactions";
   public static final String PURCHASE_REQUEST_PREFIX = API_PREFIX + "/purchase-requests";
   public static final String PURCHASE_REQUEST_ITEMS_PREFIX = API_PREFIX + "/pr-items";
+  public static final String ACCOUNTING_STOCK_RECEIPT_PREFIX = API_PREFIX + "/stock-receipt";
 
   public static final List<String> whitelistedRoutes = List.of(
       API_PREFIX + "/docs/**",

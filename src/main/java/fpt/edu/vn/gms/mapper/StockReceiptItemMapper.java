@@ -5,6 +5,8 @@ import fpt.edu.vn.gms.entity.StockReceiptItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface StockReceiptItemMapper {
 
@@ -18,4 +20,6 @@ public interface StockReceiptItemMapper {
     @Mapping(target = "quantityReceived", source = "quantityReceived")
     @Mapping(target = "totalQuantityReceived", source = "purchaseRequestItem.quantityReceived")
     StockReceiptItemResponseDto toDto(StockReceiptItem entity);
+
+    List<StockReceiptItemResponseDto> toDtos(List<StockReceiptItem> items);
 }

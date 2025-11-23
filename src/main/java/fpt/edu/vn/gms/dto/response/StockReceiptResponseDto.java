@@ -2,13 +2,21 @@ package fpt.edu.vn.gms.dto.response;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 public class StockReceiptResponseDto {
 
     private Long receiptId;
-    private Long purchaseRequestId;
-    private Long createdByEmployeeId;
+    private String code;
+
+    private String vehiclePlate;
+    private String vehicleModelName;
+
+    private String createdByName;
     private LocalDateTime createdAt;
+
+    private BigDecimal totalAmount;
+    private String status; // CREATED / COMPLETED...
 }
