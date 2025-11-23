@@ -7,24 +7,32 @@ import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
+import fpt.edu.vn.gms.mapper.ServiceTicketMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
+import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
+import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
+import fpt.edu.vn.gms.utils.NumberToVietnameseWords;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -37,10 +45,13 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     ServiceTicketRepository serviceTicketRepository;
     PartRepository partRepository;
     PurchaseRequestRepository purchaseRequestRepository;
+    PriceQuotationRepository priceQuotationRepository;
     NotificationService notificationService;
     CodeSequenceService codeSequenceService;
+    HtmlTemplateService htmlTemplateService;
+    PdfGeneratorService pdfGeneratorService;
     PriceQuotationMapper priceQuotationMapper;
-    PriceQuotationRepository priceQuotationRepository;
+    ServiceTicketMapper serviceTicketMapper;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -441,5 +452,61 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         log.info("Updated laborCost successfully for quotationId={}", id);
 
         return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+    @Override
+    public byte[] exportPdfQuotation(Long quotationId) {
+        
+        ServiceTicket serviceTicket = serviceTicketRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá!"));
+
+        ServiceTicketResponseDto ticket = serviceTicketMapper.toResponseDto(serviceTicket);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        DecimalFormat df = new DecimalFormat("#,###");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("date", ticket.getCreatedAt().format(formatter));
+        data.put("quotationCode", ticket.getServiceTicketCode());
+        data.put("customerName", ticket.getCustomer().getFullName());
+        data.put("customerAddress", ticket.getCustomer().getAddress());
+        data.put("licensePlate", ticket.getVehicle().getLicensePlate());
+        data.put("carModel", ticket.getVehicle().getVehicleModelName());
+        data.put("vin", ticket.getVehicle().getVin());
+        data.put("engineNo", ticket.getVehicle().getVin());
+        data.put("reason", ticket.getReceiveCondition());
+
+        List<Map<String, Object>> items = getMaps(ticket);
+
+        data.put("items", items);
+        data.put("grandTotal", df.format(ticket.getPriceQuotation().getEstimateAmount()).replace(",", "."));
+
+        data.put("grandTotalInWords", NumberToVietnameseWords.convert(ticket.getPriceQuotation().getEstimateAmount().longValue()));
+
+        String html = htmlTemplateService.loadAndFillTemplate(
+                "templates/quotation-template.html", data);
+
+        return pdfGeneratorService.generateQuotationPdf(html);
+    }
+
+    @NotNull
+    private static List<Map<String, Object>> getMaps(ServiceTicketResponseDto ticket) {
+        List<Map<String, Object>> items = new ArrayList<>();
+
+        DecimalFormat df = new DecimalFormat("#,###");
+
+        int index = 1;
+        for (var item : ticket.getPriceQuotation().getItems()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("index", index++);
+            row.put("name", item.getPartName());
+            row.put("unit", item.getUnit());
+            row.put("quantity", item.getQuantity());
+            row.put("unitPrice", df.format(item.getUnitPrice()).replace(",", "."));
+            row.put("total", df.format(item.getTotalPrice()).replace(",", "."));
+            items.add(row);
+        }
+        return items;
     }
 }

@@ -3,17 +3,20 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
-import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
+import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
+import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +30,12 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PRICE_QUOTATIONS_PREFIX;
 @RestController
 @RequestMapping(path = PRICE_QUOTATIONS_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PriceQuotationController {
 
-        private final PriceQuotationService priceQuotationService;
-        private final WarehouseQuotationService warehouseQuotationService;
+        PriceQuotationService priceQuotationService;
+        WarehouseQuotationService warehouseQuotationService;
+
 
         @GetMapping("/pending")
         @Operation(summary = "Lấy báo giá đang chờ xử lý", description = "Lấy danh sách các báo giá đang chờ xử lý từ kho với phân trang.")
@@ -214,6 +219,35 @@ public class PriceQuotationController {
                 return ResponseEntity.ok(
                         ApiResponse.success("Cập nhật tiền công thành công!", updatedQuotation)
                 );
+        }
+
+        @Operation(
+                summary = "Xuất PDF báo giá",
+                description = """
+            API xuất file PDF Báo giá sửa chữa từ template HTML.
+            - Tự động bind dữ liệu: khách hàng, xe, items, tổng tiền.
+            - Tải về file PDF theo mẫu đã thiết kế.
+            """
+        )
+        @ApiResponses({
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Xuất PDF thành công"),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá")
+        })
+        @GetMapping("/{id}/pdf")
+        public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) {
+
+                byte[] pdfBytes = priceQuotationService.exportPdfQuotation(id);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDispositionFormData(
+                        "attachment",
+                        "quotation-" + id + ".pdf"
+                );
+
+                return ResponseEntity.ok()
+                        .headers(headers)
+                        .body(pdfBytes);
         }
 
 }

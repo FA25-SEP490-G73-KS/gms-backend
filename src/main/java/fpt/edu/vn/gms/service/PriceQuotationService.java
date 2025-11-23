@@ -31,4 +31,6 @@ public interface PriceQuotationService {
     long countVehicleInRepairingStatus();
 
     PriceQuotationResponseDto updateLaborCost(Long id, ChangeLaborCostReqDto dto);
+
+    byte[] exportPdfQuotation(Long quotationId);
 }
