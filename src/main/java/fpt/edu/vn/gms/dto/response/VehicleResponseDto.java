@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class VehicleResponseDto {
 

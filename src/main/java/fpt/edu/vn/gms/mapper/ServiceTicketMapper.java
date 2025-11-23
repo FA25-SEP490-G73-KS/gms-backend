@@ -1,8 +1,6 @@
 package fpt.edu.vn.gms.mapper;
 
-import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
-import fpt.edu.vn.gms.dto.response.VehicleResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import org.mapstruct.*;
 

@@ -70,7 +70,14 @@ public class PriceQuotationItem {
     @Enumerated(EnumType.STRING)
     private ExportStatus exportStatus = ExportStatus.NONE;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     @PrePersist

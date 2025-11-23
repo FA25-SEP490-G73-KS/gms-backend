@@ -36,12 +36,6 @@ public class PriceQuotation {
     @Column(name = "labor_cost", precision = 18, scale = 2)
     private BigDecimal laborCost;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
@@ -52,6 +46,18 @@ public class PriceQuotation {
 
     @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PriceQuotationItem> items = new ArrayList<>();
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {

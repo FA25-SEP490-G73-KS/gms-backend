@@ -100,7 +100,7 @@ public class StockReceiptServiceImpl implements StockReceiptService {
                         prItem.getPartName(),
                         pr.getRelatedQuotation().getPriceQuotationId()
                 ),
-                NotificationType.PURCHASE_REQUEST_RECEIVED,
+                NotificationType.STOCK_RECEIVED,
                 prItem.getItemId().toString(),
                 "/quotations/" + pr.getRelatedQuotation().getPriceQuotationId()
         );

@@ -13,7 +13,6 @@ import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
-import fpt.edu.vn.gms.service.PaymentService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,7 +37,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     ServiceTicketRepository serviceTicketRepository;
     PartRepository partRepository;
     PurchaseRequestRepository purchaseRequestRepository;
-    PaymentService paymentService;
     NotificationService notificationService;
     CodeSequenceService codeSequenceService;
     PriceQuotationMapper priceQuotationMapper;
@@ -51,6 +50,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return quotations.map(priceQuotationMapper::toResponseDto);
     }
 
+    @Transactional
     @Override
     public PriceQuotationResponseDto createQuotation(Long ticketId) {
 
@@ -220,8 +220,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
-
-
+    @Transactional
     @Override
     public PriceQuotationResponseDto confirmQuotationByCustomer(Long quotationId) {
 
@@ -256,16 +255,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             Part part = item.getPart();
             if (part == null) continue;
 
-//            // Tạo bản ghi đặt giữ
-//            PartReservation reservation = PartReservation.builder()
-//                    .part(part)
-//                    .quotationItem(item)
-//                    .reservedQuantity(item.getQuantity())
-//                    .reservedAt(LocalDateTime.now())
-//                    .active(true)
-//                    .build();
-//            partReservationRepository.save(reservation);
-
             // Cập nhật số lượng đã giữ
             double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
             part.setReservedQuantity(currentReserved + item.getQuantity());
@@ -283,13 +272,12 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
-                    .reviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
                     .createdBy(null) // Hệ thống tự tạo
                     .items(new ArrayList<>())
                     .build();
-
 
             for (PriceQuotationItem item : partsToBuy) {
 
@@ -304,7 +292,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .unit(item.getUnit())
                         .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
-                        .reviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING)
+                        .reviewStatus(ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
                         .build();
 

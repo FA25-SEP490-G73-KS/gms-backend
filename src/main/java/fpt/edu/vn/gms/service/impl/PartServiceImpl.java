@@ -121,6 +121,10 @@ public class PartServiceImpl implements PartService {
         VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
 
+        // --- Tính giá bán ---
+        BigDecimal purchase = dto.getPurchasePrice();
+        BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10));
+
         // Update data
         part.setName(dto.getName());
         part.setCategory(category);
@@ -128,8 +132,8 @@ public class PartServiceImpl implements PartService {
         part.setVehicleModel(model);
         part.setUnit(unit);
 
-        part.setPurchasePrice(dto.getPurchasePrice());
-        part.setSellingPrice(dto.getSellingPrice());   // FE cho nhập giá bán
+        part.setPurchasePrice(purchase);
+        part.setSellingPrice(selling);
         part.setUniversal(dto.isUniversal());
         part.setSpecialPart(dto.isSpecialPart());
         part.setNote(dto.getNote());

@@ -47,53 +47,77 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     }
 
     @Transactional
-    public PurchaseRequestItemResponseDto confirmPurchaseRequestItem(Long itemId, boolean approved, String note) {
-        PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PR item ID: " + itemId));
+    @Override
+    public PurchaseRequestItemResponseDto reviewItem(Long itemId, boolean approve, String note) {
 
-        item.setReviewStatus(approved ? StockReceiptStatus.ManagerReviewStatus.CONFIRMED : StockReceiptStatus.ManagerReviewStatus.REJECTED);
+        PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy PurchaseRequestItem ID: " + itemId));
+
+        item.setReviewStatus(approve
+                ? ManagerReviewStatus.APPROVED
+                : ManagerReviewStatus.REJECTED);
+
         item.setNote(note);
-        item.setUpdated(LocalDateTime.now());
+        item.setUpdatedAt(LocalDateTime.now());
+
         purchaseRequestItemRepo.save(item);
 
-        // Cập nhật tổng trạng thái PR
-        updatePurchaseRequestStatus(item.getPurchaseRequest());
+        updatePRStatus(item.getPurchaseRequest());
 
         return purchaseRequestItemMapper.toResponseDto(item);
     }
 
-    private void updatePurchaseRequestStatus(PurchaseRequest pr) {
-        boolean allApproved = pr.getItems().stream()
-                .allMatch(i -> i.getReviewStatus() == StockReceiptStatus.ManagerReviewStatus.CONFIRMED);
+    // ---------------------------
+    // CẬP NHẬT TRẠNG THÁI PR SAU KHI REVIEW ITEM
+    // ---------------------------
+    @Transactional
+    protected void updatePRStatus(PurchaseRequest pr) {
 
+        List<PurchaseRequestItem> items = pr.getItems();
 
-        if (allApproved) {
-            pr.setReviewStatus(StockReceiptStatus.ManagerReviewStatus.CONFIRMED);
+        boolean allApproved = items.stream()
+                .allMatch(i -> i.getReviewStatus() == ManagerReviewStatus.APPROVED);
 
-            NotificationTemplate template = NotificationTemplate.PURCHASE_REQUEST_CONFIRMED;
+        boolean anyRejected = items.stream()
+                .anyMatch(i -> i.getReviewStatus() == ManagerReviewStatus.REJECTED);
 
-            // Lấy tất cả account có role Warehouse
-            List<Account> warehouseAccounts = accountRepository.findByRole(Role.WAREHOUSE);
-
-            // Gửi notification cho từng account
-            warehouseAccounts.forEach(account -> {
-                if (account.getEmployee() != null) {
-                    notificationService.createNotification(
-                            account.getEmployee().getEmployeeId(),
-                            template.getTitle(),
-                            template.format(pr.getId()),
-                            NotificationType.PURCHASE_REQUEST_CONFIRMED,
-                            pr.getId().toString(),
-                            "/purchase-requests/" + pr.getId()
-                    );
-                }
-            });
-
-        } else {
-            pr.setReviewStatus(StockReceiptStatus.ManagerReviewStatus.PENDING);
+        if (anyRejected) {
+            pr.setReviewStatus(ManagerReviewStatus.REJECTED);
+            purchaseRequestRepo.save(pr);
+            notifyWarehouse(pr, NotificationTemplate.PURCHASE_REQUEST_REJECTED);
+            return;
         }
 
+        if (allApproved) {
+            pr.setReviewStatus(ManagerReviewStatus.APPROVED);
+            purchaseRequestRepo.save(pr);
+            notifyWarehouse(pr, NotificationTemplate.PURCHASE_REQUEST_CONFIRMED);
+            return;
+        }
+
+        pr.setReviewStatus(ManagerReviewStatus.PENDING);
         purchaseRequestRepo.save(pr);
+    }
+
+    // ---------------------------
+    // GỬI THÔNG BÁO CHO WAREHOUSE
+    // ---------------------------
+    private void notifyWarehouse(PurchaseRequest pr, NotificationTemplate template) {
+
+        List<Account> warehouseAccounts = accountRepository.findByRole(Role.WAREHOUSE);
+
+        warehouseAccounts.forEach(acc -> {
+            if (acc.getEmployee() == null) return;
+
+            notificationService.createNotification(
+                    acc.getEmployee().getEmployeeId(),
+                    template.getTitle(),
+                    template.format(pr.getId()),
+                    NotificationType.PURCHASE_REQUEST,
+                    pr.getId().toString(),
+                    "/purchase-requests/" + pr.getId()
+            );
+        });
     }
 
 

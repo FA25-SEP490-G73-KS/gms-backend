@@ -11,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {VehicleMapper.class})
+@Mapper(componentModel = "spring")
 public interface CustomerMapper {
 
     @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")

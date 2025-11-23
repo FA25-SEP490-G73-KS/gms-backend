@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
-import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,8 +26,8 @@ public class PurchaseRequestItem {
     private PurchaseRequest purchaseRequest;
 
     // Liên kết đến báo giá
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quotation_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quotation_item_id", referencedColumnName = "price_quotation_item_id")
     private PriceQuotationItem quotationItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,16 +55,30 @@ public class PurchaseRequestItem {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)
-    private StockReceiptStatus.ManagerReviewStatus reviewStatus = StockReceiptStatus.ManagerReviewStatus.PENDING;
+    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
 
     @Column(name = "note", length = 255)
     private String note;
 
-    private LocalDateTime created;
-    private LocalDateTime updated;
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
-    protected void onCreate() {
-        this.created = LocalDateTime.now();
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

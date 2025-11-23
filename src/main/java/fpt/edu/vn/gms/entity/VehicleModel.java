@@ -23,7 +23,7 @@ public class VehicleModel {
     @Column(name = "name", nullable = false, unique = true, length = 100)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 }

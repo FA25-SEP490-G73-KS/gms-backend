@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
-import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,17 +26,6 @@ public class PurchaseRequest {
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
-    // Ai tạo PR (nhân viên hoặc hệ thống)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private Employee createdBy;
-
     // Liên kết đến báo giá
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quotation_id")
@@ -52,11 +41,33 @@ public class PurchaseRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)
-    private StockReceiptStatus.ManagerReviewStatus reviewStatus = StockReceiptStatus.ManagerReviewStatus.PENDING;
+    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
 
     @Column(nullable = true, length = 255)
     private String reason;
 
     @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseRequestItem> items = new ArrayList<>();
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

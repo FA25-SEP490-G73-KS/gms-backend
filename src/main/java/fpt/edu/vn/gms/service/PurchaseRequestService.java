@@ -12,5 +12,5 @@ public interface PurchaseRequestService {
 
     List<PurchaseRequestItemResponseDto> getPurchaseRequestItems(Long prId);
 
-    PurchaseRequestItemResponseDto confirmPurchaseRequestItem(Long itemId, boolean approved, String note);
+    PurchaseRequestItemResponseDto reviewItem(Long itemId, boolean approve, String note);
 }

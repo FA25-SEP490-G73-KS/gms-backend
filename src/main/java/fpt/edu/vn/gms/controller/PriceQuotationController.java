@@ -48,24 +48,6 @@ public class PriceQuotationController {
                                 .body(ApiResponse.success("Success", quotations));
         }
 
-        @PatchMapping("/{id}/review")
-        @Operation(summary = "Xem xét một mục trong báo giá", description = "Cập nhật trạng thái xem xét của một mục trong báo giá từ kho.")
-        @ApiResponses(value = {
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật thành công"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Yêu cầu không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy mục báo giá", content = @Content(schema = @Schema(hidden = true))),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
-        })
-        public ResponseEntity<ApiResponse<PriceQuotationItemResponseDto>> reviewSingleItem(
-                        @PathVariable Long id,
-                        @RequestBody WarehouseReviewItemDto requestDto) {
-                PriceQuotationItemResponseDto updatedQuotation = warehouseQuotationService.updateWarehouseReview(id,
-                                requestDto);
-
-                return ResponseEntity.status(200)
-                                .body(ApiResponse.success("Success", updatedQuotation));
-        }
-
         @PostMapping
         @Operation(summary = "Tạo báo giá mới", description = "Tạo một phiếu báo giá mới từ một phiếu dịch vụ.")
         @ApiResponses(value = {

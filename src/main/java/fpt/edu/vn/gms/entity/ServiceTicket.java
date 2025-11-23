@@ -99,4 +99,8 @@ public class ServiceTicket {
         updatedAt = LocalDateTime.now();
     }
 
+    @Override
+    public String toString() {
+        return vehicle.getVehicleModel() + " " + vehicle.getVehicleModel().getVehicleModelId();
+    }
 }

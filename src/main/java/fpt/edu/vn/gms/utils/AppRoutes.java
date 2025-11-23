@@ -32,6 +32,8 @@ public final class AppRoutes {
   public static final String PAYMENT_PREFIX = API_PREFIX + "/payments";
   public static final String ZNS_NOTIFICATIONS_PREFIX = API_PREFIX + "/zns-notifications";
   public static final String TRANSACTIONS_PREFIX = API_PREFIX + "/transactions";
+  public static final String PURCHASE_REQUEST_PREFIX = API_PREFIX + "/purchase-requests";
+  public static final String PURCHASE_REQUEST_ITEMS_PREFIX = API_PREFIX + "/pr-items";
 
   public static final List<String> whitelistedRoutes = List.of(
       API_PREFIX + "/docs/**",

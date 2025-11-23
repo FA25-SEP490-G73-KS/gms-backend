@@ -128,6 +128,8 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         }
         vehicleRepository.save(vehicle);
 
+//        vehicle = vehicleRepository.findDetailById(vehicle.getVehicleId()).orElse(vehicle);
+
         List<Employee> technicians = List.of();
         if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
             technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
