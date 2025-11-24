@@ -1,12 +1,12 @@
 package fpt.edu.vn.gms.mapper;
 
-import fpt.edu.vn.gms.dto.response.ExpenseVoucherResponseDto;
-import fpt.edu.vn.gms.entity.ExpenseVoucher;
+import fpt.edu.vn.gms.dto.response.ManualVoucherResponseDto;
+import fpt.edu.vn.gms.entity.ManualVoucher;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface ExpenseVoucherMapper {
+public interface ManualVoucherMapper {
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "code", source = "code")
@@ -18,5 +18,5 @@ public interface ExpenseVoucherMapper {
     @Mapping(target = "createdBy", source = "createdBy.fullName")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "attachmentUrl", source = "attachmentUrl")
-    ExpenseVoucherResponseDto toDto(ExpenseVoucher entity);
+    ManualVoucherResponseDto toDto(ManualVoucher entity);
 }

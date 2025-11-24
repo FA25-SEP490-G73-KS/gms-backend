@@ -5,6 +5,7 @@ import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
+import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
 import fpt.edu.vn.gms.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -124,5 +125,17 @@ public class CustomerController {
                 CustomerResponseDto updated = customerService.updateCustomer(id, dto);
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Cập nhật thông tin khách hàng thành công!!", updated));
+        }
+
+        @GetMapping("/service-history")
+        @Operation(summary = "Lấy lịch sử sử dụng dịch vụ của khách hàng theo số điện thoại", description = "Trả về họ tên, số điện thoại, danh sách xe đã từng sửa chữa (biển số, model, hãng, ngày sửa gần nhất) dựa trên service ticket hoàn thành.")
+        @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerServiceHistoryResponseDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy khách hàng hoặc xe", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<CustomerServiceHistoryResponseDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
+            return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
         }
 }

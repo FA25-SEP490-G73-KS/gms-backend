@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class ExpenseVoucherResponseDto {
+public class ManualVoucherResponseDto {
 
     private Long id;
     private String code;

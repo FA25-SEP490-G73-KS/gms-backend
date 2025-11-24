@@ -23,7 +23,7 @@ public class Vehicle {
     @Column(name = "license_plate", length = 20, unique = true)
     private String licensePlate; // Biển số xe
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_model_id", referencedColumnName = "vehicle_model_id")
     private VehicleModel vehicleModel;
 

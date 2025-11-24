@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.enums.ExpenseVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ExpenseVoucherType;
+import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
+import fpt.edu.vn.gms.common.enums.ManualVoucherType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseVoucher {
+public class ManualVoucher {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,11 +23,11 @@ public class ExpenseVoucher {
     private Long id;
 
     @Column(name = "code", length = 50, nullable = false, unique = true)
-    private String code; // PC-2025-00001
+    private String code;  // THU-2025-00001 / CHI-2025-00001
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
-    private ExpenseVoucherType type;  // NCC, LUONG, KHAC
+    private ManualVoucherType type;  // THU, CHI
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
     private BigDecimal amount; // tổng tiền chi
@@ -38,8 +38,11 @@ public class ExpenseVoucher {
     @Column(name = "description", length = 255)
     private String description; // "Thanh toán vật tư: Dầu máy 5W-30"
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_employee_id")
@@ -50,11 +53,11 @@ public class ExpenseVoucher {
     private Employee approvedBy;
 
     @Column(name = "attachment_url", length = 255)
-    private String attachmentUrl; // file chứng từ (optional)
+    private String attachmentUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ExpenseVoucherStatus status;
+    private ManualVoucherStatus status;
 
     // Một ExpenseVoucher gắn với đúng một StockReceiptItem
     @OneToOne(fetch = FetchType.LAZY)

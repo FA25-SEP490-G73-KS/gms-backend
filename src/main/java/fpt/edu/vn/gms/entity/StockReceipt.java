@@ -40,7 +40,7 @@ public class StockReceipt {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private StockReceiptStatus status;         // CREATED / COMPLETED
+    private StockReceiptStatus status;
 
     @Column(name = "total_amount", precision = 18, scale = 2)
     private BigDecimal totalAmount;

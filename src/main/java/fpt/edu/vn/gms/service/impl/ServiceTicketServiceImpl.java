@@ -68,6 +68,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .address(dto.getCustomer().getAddress())
                     .customerType(dto.getCustomer().getCustomerType())
                     .discountPolicy(defaultPolicy)
+                    .isActive(true)
                     .build();
         } else {
             // Đã tồn tại → cập nhật thông tin (nếu có thay đổi)

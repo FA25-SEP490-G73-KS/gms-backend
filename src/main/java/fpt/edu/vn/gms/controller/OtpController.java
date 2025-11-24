@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.request.OtpRequestDto;
 import fpt.edu.vn.gms.dto.request.OtpVerifyRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
@@ -25,6 +26,7 @@ public class OtpController {
 
     private final OtpService otpService;
 
+    @Public
     @PostMapping("/send")
     @Operation(summary = "Gửi OTP qua ZNS", description = "Tạo và gửi mã OTP đến số điện thoại của khách hàng qua Zalo Notification Service")
     @ApiResponses(value = {
@@ -45,6 +47,7 @@ public class OtpController {
         }
     }
 
+    @Public
     @PostMapping("/verify")
     @Operation(summary = "Xác thực OTP", description = "Xác thực mã OTP do khách hàng nhập")
     @ApiResponses(value = {

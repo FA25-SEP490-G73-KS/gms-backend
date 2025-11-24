@@ -4,28 +4,38 @@ import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
+import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.DiscountPolicy;
+import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.DiscountPolicyRepository;
+import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.service.CustomerService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class CustomerServiceImpl implements CustomerService {
 
-    private final CustomerRepository customerRepository;
-    private final DiscountPolicyRepository discountPolicyRepository;
-    private final CustomerMapper customerMapper;
+    CustomerRepository customerRepository;
+    DiscountPolicyRepository discountPolicyRepository;
+    CustomerMapper customerMapper;
+    ServiceTicketRepository serviceTicketRepository;
 
     @Override
     public List<CustomerDto> searchCustomersByPhone(String query) {
@@ -97,5 +107,39 @@ public class CustomerServiceImpl implements CustomerService {
         Customer updated = customerRepository.save(existing);
 
         return customerMapper.toDto(updated);
+    }
+
+    @Override
+    public CustomerServiceHistoryResponseDto getCustomerServiceHistoryByPhone(String phone) {
+        Customer customer = customerRepository.findByPhone(phone)
+                .orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!"));
+        // Lấy tất cả service ticket hoàn thành của customer
+        List<ServiceTicket> completedTickets = serviceTicketRepository.findAll().stream()
+                .filter(st -> st.getCustomer() != null && st.getCustomer().getCustomerId().equals(customer.getCustomerId()))
+                .filter(st -> st.getStatus() != null && st.getStatus().name().equalsIgnoreCase("COMPLETED"))
+                .toList();
+        // Map biển số xe -> ticket gần nhất
+        var vehicleMap = completedTickets.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        st -> st.getVehicle().getLicensePlate(),
+                        java.util.stream.Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+                ));
+        List<CustomerServiceHistoryResponseDto.VehicleServiceInfo> vehicles = vehicleMap.values().stream()
+                .filter(java.util.Optional::isPresent)
+                .map(opt -> {
+                    ServiceTicket st = opt.get();
+                    return CustomerServiceHistoryResponseDto.VehicleServiceInfo.builder()
+                            .licensePlate(st.getVehicle().getLicensePlate())
+                            .modelName(st.getVehicle().getVehicleModel().getName())
+                            .brandName(st.getVehicle().getVehicleModel().getBrand().getName())
+                            .lastServiceDate(st.getCreatedAt() != null ? st.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE) : null)
+                            .build();
+                })
+                .toList();
+        return CustomerServiceHistoryResponseDto.builder()
+                .fullName(customer.getFullName())
+                .phone(customer.getPhone())
+                .vehicles(vehicles)
+                .build();
     }
 }

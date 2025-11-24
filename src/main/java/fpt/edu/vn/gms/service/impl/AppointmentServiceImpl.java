@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,20 +75,44 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
 
         // Check customer theo số điện thoại
-        Customer customer = customerRepo.findByPhone(dto.getPhoneNumber())
-                .orElseGet(() -> {
-                    // Chưa có customer -> tạo mới
-                    Customer newCustomer = Customer.builder()
-                            .fullName(dto.getCustomerName())
-                            .phone(dto.getPhoneNumber())
-                            .discountPolicy(defaultPolicy)
-                            .isActive(true)
-                            .build();
-                    return customerRepo.save(newCustomer);
-                });
+        Optional<Customer> existingCustomer = customerRepo.findByPhone(dto.getPhoneNumber());
 
-        customer.setFullName(dto.getCustomerName());
-        customerRepo.save(customer);
+        Customer customer;
+
+        if (existingCustomer.isPresent()) {
+            Customer oldCustomer = existingCustomer.get();
+
+            // Nếu tài khoản cũ bị khóa -> không update, tạo tài khoản mới
+            if (!oldCustomer.getIsActive()) {
+
+                // Tạo customer mới hoàn toàn
+                customer = Customer.builder()
+                        .fullName(dto.getCustomerName())
+                        .phone(dto.getPhoneNumber())
+                        .discountPolicy(defaultPolicy)
+                        .isActive(true)
+                        .build();
+
+                customerRepo.save(customer);
+
+            } else {
+                // Nếu active = true thì update bình thường
+                oldCustomer.setFullName(dto.getCustomerName());
+                oldCustomer.setPhone(dto.getPhoneNumber());
+                customer = customerRepo.save(oldCustomer);
+            }
+
+        } else {
+            // Không tồn tại -> tạo mới
+            customer = Customer.builder()
+                    .fullName(dto.getCustomerName())
+                    .phone(dto.getPhoneNumber())
+                    .discountPolicy(defaultPolicy)
+                    .isActive(true)
+                    .build();
+
+            customerRepo.save(customer);
+        }
 
         // Giới hạn số lần đặt lịch theo ngày
         int countToday = appointmentRepo.countByCustomerAndAppointmentDate(customer, dto.getAppointmentDate());

@@ -4,7 +4,7 @@ import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.ExpenseVoucherCreateRequest;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Employee;
-import fpt.edu.vn.gms.service.ExpenseVoucherService;
+import fpt.edu.vn.gms.service.ManualVoucherService;
 import fpt.edu.vn.gms.service.StockReceiptService;
 import fpt.edu.vn.gms.utils.AppRoutes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +32,7 @@ import java.util.List;
 public class AccountingStockReceiptController {
 
     private final StockReceiptService stockReceiptService;
-    private final ExpenseVoucherService expenseVoucherService;
+    private final ManualVoucherService manualVoucherService;
 
     // ====== LIST HEADER ======
     @Operation(
@@ -97,20 +97,20 @@ public class AccountingStockReceiptController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Thanh toán thành công",
                     content = @Content(schema =
-                    @Schema(implementation = ExpenseVoucherResponseDto.class))),
+                    @Schema(implementation = ManualVoucherResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ"),
             @ApiResponse(responseCode = "404", description = "Không tìm thấy dòng nhập kho")
     })
     @PostMapping("/items/{itemId}/pay")
-    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<ExpenseVoucherResponseDto>> payForItem(
+    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<ManualVoucherResponseDto>> payForItem(
             @PathVariable Long itemId,
             @RequestBody ExpenseVoucherCreateRequest request,
             @CurrentUser Employee accountant
     ) {
         log.info("[ACCOUNTING][PAY] itemId={} request={}", itemId, request);
 
-        ExpenseVoucherResponseDto dto =
-                expenseVoucherService.payForStockReceiptItem(itemId, request, accountant);
+        ManualVoucherResponseDto dto =
+                manualVoucherService.payForStockReceiptItem(itemId, request, accountant);
 
         return ResponseEntity.ok(
                 fpt.edu.vn.gms.dto.response.ApiResponse.success("Thanh toán thành công", dto)

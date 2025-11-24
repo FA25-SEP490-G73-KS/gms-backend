@@ -1,10 +1,10 @@
 package fpt.edu.vn.gms.repository;
 
-import fpt.edu.vn.gms.entity.ExpenseVoucher;
+import fpt.edu.vn.gms.entity.ManualVoucher;
 import fpt.edu.vn.gms.entity.StockReceiptItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpenseVoucherRepository extends JpaRepository<ExpenseVoucher, Long> {
+public interface ManualVoucherRepository extends JpaRepository<ManualVoucher, Long> {
 
     boolean existsByStockReceiptItem(StockReceiptItem item);
 }

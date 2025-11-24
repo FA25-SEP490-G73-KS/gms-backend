@@ -11,9 +11,6 @@ import java.util.List;
 public interface StockReceiptItemMapper {
 
     @Mapping(target = "receiptItemId", source = "id")
-    @Mapping(target = "receiptId", source = "stockReceipt.receiptId")
-    @Mapping(target = "purchaseRequestItemId", source = "purchaseRequestItem.itemId")
-    @Mapping(target = "purchaseRequestCode", source = "stockReceipt.purchaseRequest.code")
     @Mapping(target = "partName", source = "purchaseRequestItem.partName")
     @Mapping(target = "unit", source = "purchaseRequestItem.unit")
     @Mapping(target = "requestedQuantity", source = "requestedQuantity")

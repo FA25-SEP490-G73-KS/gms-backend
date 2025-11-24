@@ -9,9 +9,9 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum Role {
-    MANAGER("MANAGER"),          // Quản lý
-    SERVICE_ADVISOR("SERVICE_ADVISOR"),  // Cố vấn dịch vụ
-    ACCOUNTANT("ACCOUNTANT"),       // Kế toán
+    MANAGER("MANAGER"),
+    SERVICE_ADVISOR("SERVICE_ADVISOR"),
+    ACCOUNTANT("ACCOUNTANT"),
     WAREHOUSE("WAREHOUSE");
 
     String value;

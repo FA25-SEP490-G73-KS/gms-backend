@@ -58,6 +58,10 @@ public class Part {
     @Column(name = "reorder_level")
     private Double reorderLevel;
 
+    @ManyToOne
+    @JoinColumn
+    private Supplier supplier;
+
     @Column(name = "is_universal", nullable = false)
     private boolean isUniversal = false;
 

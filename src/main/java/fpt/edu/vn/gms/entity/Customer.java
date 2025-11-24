@@ -49,5 +49,5 @@ public class Customer {
     private BigDecimal totalSpending = BigDecimal.ZERO;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private boolean isActive = true;
+    private Boolean isActive = true;
 }
