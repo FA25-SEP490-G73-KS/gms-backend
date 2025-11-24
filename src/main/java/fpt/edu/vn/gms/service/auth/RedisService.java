@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.service;
+package fpt.edu.vn.gms.service.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;

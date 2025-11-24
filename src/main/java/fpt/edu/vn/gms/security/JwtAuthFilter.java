@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,7 +34,7 @@ import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.exception.InvalidCredentialsException;
 import fpt.edu.vn.gms.exception.TokenInvalidatedException;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
-import fpt.edu.vn.gms.service.JwtService;
+import fpt.edu.vn.gms.service.auth.JwtService;
 import fpt.edu.vn.gms.utils.AppRoutes;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

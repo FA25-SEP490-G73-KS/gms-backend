@@ -11,7 +11,7 @@ import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.AuthTokenDto;
 import fpt.edu.vn.gms.dto.response.ResetPasswordResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
-import fpt.edu.vn.gms.service.AuthService;
+import fpt.edu.vn.gms.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

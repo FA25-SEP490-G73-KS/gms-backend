@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.service;
+package fpt.edu.vn.gms.service.auth;
 
 import fpt.edu.vn.gms.entity.Account;
 import fpt.edu.vn.gms.repository.AccountRepository;

@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.service;
+package fpt.edu.vn.gms.service.auth;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
