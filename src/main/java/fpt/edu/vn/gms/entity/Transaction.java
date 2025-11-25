@@ -26,6 +26,10 @@ public class Transaction {
     @JoinColumn(name = "invoice_id", nullable = false)
     private Invoice invoice;
 
+    @ManyToOne
+    @JoinColumn(name = "debt_id", nullable = false)
+    private Debt debt;
+
     @Column(nullable = false)
     private String customerFullName;
 

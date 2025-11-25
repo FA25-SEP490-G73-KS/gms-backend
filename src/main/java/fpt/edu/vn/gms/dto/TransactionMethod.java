@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.dto;
 
+import java.util.stream.Stream;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -10,4 +12,12 @@ public enum TransactionMethod {
   BANK_TRANSFER("BANK_TRANSFER");
 
   private final String value;
+
+  public static TransactionMethod fromValue(String value) {
+    return Stream.of(TransactionMethod.values())
+        .filter(type -> type.getValue() == value)
+        .findFirst()
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "TransactionMethod '%s' is not found".formatted(value)));
+  }
 }

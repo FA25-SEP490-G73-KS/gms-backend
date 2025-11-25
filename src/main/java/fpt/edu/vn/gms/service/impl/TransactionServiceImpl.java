@@ -1,19 +1,25 @@
 package fpt.edu.vn.gms.service.impl;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import fpt.edu.vn.gms.common.enums.DebtStatus;
+import fpt.edu.vn.gms.common.enums.InvoiceStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.request.TransactionCallbackDto;
+import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.Invoice;
 import fpt.edu.vn.gms.entity.Transaction;
 import fpt.edu.vn.gms.exception.TransactionNotFoundException;
 import fpt.edu.vn.gms.mapper.TransactionMapper;
+import fpt.edu.vn.gms.repository.DebtRepository;
+import fpt.edu.vn.gms.repository.InvoiceRepository;
 import fpt.edu.vn.gms.repository.TransactionRepository;
 import fpt.edu.vn.gms.service.TransactionService;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +30,15 @@ import vn.payos.model.v2.paymentRequests.PaymentLinkStatus;
 @Service
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
+
   @Value("${app.frontend-url}")
   private String returnUrl;
 
   private final PayOS payOS;
   private final TransactionRepository transactionRepository;
   private final TransactionMapper transactionMapper;
+  private final DebtRepository debtRepository;
+  private final InvoiceRepository invoiceRepository;
 
   @Override
   public TransactionResponseDto createTransaction(CreateTransactionRequestDto request)
@@ -87,7 +96,28 @@ public class TransactionServiceImpl implements TransactionService {
       transaction.setIsActive(true);
       transactionRepository.save(transaction);
 
-      // TODO: change status of payment
+      Invoice invoice = transaction.getInvoice();
+      Debt debt = transaction.getDebt();
+      BigDecimal amount = new BigDecimal(transaction.getAmount());
+
+      if (invoice != null) {
+        if (transaction.getType() == PaymentTransactionType.DEPOSIT) {
+          invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
+          invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
+          invoiceRepository.save(invoice);
+        } else {
+          InvoiceStatus status = amount.equals(invoice.getFinalAmount()) ? InvoiceStatus.PAID_IN_FULL
+              : InvoiceStatus.UNDERPAID;
+          invoice.setStatus(status);
+          invoiceRepository.save(invoice);
+        }
+      } else if (debt != null) {
+        DebtStatus status = debt.getAmount().subtract(debt.getPaidAmount()).equals(amount) ? DebtStatus.DA_TAT_TOAN
+            : DebtStatus.CON_NO;
+        debt.setPaidAmount(debt.getPaidAmount().add(amount));
+        debt.setStatus(status);
+        debtRepository.save(debt);
+      }
 
       return;
     }
@@ -102,8 +132,7 @@ public class TransactionServiceImpl implements TransactionService {
   private String getDescriptionOfTransaction(PaymentTransactionType type, Invoice invoice) {
     String typeName = switch (type) {
       case PaymentTransactionType.DEPOSIT -> "Dat coc";
-      case PaymentTransactionType.PARTIAL_PAYMENT -> "Thanh toan mot phan";
-      case PaymentTransactionType.FULL_PAYMENT -> "Thanh toan";
+      case PaymentTransactionType.PAYMENT -> "Thanh toan";
     };
 
     return "%s-%s".formatted(typeName, invoice.getServiceTicket().getServiceTicketCode());
