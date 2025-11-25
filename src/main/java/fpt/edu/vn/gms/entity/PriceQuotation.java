@@ -33,9 +33,6 @@ public class PriceQuotation {
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
 
-    @Column(name = "labor_cost", precision = 18, scale = 2)
-    private BigDecimal laborCost;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
@@ -65,5 +62,7 @@ public class PriceQuotation {
     }
 
     @PreUpdate
-    protected void onUpdate() {updatedAt = LocalDateTime.now();}
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -1,14 +1,11 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
-import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
-import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +32,6 @@ public class PriceQuotationController {
 
         PriceQuotationService priceQuotationService;
         WarehouseQuotationService warehouseQuotationService;
-
 
         @GetMapping("/pending")
         @Operation(summary = "Lấy báo giá đang chờ xử lý", description = "Lấy danh sách các báo giá đang chờ xử lý từ kho với phân trang.")
@@ -180,58 +176,35 @@ public class PriceQuotationController {
         @GetMapping("/count-waiting")
         @Operation(summary = "Đếm số phiếu báo giá đang chờ khách hàng duyệt", description = "Cố vấn dịch vụ gửi báo giá chờ khách duyệt")
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá chờ khách duyệt"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá chờ khách duyệt"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<Long>> countWaiting() {
                 long count = priceQuotationService.countWaitingCustomerConfirm();
                 return ResponseEntity.ok(
-                        ApiResponse.success("Số báo giá khách hàng chưa xác nhận", count)
-                );
+                                ApiResponse.success("Số báo giá khách hàng chưa xác nhận", count));
         }
 
         @GetMapping("/count-vehicle-repairing")
         @Operation(summary = "Đếm số phiếu báo giá của xe đang sửa chữa", description = "Cố vấn dịch vụ đếm số báo giá của xe đang trong quá trình sửa chữa.")
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá của xe đang sửa chữa"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Số báo giá của xe đang sửa chữa"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<Long>> countVehicleRepairing() {
                 long count = priceQuotationService.countVehicleInRepairingStatus();
                 return ResponseEntity.ok(
-                        ApiResponse.success("Số báo giá của xe đang sửa chữa", count)
-                );
+                                ApiResponse.success("Số báo giá của xe đang sửa chữa", count));
         }
 
-        @PatchMapping("/{id}/labor-cost")
-        @Operation(summary = "Cập nhật tiền công", description = "Cập nhật chi phí tiền công của một phiếu báo giá.")
-        @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật tiền công thành công"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá", content = @Content(schema = @Schema(hidden = true))),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
-        })
-        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateLaborCost(
-                @PathVariable Long id,
-                @RequestBody ChangeLaborCostReqDto dto) {
-
-                PriceQuotationResponseDto updatedQuotation = priceQuotationService.updateLaborCost(id, dto);
-
-                return ResponseEntity.ok(
-                        ApiResponse.success("Cập nhật tiền công thành công!", updatedQuotation)
-                );
-        }
-
-        @Operation(
-                summary = "Xuất PDF báo giá",
-                description = """
-            API xuất file PDF Báo giá sửa chữa từ template HTML.
-            - Tự động bind dữ liệu: khách hàng, xe, items, tổng tiền.
-            - Tải về file PDF theo mẫu đã thiết kế.
-            """
-        )
+        @Operation(summary = "Xuất PDF báo giá", description = """
+                        API xuất file PDF Báo giá sửa chữa từ template HTML.
+                        - Tự động bind dữ liệu: khách hàng, xe, items, tổng tiền.
+                        - Tải về file PDF theo mẫu đã thiết kế.
+                        """)
         @ApiResponses({
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Xuất PDF thành công"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá")
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Xuất PDF thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá")
         })
         @GetMapping("/{id}/pdf")
         public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) {
@@ -241,13 +214,12 @@ public class PriceQuotationController {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_PDF);
                 headers.setContentDispositionFormData(
-                        "attachment",
-                        "quotation-" + id + ".pdf"
-                );
+                                "attachment",
+                                "quotation-" + id + ".pdf");
 
                 return ResponseEntity.ok()
-                        .headers(headers)
-                        .body(pdfBytes);
+                                .headers(headers)
+                                .body(pdfBytes);
         }
 
 }

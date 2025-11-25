@@ -8,21 +8,20 @@ import java.util.List;
 
 @Data
 @Builder
-public class PaymentDetailResDto {
+public class InvoiceDetailResDto {
 
-    private Long paymentId;
-    private String paymentCode;
+    private Long id;
+    private String code;
+    private String status;
 
-    private Long serviceTicketId;
+    private ServiceTicketResponseDto serviceTicket;
     private String customerName;
 
     private List<PaymentItemDto> items;
 
     // Các thông số thanh toán
     private BigDecimal totalItemPrice;
-    private BigDecimal laborCost;
     private BigDecimal discount;
-    private BigDecimal previousDebt;
     private BigDecimal depositReceived;
     private BigDecimal finalAmount;
     private String amountInWords;

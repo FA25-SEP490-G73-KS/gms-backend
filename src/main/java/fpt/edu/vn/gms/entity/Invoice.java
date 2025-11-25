@@ -5,6 +5,11 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import org.hibernate.annotations.ColumnDefault;
+
+import fpt.edu.vn.gms.common.enums.PaymentStatus;
 
 @Getter
 @Setter
@@ -12,8 +17,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "payment")
-public class Payment {
+@Table(name = "invoice")
+public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,11 +26,11 @@ public class Payment {
 
     private String code;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "price_quotation_id")
     private PriceQuotation quotation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "service_ticket_id")
     private ServiceTicket serviceTicket;
 
@@ -33,17 +38,9 @@ public class Payment {
     @Column(name = "item_total", precision = 18, scale = 2)
     private BigDecimal itemTotal;
 
-    // Tiền công
-    @Column(name = "labor_cost", precision = 18, scale = 2)
-    private BigDecimal laborCost;
-
     // Chiết khấu (mặc định)
     @Column(name = "discount", precision = 18, scale = 2)
     private BigDecimal discount;
-
-    // Công nợ cũ
-    @Column(name = "previous_debt", precision = 18, scale = 2)
-    private BigDecimal previousDebt;
 
     // Tiền cọc đã nhận
     @Column(name = "deposit_received", precision = 18, scale = 2)
@@ -53,13 +50,18 @@ public class Payment {
     @Column(name = "final_amount", precision = 18, scale = 2)
     private BigDecimal finalAmount;
 
-    @Column(length = 8)
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'PENDING'")
+    @Builder.Default
+    private PaymentStatus status = PaymentStatus.PENDING;
 
-//    @Column(columnDefinition = "JSON")
-    private String metadata;
+    @OneToMany(mappedBy = "invoice")
+    private List<Transaction> transactions;
 
+    @Column
     private LocalDateTime createdAt;
+
+    @Column
     private LocalDateTime updatedAt;
 
     // Người tạo

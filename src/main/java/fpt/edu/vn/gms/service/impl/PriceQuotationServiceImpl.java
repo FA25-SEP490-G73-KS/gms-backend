@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
-import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
@@ -18,7 +17,7 @@ import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
 import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
-import fpt.edu.vn.gms.utils.NumberToVietnameseWords;
+import fpt.edu.vn.gms.utils.NumberToVietnameseWordsUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -105,7 +104,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         return priceQuotationMapper.toResponseDto(quotation);
     }
 
-
     @Override
     public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
 
@@ -162,12 +160,10 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotationRepository.save(quotation);
     }
 
-
     @Override
     public PriceQuotationResponseDto getById(Long id) {
         return priceQuotationMapper.toResponseDto(quotationRepository.findById(id).orElse(null));
     }
-
 
     private void applyItemUpdates(PriceQuotationItem item, PriceQuotationItemRequestDto dto) {
         item.setItemName(dto.getItemName());
@@ -201,12 +197,10 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 // AVAILABLE → inventory = AVAILABLE, review = CONFIRMED
                 // OUT_OF_STOCK → inventory = OUT_OF_STOCK, review = PENDING
                 item.setInventoryStatus(
-                        available ? PriceQuotationItemStatus.AVAILABLE : PriceQuotationItemStatus.OUT_OF_STOCK
-                );
+                        available ? PriceQuotationItemStatus.AVAILABLE : PriceQuotationItemStatus.OUT_OF_STOCK);
 
                 item.setWarehouseReviewStatus(
-                        available ? WarehouseReviewStatus.CONFIRMED : WarehouseReviewStatus.PENDING
-                );
+                        available ? WarehouseReviewStatus.CONFIRMED : WarehouseReviewStatus.PENDING);
             }
         } else {
             item.setPart(null);
@@ -221,7 +215,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         PriceQuotation quotation = quotationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Quotation không tồn tại!!!"));
 
-        if (quotation.getPriceQuotationId() != null && quotation.getStatus() == PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
+        if (quotation.getPriceQuotationId() != null
+                && quotation.getStatus() == PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
             quotation.setStatus(reqDto.getStatus());
             quotationRepository.save(quotation);
         } else {
@@ -251,7 +246,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         List<PriceQuotationItem> partsToBuy = new ArrayList<>();
 
         for (PriceQuotationItem item : quotation.getItems()) {
-            if (item.getItemType() != PriceQuotationItemType.PART) continue;
+            if (item.getItemType() != PriceQuotationItemType.PART)
+                continue;
 
             if (item.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE) {
                 availableParts.add(item);
@@ -264,7 +260,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // 1. Tạo PartReservation cho các linh kiện AVAILABLE
         for (PriceQuotationItem item : availableParts) {
             Part part = item.getPart();
-            if (part == null) continue;
+            if (part == null)
+                continue;
 
             // Cập nhật số lượng đã giữ
             double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -301,7 +298,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                         .partName(item.getItemName())
                         .quantity(quantityToPurchase)
                         .unit(item.getUnit())
-                        .estimatedPurchasePrice(item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
+                        .estimatedPurchasePrice(
+                                item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
                         .status(PurchaseReqItemStatus.PENDING)
                         .reviewStatus(ManagerReviewStatus.PENDING)
                         .purchaseRequest(purchaseRequest)
@@ -336,8 +334,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 template.format(quotation.getPriceQuotationId()),
                 NotificationType.QUOTATION_CONFIRMED,
                 quotation.getPriceQuotationId().toString(),
-                "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-        );
+                "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
@@ -386,8 +383,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     template.format(quotation.getPriceQuotationId()),
                     NotificationType.QUOTATION_REJECTED,
                     quotation.getPriceQuotationId().toString(),
-                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-            );
+                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
 
             // WebSocket realtime đã được push trong createNotification
         }
@@ -416,36 +412,28 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public long countWaitingCustomerConfirm() {
         return priceQuotationRepository.countByStatus(
-                PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM
-        );
+                PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
     }
 
     @Override
     public long countVehicleInRepairingStatus() {
         return priceQuotationRepository.countByStatus(
-                PriceQuotationStatus.CUSTOMER_CONFIRMED
-        );
+                PriceQuotationStatus.CUSTOMER_CONFIRMED);
     }
 
     @Override
-    public PriceQuotationResponseDto updateLaborCost(Long id, ChangeLaborCostReqDto dto) {
-        log.info("Updating laborCost for quotationId={}, newLaborCost={}", id, dto.getLaborCost());
-
+    public PriceQuotationResponseDto updateLaborCost(Long id) {
         PriceQuotation quotation = priceQuotationRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("PriceQuotation not found id={}", id);
                     return new ResourceNotFoundException("Không tìm thấy báo giá!");
                 });
 
-        quotation.setLaborCost(dto.getLaborCost());
-
         // Nếu bạn muốn update estimateAmount theo laborCost
         quotation.setEstimateAmount(
                 quotation.getItems().stream()
                         .map(i -> i.getTotalPrice())
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .add(dto.getLaborCost())
-        );
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
 
         priceQuotationRepository.save(quotation);
 
@@ -456,7 +444,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     @Override
     public byte[] exportPdfQuotation(Long quotationId) {
-        
+
         ServiceTicket serviceTicket = serviceTicketRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá!"));
 
@@ -482,7 +470,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         data.put("items", items);
         data.put("grandTotal", df.format(ticket.getPriceQuotation().getEstimateAmount()).replace(",", "."));
 
-        data.put("grandTotalInWords", NumberToVietnameseWords.convert(ticket.getPriceQuotation().getEstimateAmount().longValue()));
+        data.put("grandTotalInWords",
+                NumberToVietnameseWordsUtils.convert(ticket.getPriceQuotation().getEstimateAmount().longValue()));
 
         String html = htmlTemplateService.loadAndFillTemplate(
                 "templates/quotation-template.html", data);

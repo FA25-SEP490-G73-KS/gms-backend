@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto.request;
+package fpt.edu.vn.gms.dto;
 
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import jakarta.validation.constraints.NotBlank;
@@ -7,28 +7,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @AllArgsConstructor
 @Getter
 @Setter
-public class CreatePaymentLinkRequestDto {
+public class PayInvoiceRequestDto {
 
-  @NotBlank
-  private String customerFullName;
-
-  @NotBlank
-  private String customerPhone;
-
-  @NotBlank
-  private String customerAddress;
+  @NotNull
+  private Long price;
 
   @NotBlank
   private PaymentTransactionType type;
 
   @NotBlank
-  private String description;
-
-  @NotNull
-  private Long price;
+  private TransactionMethod method;
 }

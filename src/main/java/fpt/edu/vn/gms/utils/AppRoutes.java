@@ -29,7 +29,7 @@ public final class AppRoutes {
   public static final String DEBTS_PREFIX = API_PREFIX + "/debts";
   public static final String STOCK_EXPORTS_PREFIX = API_PREFIX + "/stock-exports";
   public static final String VEHICLES_PREFIX = API_PREFIX + "/vehicles";
-  public static final String PAYMENT_PREFIX = API_PREFIX + "/payments";
+  public static final String INVOICE_PREFIX = API_PREFIX + "/invoices";
   public static final String ZNS_NOTIFICATIONS_PREFIX = API_PREFIX + "/zns-notifications";
   public static final String TRANSACTIONS_PREFIX = API_PREFIX + "/transactions";
   public static final String PURCHASE_REQUEST_PREFIX = API_PREFIX + "/purchase-requests";

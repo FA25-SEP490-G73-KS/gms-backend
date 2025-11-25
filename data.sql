@@ -100,11 +100,11 @@ VALUES
     ('SLIVER', 5.00,  5000.00, 'Chi tiêu trên 5 triệu'),
     ('GOLD', 10.00, 10000.00, 'Chi tiêu trên 10 triệu');
 
-INSERT INTO customer (full_name, phone, zalo_id, address, customer_type, discount_policy_id)
+INSERT INTO customer (full_name, phone, address, customer_type, discount_policy_id)
 VALUES
-    ('Nguyễn Văn A', '0123456789', 'zalo_001', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 1),
-    ('Trần Thị B', '0123987654', 'zalo_002', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 1),
-    ('Lê Văn C', '0987654321', 'zalo_003', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 1);
+    ('Nguyễn Văn A', '0123456789', '123 Nguyễn Trãi, Hà Nội', 'CA_NHAN', 1),
+    ('Trần Thị B', '0123987654', '45 Lê Lợi, TP.HCM', 'CA_NHAN', 1),
+    ('Lê Văn C', '0987654321', '78 Hai Bà Trưng, Đà Nẵng', 'CA_NHAN', 1);
 
 
 INSERT INTO vehicle (customer_id, vehicle_model_id, license_plate, vin, year)

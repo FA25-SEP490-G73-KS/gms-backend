@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.utils;
 
-public class NumberToVietnameseWords {
+public class NumberToVietnameseWordsUtils {
     private static final String[] chuSo = { "không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín" };
     private static final String[] hang = { "", "nghìn", "triệu", "tỷ" };
 
@@ -66,4 +66,3 @@ public class NumberToVietnameseWords {
         return text + " đồng";
     }
 }
-

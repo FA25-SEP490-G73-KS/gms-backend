@@ -28,9 +28,6 @@ public class Customer {
     @Column(name = "phone")
     private String phone;
 
-    @Column(name = "zalo_id", length = 50)
-    private String zaloId;
-
     @Column(name = "address", length = 200)
     private String address;
 

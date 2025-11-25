@@ -15,14 +15,14 @@ public interface StockReceiptRepository extends JpaRepository<StockReceipt, Long
     Optional<StockReceipt> findByPurchaseRequest(PurchaseRequest pr);
 
     @Query("""
-           SELECT r FROM StockReceipt r
-           LEFT JOIN r.purchaseRequest pr
-           LEFT JOIN pr.relatedQuotation q
-           LEFT JOIN q.serviceTicket t
-           LEFT JOIN t.vehicle v
-           WHERE (:search IS NULL OR :search = ''\s
-                  OR r.code LIKE %:search%
-                  OR v.licensePlate LIKE %:search%)
-          \s""")
+             SELECT r FROM StockReceipt r
+             LEFT JOIN r.purchaseRequest pr
+             LEFT JOIN pr.relatedQuotation q
+             LEFT JOIN q.serviceTicket t
+             LEFT JOIN t.vehicle v
+             WHERE (:search IS NULL OR :search = ''
+                    OR r.code LIKE %:search%
+                    OR v.licensePlate LIKE %:search%)
+            """)
     Page<StockReceipt> searchForAccounting(@Param("search") String search, Pageable pageable);
 }

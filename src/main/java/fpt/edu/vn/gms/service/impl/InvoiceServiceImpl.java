@@ -1,0 +1,227 @@
+package fpt.edu.vn.gms.service.impl;
+
+import fpt.edu.vn.gms.common.enums.DebtStatus;
+import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
+import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
+import fpt.edu.vn.gms.dto.response.DebtResDto;
+import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
+import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
+import fpt.edu.vn.gms.entity.*;
+import fpt.edu.vn.gms.exception.PaymentNotFoundException;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.DebtMapper;
+import fpt.edu.vn.gms.mapper.InvoiceMapper;
+import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
+import fpt.edu.vn.gms.service.InvoiceService;
+import fpt.edu.vn.gms.service.TransactionService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Objects;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class InvoiceServiceImpl implements InvoiceService {
+
+        ServiceTicketRepository serviceTicketRepo;
+        PriceQuotationRepository priceQuotationRepo;
+        InvoiceRepository invoiceRepo;
+        DebtRepository debtRepo;
+        TransactionRepository transactionRepo;
+        TransactionService transactionService;
+        CodeSequenceService codeSequenceService;
+        DebtMapper debtMapper;
+        InvoiceMapper mapper;
+
+        @Override
+        @Transactional
+        public void createInvoice(Long serviceTicketId, Long quotationId) {
+
+                // Lấy service ticket
+                ServiceTicket serviceTicket = serviceTicketRepo.findById(serviceTicketId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Không tìm thấy phiếu dịch vụ: " + serviceTicketId));
+
+                // Lấy báo giá
+                PriceQuotation priceQuotation = priceQuotationRepo.findById(quotationId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Không tìm thấy báo giá: " + quotationId));
+
+                // Lấy Customer từ Service Ticket
+                Customer customer = serviceTicket.getCustomer();
+                if (customer == null) {
+                        throw new ResourceNotFoundException("Phiếu dịch vụ chưa gắn khách hàng!");
+                }
+
+                BigDecimal itemTotal = priceQuotation.getEstimateAmount() != null ? priceQuotation.getEstimateAmount()
+                                : BigDecimal.ZERO;
+                BigDecimal discountRate = customer.getDiscountPolicy() != null
+                                && customer.getDiscountPolicy().getDiscountRate() != null
+                                                ? customer.getDiscountPolicy().getDiscountRate()
+                                                : BigDecimal.ZERO;
+
+                BigDecimal discount = itemTotal
+                                .multiply(discountRate)
+                                .divide(BigDecimal.valueOf(100));
+
+                // Lấy tiền cọc (nếu không có cọc -> 0)
+                BigDecimal depositAmount = BigDecimal.ZERO;
+
+                // Lấy công nợ cũ = tổng các payment chưa thanh toán hết
+                BigDecimal previousDebt = debtRepo.getTotalDebt(customer.getCustomerId());
+
+                // Tổng số tiền cần trả = hàng + công - giảm giá - cọc + công nợ cũ
+                BigDecimal amountPaid = itemTotal
+                                .subtract(discount)
+                                .subtract(depositAmount)
+                                .add(previousDebt);
+
+                // Tạo payment
+                invoiceRepo.save(Invoice.builder()
+                                .code(codeSequenceService.generateCode("PAY"))
+                                .serviceTicket(serviceTicket)
+                                .quotation(priceQuotation)
+                                .itemTotal(itemTotal)
+                                .discount(discount)
+                                .depositReceived(depositAmount)
+                                .finalAmount(amountPaid)
+                                .createdBy("hệ thống")
+                                .createdAt(LocalDateTime.now())
+                                .build());
+
+        }
+
+        @Override
+        public Page<InvoiceListResDto> getInvoiceList(int page, int size, String sort) {
+
+                log.info("Fetching payment list with paging: page={}, size={}, sort={}", page, size, sort);
+
+                String[] sortParams = sort.split(",");
+                Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
+                Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+
+                Page<Invoice> payments = invoiceRepo.findAllWithRelations(pageable);
+
+                return payments.map(mapper::toListDto);
+        }
+
+        @Override
+        public InvoiceDetailResDto getInvoiceDetail(Long paymentId) {
+
+                log.info("Fetching payment detail, paymentId={}", paymentId);
+
+                Invoice payment = invoiceRepo.findById(paymentId)
+                                .orElseThrow(() -> {
+                                        log.warn("Payment not found, id={}", paymentId);
+                                        return new ResourceNotFoundException("Không tìm thấy phiếu thanh toán!");
+                                });
+
+                return mapper.toDetailDto(payment);
+        }
+
+        @Override
+        @Transactional
+        public DebtResDto createDebtFromInvoice(Long paymentId, LocalDate dueDate) {
+                log.info("Creating debt from paymentId={} with dueDate={}", paymentId, dueDate);
+
+                Invoice payment = invoiceRepo.findById(paymentId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Không tìm thấy phiếu thanh toán: " + paymentId));
+
+                ServiceTicket serviceTicket = payment.getServiceTicket();
+                if (serviceTicket == null || serviceTicket.getCustomer() == null) {
+                        throw new ResourceNotFoundException(
+                                        "Phiếu thanh toán chưa gắn khách hàng / phiếu dịch vụ hợp lệ");
+                }
+
+                Customer customer = serviceTicket.getCustomer();
+
+                // Tổng phải thu từ payment (finalAmount đã bao gồm công nợ cũ + giảm giá + cọc)
+                BigDecimal totalAmount = payment.getFinalAmount() != null
+                                ? payment.getFinalAmount()
+                                : BigDecimal.ZERO;
+
+                // Lấy các transaction đã tạo (PayOS callback thành công)
+                // Nếu repo đã có findByPaymentAndStatus thì dùng trực tiếp cho nhẹ DB:
+                var transactions = transactionRepo.findByInvoiceAndIsActiveTrue(payment);
+
+                BigDecimal collectedAmount = transactions.stream()
+                                .map(Transaction::getAmount)
+                                .filter(Objects::nonNull)
+                                .map(BigDecimal::valueOf)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // Công nợ mới = tổng phải thu - số tiền đã thu
+                BigDecimal newDebtAmount = totalAmount.subtract(collectedAmount);
+                if (newDebtAmount.compareTo(BigDecimal.ZERO) < 0) {
+                        // không cho âm, log để dễ debug
+                        log.warn("Computed newDebtAmount < 0 for paymentId={} (total={}, collected={}), force to 0",
+                                        paymentId, totalAmount, collectedAmount);
+                        newDebtAmount = BigDecimal.ZERO;
+                }
+
+                if (newDebtAmount.compareTo(BigDecimal.ZERO) == 0) {
+                        log.info("Payment {} has no remaining amount, skip creating debt", paymentId);
+                        return null;
+                }
+
+                if (dueDate == null) {
+                        // Nếu FE không gửi dueDate, mặc định +30 ngày
+                        dueDate = LocalDate.now().plusDays(30);
+                }
+
+                // Nếu không còn nợ -> có thể không tạo Debt, tuỳ nghiệp vụ
+                DebtStatus status = DebtStatus.CON_NO;
+
+                Debt debt = Debt.builder()
+                                .customer(customer)
+                                .serviceTicket(serviceTicket)
+                                .amount(newDebtAmount)
+                                .paidAmount(BigDecimal.ZERO) // đây là nợ mới, chưa thu gì
+                                .status(status)
+                                .dueDate(dueDate)
+                                .build();
+
+                debt = debtRepo.save(debt);
+
+                log.info("Created debt id={} for customer={} paymentId={} amount={} dueDate={}",
+                                debt.getId(), customer.getCustomerId(), paymentId, newDebtAmount, dueDate);
+
+                DebtResDto dto = debtMapper.toDto(debt);
+                // remaining = amount - paidAmount (hiện bằng amount)
+                dto.setAmount(newDebtAmount);
+                dto.setPaidAmount(debt.getPaidAmount());
+
+                return dto;
+        }
+
+        @Override
+        public TransactionResponseDto payInvoice(Long invoiceId, PayInvoiceRequestDto request) throws Exception {
+                Invoice invoice = invoiceRepo.findById(invoiceId).orElseThrow(PaymentNotFoundException::new);
+                return transactionService.createTransaction(
+                                CreateTransactionRequestDto.builder()
+                                                .invoice(invoice)
+                                                .customerFullName(invoice.getServiceTicket().getCustomerName())
+                                                .customerPhone(invoice.getServiceTicket().getCustomerPhone())
+                                                .type(request.getType())
+                                                .method(request.getMethod())
+                                                .price(request.getPrice())
+                                                .build());
+        }
+
+}

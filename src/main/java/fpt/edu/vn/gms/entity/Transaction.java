@@ -1,11 +1,9 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
+import fpt.edu.vn.gms.dto.TransactionMethod;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -25,8 +23,8 @@ public class Transaction {
     private String paymentLinkId; // id link thanh toán của PayOS
 
     @ManyToOne
-    @JoinColumn(name = "payment_id", nullable = false)
-    private Payment payment;
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private Invoice invoice;
 
     @Column(nullable = false)
     private String customerFullName;
@@ -34,12 +32,9 @@ public class Transaction {
     @Column(nullable = false)
     private String customerPhone;
 
-    @Column(nullable = false)
-    private String customerAddress;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "method", length = 30)
-    private Method method;
+    private TransactionMethod method;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", length = 30)
@@ -53,14 +48,4 @@ public class Transaction {
 
     @Column
     private Boolean isActive;
-
-    @Getter
-    @RequiredArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-    public static enum Method {
-        CASH("CASH"),
-        BANK_TRANSFER("BANK_TRANSFER");
-
-        String value;
-    }
 }

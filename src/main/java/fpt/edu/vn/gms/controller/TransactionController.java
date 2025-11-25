@@ -11,16 +11,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import fpt.edu.vn.gms.common.annotations.Public;
-import fpt.edu.vn.gms.dto.request.CreatePaymentLinkRequestDto;
 import fpt.edu.vn.gms.dto.request.TransactionCallbackDto;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.service.TransactionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 
 @Tag(name = "transactions", description = "Giao dịch")
 @RestController
@@ -29,13 +26,6 @@ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TransactionController {
   TransactionService transactionService;
-
-  @Public
-  @PostMapping("/create")
-  public ApiResponse<CreatePaymentLinkResponse> createPaymentLink(
-      @RequestBody @Valid CreatePaymentLinkRequestDto request) throws Exception {
-    return ApiResponse.success("Tạo link thanh toán thành công", transactionService.createPaymentLink(request));
-  }
 
   @Public
   @PostMapping("/callback")

@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.dto.request.ChangeLaborCostReqDto;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
@@ -30,7 +29,7 @@ public interface PriceQuotationService {
 
     long countVehicleInRepairingStatus();
 
-    PriceQuotationResponseDto updateLaborCost(Long id, ChangeLaborCostReqDto dto);
+    PriceQuotationResponseDto updateLaborCost(Long id);
 
     byte[] exportPdfQuotation(Long quotationId);
 }
