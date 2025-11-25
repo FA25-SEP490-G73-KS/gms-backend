@@ -86,7 +86,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // ----------------------------
         if (dto.getVehicle().getVehicleId() != null) {
 
-            // Lấy vehicle theo ID
             vehicle = vehicleRepository.findById(dto.getVehicle().getVehicleId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe!"));
 
@@ -94,25 +93,40 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             if (dto.getCustomer().getCustomerId() == null) {
                 vehicle.setCustomer(customer);
                 vehicleRepository.save(vehicle);
+            } else if (vehicle.getCustomer() == null || !vehicle.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
+                // Trường hợp biển số thuộc khách hàng khác → cập nhật lại chủ xe là customer hiện tại
+                vehicle.setCustomer(customer);
+                vehicleRepository.save(vehicle);
             }
+
 
             // Nếu có cả vehicleId + customerId → giữ nguyên, KHÔNG update
         }
         else {
 
-            // Không có vehicleId → tạo mới
-            Brand brand = resolveBrand(dto);
-            VehicleModel vehicleModel = resolveVehicleModel(dto, brand);
+            // Không có vehicleId → tìm theo biển số, nếu chưa tồn tại thì tạo mới
+            vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate())
+                    .orElse(null);
 
-            vehicle = Vehicle.builder()
-                    .licensePlate(dto.getVehicle().getLicensePlate())
-                    .vehicleModel(vehicleModel)
-                    .year(dto.getVehicle().getYear())
-                    .vin(dto.getVehicle().getVin())
-                    .customer(customer)
-                    .build();
+            if (vehicle != null) {
+                if (vehicle.getCustomer() == null || !vehicle.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
+                    vehicle.setCustomer(customer);
+                    vehicleRepository.save(vehicle);
+                }
+            } else {
+                Brand brand = resolveBrand(dto);
+                VehicleModel vehicleModel = resolveVehicleModel(dto, brand);
 
-            vehicle = vehicleRepository.save(vehicle);
+                vehicle = Vehicle.builder()
+                        .licensePlate(dto.getVehicle().getLicensePlate())
+                        .vehicleModel(vehicleModel)
+                        .year(dto.getVehicle().getYear())
+                        .vin(dto.getVehicle().getVin())
+                        .customer(customer)
+                        .build();
+
+                vehicle = vehicleRepository.save(vehicle);
+            }
         }
 
         // ----------------------------
