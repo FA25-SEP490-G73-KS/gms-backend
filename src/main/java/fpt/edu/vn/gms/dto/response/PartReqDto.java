@@ -28,6 +28,9 @@ public class PartReqDto {
     @Schema(description = "Có dùng chung không")
     private boolean universal;
 
+    @Schema(description = "Nhà cung cấp")
+    private String supplierName;
+
     @Schema(description = "Giá nhập")
     private BigDecimal purchasePrice;
 

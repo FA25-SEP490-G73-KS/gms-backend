@@ -46,22 +46,29 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     CodeSequenceService codeSequenceService;
     BrandRepository brandRepository;
 
+    @Transactional
     @Override
     public ServiceTicketResponseDto createServiceTicket(ServiceTicketRequestDto dto, Employee currEmployee) {
 
         Customer customer = null;
+        Vehicle vehicle = null;
 
-        if (dto.getCustomer() != null && dto.getCustomer().getCustomerId() != null) {
+        // ----------------------------
+        // 1. XỬ LÝ CUSTOMER
+        // ----------------------------
+        if (dto.getCustomer().getCustomerId() != null) {
+
+            // Lấy customer theo ID
             customer = customerRepository.findById(dto.getCustomer().getCustomerId())
-                    .orElse(null);
-        }
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng!"));
 
-        // Lấy giảm giá mặc định
-        DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
+            // Có customerId → GIỮ NGUYÊN, không update
+        } else {
 
-        if (customer == null) {
-            // Chưa tồn tại → tạo mới
+            // Không có customerId → tạo mới
+            DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
+
             customer = Customer.builder()
                     .fullName(dto.getCustomer().getFullName())
                     .phone(dto.getCustomer().getPhone())
@@ -70,49 +77,33 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .discountPolicy(defaultPolicy)
                     .isActive(true)
                     .build();
-        } else {
-            // Đã tồn tại → cập nhật thông tin (nếu có thay đổi)
-            customer.setFullName(dto.getCustomer().getFullName());
-            customer.setAddress(dto.getCustomer().getAddress());
-            customer.setCustomerType(dto.getCustomer().getCustomerType());
+
+            customer = customerRepository.save(customer);
         }
 
-        customer = customerRepository.save(customer);
+        // ----------------------------
+        // 2. XỬ LÝ VEHICLE
+        // ----------------------------
+        if (dto.getVehicle().getVehicleId() != null) {
 
-        Vehicle vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate()).orElse(null);
+            // Lấy vehicle theo ID
+            vehicle = vehicleRepository.findById(dto.getVehicle().getVehicleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe!"));
 
-        VehicleModel vehicleModel;
-        Brand brand;
+            // Có vehicleId và KHÔNG có customerId → update vehicle về customer mới
+            if (dto.getCustomer().getCustomerId() == null) {
+                vehicle.setCustomer(customer);
+                vehicleRepository.save(vehicle);
+            }
 
-        // Xử lý brand
-        if (dto.getVehicle().getBrandId() != null) {
-            // Brand đã tồn tại → lấy từ DB
-            brand = brandRepository.findById(dto.getVehicle().getBrandId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hãng xe!"));
-        } else {
-            // Brand chưa có → tạo mới
-            brand = Brand.builder()
-                    .name(dto.getVehicle().getBrandName())
-                    .build();
-            brand = brandRepository.save(brand);
+            // Nếu có cả vehicleId + customerId → giữ nguyên, KHÔNG update
         }
+        else {
 
-        // Xử lý vehicle model
-        if (dto.getVehicle().getModelId() != null) {
-            // Client gửi modelId → lấy model có sẵn
-            vehicleModel = vehicleModelRepository.findById(dto.getVehicle().getModelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại xe!"));
-        } else {
-            // Chưa có modelId → tạo mới
-            VehicleModel newModel = VehicleModel.builder()
-                    .brand(brand)
-                    .name(dto.getVehicle().getModelName())
-                    .build();
-            vehicleModel = vehicleModelRepository.save(newModel);
-        }
+            // Không có vehicleId → tạo mới
+            Brand brand = resolveBrand(dto);
+            VehicleModel vehicleModel = resolveVehicleModel(dto, brand);
 
-        if (vehicle == null) {
-            // Chưa tồn tại → tạo mới
             vehicle = Vehicle.builder()
                     .licensePlate(dto.getVehicle().getLicensePlate())
                     .vehicleModel(vehicleModel)
@@ -120,45 +111,44 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .vin(dto.getVehicle().getVin())
                     .customer(customer)
                     .build();
-        } else {
-            // Đã tồn tại → cập nhật thông tin
-            vehicle.setVehicleModel(vehicleModel);
-            vehicle.setYear(dto.getVehicle().getYear());
-            vehicle.setVin(dto.getVehicle().getVin());
-            vehicle.setCustomer(customer);
+
+            vehicle = vehicleRepository.save(vehicle);
         }
-        vehicleRepository.save(vehicle);
 
-//        vehicle = vehicleRepository.findDetailById(vehicle.getVehicleId()).orElse(vehicle);
-
+        // ----------------------------
+        // 3. Lấy danh sách kỹ thuật viên
+        // ----------------------------
         List<Employee> technicians = List.of();
-        if (dto.getAssignedTechnicianIds() != null && !dto.getAssignedTechnicianIds().isEmpty()) {
+        if (dto.getAssignedTechnicianIds() != null) {
             technicians = employeeRepository.findAllById(dto.getAssignedTechnicianIds());
         }
 
-        // Lấy danh sách ServiceType từ danh sách ID
-        List<ServiceType> serviceTypes = new ArrayList<>();
-        if (dto.getServiceTypeIds() != null && !dto.getServiceTypeIds().isEmpty()) {
+        // ----------------------------
+        // 4. Lấy loại dịch vụ
+        // ----------------------------
+        List<ServiceType> serviceTypes = List.of();
+        if (dto.getServiceTypeIds() != null) {
             serviceTypes = serviceTypeRepository.findAllById(dto.getServiceTypeIds());
-            if (serviceTypes.isEmpty()) {
-                throw new ResourceNotFoundException("Không tìm thấy loại dịch vụ nào với danh sách ID đã cung cấp");
-            }
         }
 
-        // Kiểm tra có được tạo từ appointment k
+        // ----------------------------
+        // 5. Kiểm tra có appointment không
+        // ----------------------------
         Appointment appointment = null;
         if (dto.getAppointmentId() != null) {
             appointment = appointmentRepository.findById(dto.getAppointmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn ID: " + dto.getAppointmentId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn!"));
         }
 
-        // Tạo mới ServiceTicket
+        // ----------------------------
+        // 6. Tạo service ticket
+        // ----------------------------
         ServiceTicket ticket = ServiceTicket.builder()
                 .serviceTicketCode(codeSequenceService.generateCode("STK"))
                 .serviceTypes(serviceTypes)
                 .customer(customer)
-                .customerName(dto.getCustomer().getFullName())
-                .customerPhone(dto.getCustomer().getPhone())
+                .customerName(customer.getFullName())
+                .customerPhone(customer.getPhone())
                 .vehicle(vehicle)
                 .createdBy(currEmployee)
                 .technicians(technicians)
@@ -169,12 +159,32 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 .appointment(appointment)
                 .build();
 
-        System.out.println(currEmployee);
-
         ServiceTicket saved = serviceTicketRepository.save(ticket);
 
         return serviceTicketMapper.toResponseDto(saved);
     }
+
+    private Brand resolveBrand(ServiceTicketRequestDto dto) {
+        if (dto.getVehicle().getBrandId() != null) {
+            return brandRepository.findById(dto.getVehicle().getBrandId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hãng xe!"));
+        }
+        return brandRepository.save(Brand.builder()
+                .name(dto.getVehicle().getBrandName())
+                .build());
+    }
+
+    private VehicleModel resolveVehicleModel(ServiceTicketRequestDto dto, Brand brand) {
+        if (dto.getVehicle().getModelId() != null) {
+            return vehicleModelRepository.findById(dto.getVehicle().getModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy model!"));
+        }
+        return vehicleModelRepository.save(VehicleModel.builder()
+                .brand(brand)
+                .name(dto.getVehicle().getModelName())
+                .build());
+    }
+
 
     @Override
     public ServiceTicketResponseDto getServiceTicketById(Long serviceTicketId) {

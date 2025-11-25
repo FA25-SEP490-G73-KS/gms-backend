@@ -90,7 +90,7 @@ public class QuotationItemController {
     }
 
     @PostMapping("/{itemId}/confirm/create")
-    public ResponseEntity<ApiResponse<PartReqDto>> createPart(
+    public ResponseEntity<ApiResponse<PartReqDto>> createPartDuringReview(
             @PathVariable Long itemId,
             @RequestBody PartDuringReviewDto dto) {
 

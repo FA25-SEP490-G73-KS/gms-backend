@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface PurchaseRequestItemMapper {
 
     @Mapping(target = "partId", source = "part.partId")
+    @Mapping(target = "status", source = "status")
     PurchaseRequestItemResponseDto toResponseDto(PurchaseRequestItem item);
 
 }

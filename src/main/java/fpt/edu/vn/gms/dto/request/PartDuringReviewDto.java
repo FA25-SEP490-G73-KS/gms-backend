@@ -33,6 +33,9 @@ public class PartDuringReviewDto {
     private Boolean universal;
 
     @NotNull
+    private Long supplierId;
+
+    @NotNull
     private Long vehicleModelId;
 
     private String warehouseNote;

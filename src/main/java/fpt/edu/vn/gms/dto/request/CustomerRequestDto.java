@@ -25,5 +25,6 @@ public class CustomerRequestDto {
      private String address;
 
      private CustomerType customerType;
+
      private Long discountPolicyId;
 }

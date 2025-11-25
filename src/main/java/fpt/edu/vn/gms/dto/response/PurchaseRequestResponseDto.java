@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class PurchaseRequestResponseDto {
     private String code;
     private String licensePlate;
     private PurchaseRequestStatus status;
+    private ManagerReviewStatus reviewStatus;
     private BigDecimal totalEstimatedAmount;
     private LocalDateTime createdAt;
 }

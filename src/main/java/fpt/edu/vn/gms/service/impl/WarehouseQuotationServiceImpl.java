@@ -40,14 +40,15 @@ import java.util.Optional;
 @Slf4j
 public class WarehouseQuotationServiceImpl implements WarehouseQuotationService {
 
-    PartRepository partRepository;
     NotificationService notificationService;
+    PartRepository partRepository;
     PriceQuotationRepository quotationRepository;
     PriceQuotationItemRepository priceQuotationItemRepo;
     PartCategoryRepository partCategoryRepo;
     MarketRepository marketRepo;
     UnitRepository unitRepo;
     VehicleModelRepository vehicleModelRepo;
+    SupplierRepository supplierRepo;
     PriceQuotationItemMapper priceQuotationItemMapper;
     PriceQuotationMapper priceQuotationMapper;
     PartMapper partMapper;
@@ -239,10 +240,14 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
 
+        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
+
         part.setCategory(category);
         part.setMarket(market);
         part.setUnit(unit);
         part.setVehicleModel(model);
+        part.setSupplier(supplier);
 
         Part savedPart = partRepository.save(part);
 
@@ -314,6 +319,9 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
 
+        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
+
         // ===== CREATE NEW PART =====
         log.info("Building new Part entity from warehouse input...");
 
@@ -324,7 +332,8 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                 .unit(unit)
                 .vehicleModel(model)
                 .purchasePrice(dto.getPurchasePrice())
-                .sellingPrice(dto.getPurchasePrice().multiply(BigDecimal.valueOf(1.10)))  // auto 10% markup
+                .sellingPrice(dto.getPurchasePrice().multiply(BigDecimal.valueOf(1.10)))
+                .supplier(supplier)
                 .discountRate(BigDecimal.ZERO)
                 .quantityInStock(0.0)
                 .reservedQuantity(0.0)

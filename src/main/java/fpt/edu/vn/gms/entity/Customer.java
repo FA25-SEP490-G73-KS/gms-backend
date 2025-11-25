@@ -48,6 +48,6 @@ public class Customer {
     @Column(name = "total_spending", precision = 18, scale = 2)
     private BigDecimal totalSpending = BigDecimal.ZERO;
 
-    @Column(name = "is_active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;
 }
