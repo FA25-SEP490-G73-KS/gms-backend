@@ -15,7 +15,7 @@ public enum TransactionMethod {
 
   public static TransactionMethod fromValue(String value) {
     return Stream.of(TransactionMethod.values())
-        .filter(type -> type.getValue() == value)
+        .filter(type -> type.getValue().equals(value))
         .findFirst()
         .orElseThrow(() -> new ResourceNotFoundException(
             "TransactionMethod '%s' is not found".formatted(value)));
