@@ -16,7 +16,7 @@ public enum PaymentTransactionType {
 
     public static PaymentTransactionType fromValue(String value) {
         return Stream.of(PaymentTransactionType.values())
-                .filter(type -> type.getValue() == value)
+                .filter(type -> type.getValue().equals(value))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "PaymentTransactionValue '%s' is not found".formatted(value)));
