@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import fpt.edu.vn.gms.common.enums.CustomerType;
 
 @Getter
@@ -36,6 +38,7 @@ public class Customer {
     private CustomerType customerType;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Vehicle> vehicles = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -43,8 +46,11 @@ public class Customer {
     private DiscountPolicy discountPolicy;
 
     @Column(name = "total_spending", precision = 18, scale = 2)
+    @ColumnDefault("0")
+    @Builder.Default
     private BigDecimal totalSpending = BigDecimal.ZERO;
 
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Builder.Default
     private Boolean isActive = true;
 }

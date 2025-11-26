@@ -20,6 +20,7 @@ import fpt.edu.vn.gms.mapper.DebtMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.DebtRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
+import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.DebtService;
 import fpt.edu.vn.gms.service.TransactionService;
 import lombok.AccessLevel;
@@ -29,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +48,7 @@ public class DebtServiceImpl implements DebtService {
 
         DebtRepository debtRepository;
         CustomerRepository customerRepository;
+        CustomerService customerService;
         ServiceTicketRepository serviceTicketRepository;
         DebtMapper debtMapper;
         TransactionService transactionService;
@@ -134,13 +135,25 @@ public class DebtServiceImpl implements DebtService {
                         return transaction;
                 }
 
+                Long customerId = debt.getCustomer().getCustomerId();
                 BigDecimal amount = new BigDecimal(transaction.getAmount());
+                BigDecimal paidAmountAfter = debt.getPaidAmount().add(amount);
+                boolean isPaidAmountAfterGreaterThanOrEqualToDebtAmount = paidAmountAfter
+                                .compareTo(debt.getAmount()) >= 0;
 
-                DebtStatus status = debt.getAmount().subtract(debt.getPaidAmount()).equals(amount)
+                DebtStatus status = isPaidAmountAfterGreaterThanOrEqualToDebtAmount
                                 ? DebtStatus.PAID_IN_FULL
                                 : DebtStatus.OUTSTANDING;
-                debt.setPaidAmount(debt.getPaidAmount().add(amount));
+
+                debt.setPaidAmount(
+                                isPaidAmountAfterGreaterThanOrEqualToDebtAmount ? debt.getAmount() : paidAmountAfter);
                 debt.setStatus(status);
+
+                customerService.updateTotalSpending(customerId, paidAmountAfter
+                                .compareTo(debt.getAmount()) > 0
+                                                ? paidAmountAfter.subtract(
+                                                                debt.getAmount())
+                                                : amount);
                 debtRepository.save(debt);
                 return transaction;
 

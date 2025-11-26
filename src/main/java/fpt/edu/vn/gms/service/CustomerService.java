@@ -7,6 +7,7 @@ import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CustomerService {
@@ -15,7 +16,7 @@ public interface CustomerService {
 
     CustomerDetailResponseDto getCustomerDetailById(Long id);
 
-    Page<CustomerResponseDto>  getAllCustomers(int page, int size);
+    Page<CustomerResponseDto> getAllCustomers(int page, int size);
 
     CustomerDetailResponseDto getByPhone(String phone);
 
@@ -24,5 +25,7 @@ public interface CustomerService {
     CustomerResponseDto updateCustomer(Long id, CustomerRequestDto dto);
 
     CustomerServiceHistoryResponseDto getCustomerServiceHistoryByPhone(String phone);
+
+    void updateTotalSpending(Long customerId, BigDecimal addtionalSpending);
 
 }

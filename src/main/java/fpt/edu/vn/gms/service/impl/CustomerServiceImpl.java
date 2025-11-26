@@ -22,7 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,8 +69,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerDetailResponseDto getByPhone(String phone) {
 
-        return customerMapper.toDetailDto(customerRepository.findByPhone(phone).
-                orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!")));
+        return customerMapper.toDetailDto(customerRepository.findByPhone(phone)
+                .orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!")));
     }
 
     @Override
@@ -95,8 +97,8 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
-
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
 
         existing.setFullName(dto.getFullName());
         existing.setPhone(dto.getPhone());
@@ -115,15 +117,15 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!"));
         // Lấy tất cả service ticket hoàn thành của customer
         List<ServiceTicket> completedTickets = serviceTicketRepository.findAll().stream()
-                .filter(st -> st.getCustomer() != null && st.getCustomer().getCustomerId().equals(customer.getCustomerId()))
+                .filter(st -> st.getCustomer() != null
+                        && st.getCustomer().getCustomerId().equals(customer.getCustomerId()))
                 .filter(st -> st.getStatus() != null && st.getStatus().name().equalsIgnoreCase("COMPLETED"))
                 .toList();
         // Map biển số xe -> ticket gần nhất
         var vehicleMap = completedTickets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
                         st -> st.getVehicle().getLicensePlate(),
-                        java.util.stream.Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
-                ));
+                        java.util.stream.Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))));
         List<CustomerServiceHistoryResponseDto.VehicleServiceInfo> vehicles = vehicleMap.values().stream()
                 .filter(java.util.Optional::isPresent)
                 .map(opt -> {
@@ -132,7 +134,9 @@ public class CustomerServiceImpl implements CustomerService {
                             .licensePlate(st.getVehicle().getLicensePlate())
                             .modelName(st.getVehicle().getVehicleModel().getName())
                             .brandName(st.getVehicle().getVehicleModel().getBrand().getName())
-                            .lastServiceDate(st.getCreatedAt() != null ? st.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE) : null)
+                            .lastServiceDate(st.getCreatedAt() != null
+                                    ? st.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                                    : null)
                             .build();
                 })
                 .toList();
@@ -141,5 +145,24 @@ public class CustomerServiceImpl implements CustomerService {
                 .phone(customer.getPhone())
                 .vehicles(vehicles)
                 .build();
+    }
+
+    @Override
+    public void updateTotalSpending(Long customerId, BigDecimal additionalSpending) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+
+        // Update totalSpending
+        customer.setTotalSpending(customer.getTotalSpending().add(additionalSpending));
+
+        // Find the best discount policy
+        DiscountPolicy bestPolicy = discountPolicyRepository.findAll().stream()
+                .filter(policy -> customer.getTotalSpending().compareTo(policy.getRequiredSpending()) >= 0)
+                .max(Comparator.comparing(DiscountPolicy::getRequiredSpending))
+                .orElse(null);
+
+        customer.setDiscountPolicy(bestPolicy);
+
+        customerRepository.save(customer);
     }
 }

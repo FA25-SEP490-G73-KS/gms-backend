@@ -34,6 +34,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleOtherExceptions(Exception ex) {
+        log.error("Error happens: {}", ex);
         return ResponseEntity.internalServerError().body(ApiResponse.error(500, ex.getMessage()));
     }
 }

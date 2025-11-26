@@ -13,14 +13,17 @@ import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.request.TransactionCallbackDto;
+import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.Invoice;
 import fpt.edu.vn.gms.entity.Transaction;
 import fpt.edu.vn.gms.exception.TransactionNotFoundException;
 import fpt.edu.vn.gms.mapper.TransactionMapper;
+import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.DebtRepository;
 import fpt.edu.vn.gms.repository.InvoiceRepository;
 import fpt.edu.vn.gms.repository.TransactionRepository;
+import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import vn.payos.PayOS;
@@ -39,6 +42,8 @@ public class TransactionServiceImpl implements TransactionService {
   private final TransactionMapper transactionMapper;
   private final DebtRepository debtRepository;
   private final InvoiceRepository invoiceRepository;
+  private final CustomerRepository customerRepository;
+  private final CustomerService customerService;
 
   @Override
   public TransactionResponseDto createTransaction(CreateTransactionRequestDto request)
@@ -101,21 +106,39 @@ public class TransactionServiceImpl implements TransactionService {
       BigDecimal amount = new BigDecimal(transaction.getAmount());
 
       if (invoice != null) {
+        Long customerId = invoice.getServiceTicket().getCustomer().getCustomerId();
+
         if (transaction.getType() == PaymentTransactionType.DEPOSIT) {
           invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
           invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
-          invoiceRepository.save(invoice);
+          customerService.updateTotalSpending(customerId, amount);
         } else {
-          InvoiceStatus status = amount.equals(invoice.getFinalAmount()) ? InvoiceStatus.PAID_IN_FULL
+          BigDecimal finalAmount = invoice.getFinalAmount();
+          InvoiceStatus status = amount.equals(finalAmount) ? InvoiceStatus.PAID_IN_FULL
               : InvoiceStatus.UNDERPAID;
+          customerService.updateTotalSpending(customerId, amount.compareTo(finalAmount) < 0 ? amount : finalAmount);
           invoice.setStatus(status);
-          invoiceRepository.save(invoice);
         }
+
+        invoiceRepository.save(invoice);
       } else if (debt != null) {
-        DebtStatus status = debt.getAmount().subtract(debt.getPaidAmount()).equals(amount) ? DebtStatus.PAID_IN_FULL
+        Long customerId = debt.getCustomer().getCustomerId();
+        BigDecimal paidAmountAfter = debt.getPaidAmount().add(amount);
+        boolean isPaidAmountAfterGreaterThanOrEqualToDebtAmount = paidAmountAfter
+            .compareTo(debt.getAmount()) >= 0;
+        DebtStatus status = isPaidAmountAfterGreaterThanOrEqualToDebtAmount ? DebtStatus.PAID_IN_FULL
             : DebtStatus.OUTSTANDING;
-        debt.setPaidAmount(debt.getPaidAmount().add(amount));
+
+        debt.setPaidAmount(
+            isPaidAmountAfterGreaterThanOrEqualToDebtAmount ? debt.getAmount() : paidAmountAfter);
         debt.setStatus(status);
+
+        customerService.updateTotalSpending(customerId, paidAmountAfter
+            .compareTo(debt.getAmount()) > 0
+                ? paidAmountAfter.subtract(
+                    debt.getAmount())
+                : amount);
+
         debtRepository.save(debt);
       }
 

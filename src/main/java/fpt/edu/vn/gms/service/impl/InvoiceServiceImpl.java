@@ -17,6 +17,7 @@ import fpt.edu.vn.gms.mapper.DebtMapper;
 import fpt.edu.vn.gms.mapper.InvoiceMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
+import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.InvoiceService;
 import fpt.edu.vn.gms.service.TransactionService;
 import lombok.AccessLevel;
@@ -50,6 +51,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         CodeSequenceService codeSequenceService;
         DebtMapper debtMapper;
         InvoiceMapper mapper;
+        CustomerRepository customerRepository;
+        CustomerService customerService;
 
         @Override
         @Transactional
@@ -230,18 +233,25 @@ public class InvoiceServiceImpl implements InvoiceService {
                         return transaction;
                 }
 
+                Long customerId = invoice.getServiceTicket().getCustomer().getCustomerId();
                 BigDecimal amount = new BigDecimal(transaction.getAmount());
 
                 if (transaction.getType() == PaymentTransactionType.DEPOSIT.getValue()) {
                         invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
                         invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
-                        invoiceRepo.save(invoice);
+                        customerService.updateTotalSpending(customerId, amount);
                 } else {
-                        InvoiceStatus status = amount.equals(invoice.getFinalAmount()) ? InvoiceStatus.PAID_IN_FULL
+                        BigDecimal finalAmount = invoice.getFinalAmount();
+                        InvoiceStatus status = amount.compareTo(finalAmount) >= 0
+                                        ? InvoiceStatus.PAID_IN_FULL
                                         : InvoiceStatus.UNDERPAID;
+
+                        customerService.updateTotalSpending(customerId,
+                                        amount.compareTo(finalAmount) < 0 ? amount : finalAmount);
                         invoice.setStatus(status);
-                        invoiceRepo.save(invoice);
                 }
+
+                invoiceRepo.save(invoice);
                 return transaction;
         }
 
