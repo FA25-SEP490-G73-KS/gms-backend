@@ -23,11 +23,11 @@ public class Transaction {
     private String paymentLinkId; // id link thanh toán của PayOS
 
     @ManyToOne
-    @JoinColumn(name = "invoice_id", nullable = false)
+    @JoinColumn(name = "invoice_id")
     private Invoice invoice;
 
     @ManyToOne
-    @JoinColumn(name = "debt_id", nullable = false)
+    @JoinColumn(name = "debt_id")
     private Debt debt;
 
     @Column(nullable = false)
