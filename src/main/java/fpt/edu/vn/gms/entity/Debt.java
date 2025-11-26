@@ -17,7 +17,7 @@ import org.hibernate.annotations.ColumnDefault;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Debt")
+@Table(name = "debt")
 public class Debt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +44,7 @@ public class Debt {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    @ColumnDefault("'CÒN_NỢ'")
+    @ColumnDefault("'OUTSTANDING'")
     @Builder.Default
     private DebtStatus status = DebtStatus.OUTSTANDING;
 
