@@ -5,7 +5,7 @@ import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateDebtFromPaymentReq;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.DebtResDto;
+import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
 import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
 import fpt.edu.vn.gms.service.InvoiceService;
@@ -36,7 +36,6 @@ import static fpt.edu.vn.gms.utils.AppRoutes.INVOICE_PREFIX;
 public class InvoiceController {
 
         InvoiceService invoiceService;
-        TransactionService transactionService;
 
         @GetMapping
         @Operation(summary = "Lấy danh sách phiếu thanh toán (phân trang + sort)")
@@ -102,7 +101,7 @@ public class InvoiceController {
                         @RequestBody @Validated CreateDebtFromPaymentReq request) {
                 log.info("Request create debt from paymentId={} dueDate={}", paymentId, request.getDueDate());
 
-                DebtResDto debt = invoiceService.createDebtFromInvoice(paymentId, request.getDueDate());
+                DebtDetailResponseDto debt = invoiceService.createDebtFromInvoice(paymentId, request.getDueDate());
 
                 if (debt == null) {
                         return ResponseEntity.ok(ApiResponse.success("Không còn công nợ cần tạo", null));

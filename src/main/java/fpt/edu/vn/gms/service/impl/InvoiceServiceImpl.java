@@ -7,7 +7,7 @@ import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
 import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
-import fpt.edu.vn.gms.dto.response.DebtResDto;
+import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
 import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
 import fpt.edu.vn.gms.entity.*;
@@ -139,7 +139,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         @Override
         @Transactional
-        public DebtResDto createDebtFromInvoice(Long paymentId, LocalDate dueDate) {
+        public DebtDetailResponseDto createDebtFromInvoice(Long paymentId, LocalDate dueDate) {
                 log.info("Creating debt from paymentId={} with dueDate={}", paymentId, dueDate);
 
                 Invoice payment = invoiceRepo.findById(paymentId)
@@ -189,7 +189,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 }
 
                 // Nếu không còn nợ -> có thể không tạo Debt, tuỳ nghiệp vụ
-                DebtStatus status = DebtStatus.CON_NO;
+                DebtStatus status = DebtStatus.OUTSTANDING;
 
                 Debt debt = Debt.builder()
                                 .customer(customer)
@@ -205,7 +205,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 log.info("Created debt id={} for customer={} paymentId={} amount={} dueDate={}",
                                 debt.getId(), customer.getCustomerId(), paymentId, newDebtAmount, dueDate);
 
-                DebtResDto dto = debtMapper.toDto(debt);
+                DebtDetailResponseDto dto = debtMapper.toDto(debt);
                 // remaining = amount - paidAmount (hiện bằng amount)
                 dto.setAmount(newDebtAmount);
                 dto.setPaidAmount(debt.getPaidAmount());

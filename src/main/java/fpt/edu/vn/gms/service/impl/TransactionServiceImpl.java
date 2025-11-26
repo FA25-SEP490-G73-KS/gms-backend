@@ -112,8 +112,8 @@ public class TransactionServiceImpl implements TransactionService {
           invoiceRepository.save(invoice);
         }
       } else if (debt != null) {
-        DebtStatus status = debt.getAmount().subtract(debt.getPaidAmount()).equals(amount) ? DebtStatus.DA_TAT_TOAN
-            : DebtStatus.CON_NO;
+        DebtStatus status = debt.getAmount().subtract(debt.getPaidAmount()).equals(amount) ? DebtStatus.PAID_IN_FULL
+            : DebtStatus.OUTSTANDING;
         debt.setPaidAmount(debt.getPaidAmount().add(amount));
         debt.setStatus(status);
         debtRepository.save(debt);

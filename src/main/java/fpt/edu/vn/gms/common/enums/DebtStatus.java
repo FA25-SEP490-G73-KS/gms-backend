@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum DebtStatus {
 
-    CON_NO("CÒN_NỢ"),
-    DA_TAT_TOAN("ĐÃ_TẤT_TOÁN");
+    OUTSTANDING("OUTSTANDING"),
+    PAID_IN_FULL("PAID_IN_FULL");
 
-    private final String label;
+    private final String value;
 }

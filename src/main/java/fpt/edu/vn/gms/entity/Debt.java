@@ -7,6 +7,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.ColumnDefault;
 
@@ -45,7 +46,10 @@ public class Debt {
     @Column(name = "status", length = 30)
     @ColumnDefault("'CÒN_NỢ'")
     @Builder.Default
-    private DebtStatus status = DebtStatus.CON_NO;
+    private DebtStatus status = DebtStatus.OUTSTANDING;
+
+    @OneToMany(mappedBy = "debt")
+    private List<Transaction> transactions;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

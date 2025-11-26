@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
-import fpt.edu.vn.gms.dto.response.DebtResDto;
+import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
 import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
 import org.springframework.data.domain.Page;
@@ -22,5 +22,5 @@ public interface InvoiceService {
     /**
      * Tạo công nợ mới cho khách dựa trên phiếu thanh toán & các transaction đã có.
      */
-    DebtResDto createDebtFromInvoice(Long invoiceId, LocalDate dueDate);
+    DebtDetailResponseDto createDebtFromInvoice(Long invoiceId, LocalDate dueDate);
 }

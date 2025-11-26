@@ -1,31 +1,29 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.enums.DebtStatus;
+import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DebtResDto {
+public class DebtDetailResponseDto {
 
     @Schema(description = "ID công nợ")
     private Long id;
 
     @Schema(description = "Khách hàng")
-    private Long customerId;
+    private Long customerFullName;
 
     @Schema(description = "Phiếu dịch vụ liên quan")
-    private Long serviceTicketId;
-
-    @Schema(description = "Mã phiếu dịch vụ liên quan")
-    private String serviceTicketCode;
+    private ServiceTicketResponseDto serviceTicket;
 
     @Schema(description = "Số tiền công nợ")
     private BigDecimal amount;
@@ -34,11 +32,14 @@ public class DebtResDto {
     private BigDecimal paidAmount;
 
     @Schema(description = "Trạng thái công nợ (CÒN_NỢ / ĐÃ_TẤT_TOÁN / ...)")
-    private String statusLabel;
+    private String status;
 
     @Schema(description = "Ngày hẹn trả")
     private LocalDate dueDate;
 
     @Schema(description = "Thời điểm tạo")
     private LocalDateTime createdAt;
+
+    private List<TransactionResponseDto> transactions;
+
 }
