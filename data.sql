@@ -1,3 +1,5 @@
+CREATE DATABASE gms;
+
 USE gms;
 -- TimeSlot
 INSERT INTO time_slot(label, start_time, end_time, max_capacity)
@@ -19,19 +21,21 @@ VALUES
     (2, 'USER');
 
 INSERT INTO employee (
-    employee_id, full_name, gender, date_of_birth, phone, address, hire_date, status
+    employee_id, full_name, gender, date_of_birth, phone, address, hire_date, status, account_id
 ) VALUES
-      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 'ACTIVE'),
-      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 'ACTIVE'),
-      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE'),
-      (4, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0123456789', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE');
+      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 'ACTIVE', 1),
+      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 'ACTIVE', 2),
+      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE', 3),
+      (4, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0123456789', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE', 4),
+      (5, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0999999999', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE', null),
+      (6, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0888888888', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 'ACTIVE', null);
 
-INSERT INTO account (account_id, phone, password, role, employee_id, is_active)
+INSERT INTO account (account_id, phone, password, role, is_active)
 VALUES
-    (1, '0909123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'SERVICE_ADVISOR', 1, 1),
-    (2, '0987123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'ACCOUNTANT', 3, 1),
-    (3, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 2, 1),
-    (4, '0123456789', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'WAREHOUSE', 4, 1);
+    (1, '0909123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'SERVICE_ADVISOR', 1),
+    (2, '0987123456', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'ACCOUNTANT', 1),
+    (3, '0909988776', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'MANAGER', 1),
+    (4, '0123456789', '$2a$10$1405F5A.2xsmn98bZYT3GeeIUcKvpaCfAK.9iqJaOQElN9y33Tagy', 'WAREHOUSE', 1);
 
 INSERT INTO part_category (name) VALUES
                                      ('Động cơ'),

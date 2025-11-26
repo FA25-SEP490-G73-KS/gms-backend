@@ -44,6 +44,7 @@ public class Employee {
     private String status;
 
     // nullable với TECHNICIANS
-    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+    @OneToOne
+    @JoinColumn(name = "account_id")
     private Account account;
 }

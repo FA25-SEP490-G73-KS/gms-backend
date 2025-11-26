@@ -28,8 +28,7 @@ public class Account {
     @Column(name = "password", length = 100)
     private String password;
 
-    @OneToOne
-    @JoinColumn(name = "employee_id")
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
     private Employee employee;
 
     @Column(name = "is_active")
