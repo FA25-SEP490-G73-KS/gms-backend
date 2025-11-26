@@ -49,9 +49,8 @@ public class DebtController {
         })
         public ResponseEntity<ApiResponse<Page<CustomerDebtSummaryDto>>> getDebtSummaryByCustomer(
                         @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size,
-                        @RequestParam(defaultValue = "customerFullName,asc") String sort) {
-                var result = debtService.getAllDebtsSummary(page, size, sort);
+                        @RequestParam(defaultValue = "10") int size) {
+                var result = debtService.getAllDebtsSummary(page, size);
                 return ResponseEntity.ok(ApiResponse.success("Lấy tổng hợp công nợ thành công", result));
         }
 

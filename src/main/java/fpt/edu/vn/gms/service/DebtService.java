@@ -9,7 +9,7 @@ import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import org.springframework.data.domain.Page;
 
 public interface DebtService {
-    Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size, String sort);
+    Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size);
 
     Page<DebtDetailResponseDto> getDebtsByCustomer(Long customerId, DebtStatus status, String keyword, int page,
             int size,

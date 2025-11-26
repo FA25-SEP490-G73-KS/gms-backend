@@ -53,8 +53,8 @@ public class DebtServiceImpl implements DebtService {
         TransactionService transactionService;
 
         @Override
-        public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size, String sort) {
-                Pageable pageable = buildPageable(page, size, sort);
+        public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size) {
+                Pageable pageable = buildPageable(page, size, null);
                 Page<CustomerDebtSummaryDto> debts = debtRepository.findTotalDebtGroupedByCustomer(pageable);
                 return debts;
         }
