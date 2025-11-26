@@ -1,5 +1,3 @@
-CREATE DATABASE gms;
-
 USE gms;
 -- TimeSlot
 INSERT INTO time_slot(label, start_time, end_time, max_capacity)

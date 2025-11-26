@@ -20,7 +20,7 @@ public class DebtDetailResponseDto {
     private Long id;
 
     @Schema(description = "Khách hàng")
-    private Long customerFullName;
+    private String customerFullName;
 
     @Schema(description = "Phiếu dịch vụ liên quan")
     private ServiceTicketResponseDto serviceTicket;

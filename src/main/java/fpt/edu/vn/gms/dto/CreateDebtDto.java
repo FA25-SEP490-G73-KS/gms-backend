@@ -2,10 +2,8 @@ package fpt.edu.vn.gms.dto;
 
 import java.math.BigDecimal;
 
-import com.google.firebase.database.annotations.NotNull;
-
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -13,10 +11,10 @@ import lombok.Data;
 @AllArgsConstructor
 public class CreateDebtDto {
 
-  @NotBlank
+  @NotNull
   private Long customerId;
 
-  @NotBlank
+  @NotNull
   private Long serviceTicketId;
 
   @NotNull

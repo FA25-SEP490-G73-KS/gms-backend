@@ -52,4 +52,9 @@ public class Transaction {
 
     @Column
     private Boolean isActive;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }
