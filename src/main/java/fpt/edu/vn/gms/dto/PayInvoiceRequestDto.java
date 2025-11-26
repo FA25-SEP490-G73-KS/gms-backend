@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.dto;
 
-import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -16,8 +15,8 @@ public class PayInvoiceRequestDto {
   private Long price;
 
   @NotBlank
-  private PaymentTransactionType type;
+  private String type;
 
   @NotBlank
-  private TransactionMethod method;
+  private String method;
 }

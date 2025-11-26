@@ -1,7 +1,10 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.DebtStatus;
+import fpt.edu.vn.gms.common.enums.InvoiceStatus;
+import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
+import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.DebtResDto;
@@ -213,15 +216,33 @@ public class InvoiceServiceImpl implements InvoiceService {
         @Override
         public TransactionResponseDto payInvoice(Long invoiceId, PayInvoiceRequestDto request) throws Exception {
                 Invoice invoice = invoiceRepo.findById(invoiceId).orElseThrow(PaymentNotFoundException::new);
-                return transactionService.createTransaction(
+                var transaction = transactionService.createTransaction(
                                 CreateTransactionRequestDto.builder()
                                                 .invoice(invoice)
                                                 .customerFullName(invoice.getServiceTicket().getCustomerName())
                                                 .customerPhone(invoice.getServiceTicket().getCustomerPhone())
-                                                .type(request.getType())
-                                                .method(request.getMethod())
+                                                .type(PaymentTransactionType.fromValue(request.getType()))
+                                                .method(TransactionMethod.fromValue(request.getMethod()))
                                                 .price(request.getPrice())
                                                 .build());
+
+                if (transaction.getMethod() == TransactionMethod.BANK_TRANSFER.getValue()) {
+                        return transaction;
+                }
+
+                BigDecimal amount = new BigDecimal(transaction.getAmount());
+
+                if (transaction.getType() == PaymentTransactionType.DEPOSIT.getValue()) {
+                        invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
+                        invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
+                        invoiceRepo.save(invoice);
+                } else {
+                        InvoiceStatus status = amount.equals(invoice.getFinalAmount()) ? InvoiceStatus.PAID_IN_FULL
+                                        : InvoiceStatus.UNDERPAID;
+                        invoice.setStatus(status);
+                        invoiceRepo.save(invoice);
+                }
+                return transaction;
         }
 
 }

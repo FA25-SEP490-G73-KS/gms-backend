@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.annotations.ColumnDefault;
 
-import fpt.edu.vn.gms.common.enums.PaymentStatus;
+import fpt.edu.vn.gms.common.enums.InvoiceStatus;
 
 @Getter
 @Setter
@@ -53,7 +53,7 @@ public class Invoice {
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'PENDING'")
     @Builder.Default
-    private PaymentStatus status = PaymentStatus.PENDING;
+    private InvoiceStatus status = InvoiceStatus.PENDING;
 
     @OneToMany(mappedBy = "invoice")
     private List<Transaction> transactions;

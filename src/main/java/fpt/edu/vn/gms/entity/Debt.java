@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.ColumnDefault;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,11 +37,15 @@ public class Debt {
     private LocalDate dueDate;
 
     @Column(name = "paid_amount", precision = 18, scale = 2)
-    private BigDecimal paidAmount;
+    @ColumnDefault("0")
+    @Builder.Default
+    private BigDecimal paidAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
-    private DebtStatus status;
+    @ColumnDefault("'CÒN_NỢ'")
+    @Builder.Default
+    private DebtStatus status = DebtStatus.CON_NO;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
