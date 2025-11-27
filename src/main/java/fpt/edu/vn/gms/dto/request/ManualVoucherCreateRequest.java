@@ -12,7 +12,7 @@ public class ManualVoucherCreateRequest {
     private LedgerVoucherCategory category;
     private BigDecimal amount;
     private String description;
-    private Long approvedByEmployeeId;
     private String attachmentUrl;
+    private Long approvedByEmployeeId;
 }
 

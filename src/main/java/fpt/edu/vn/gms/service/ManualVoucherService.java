@@ -14,7 +14,9 @@ public interface ManualVoucherService {
                                                     ExpenseVoucherCreateRequest request,
                                                     Employee accountant);
 
-    ManualVoucherResponseDto create(ManualVoucherCreateRequest req, MultipartFile file, Employee creator);
+    ManualVoucherResponseDto createFromStockReceipt(ManualVoucherCreateRequest req, MultipartFile file, Employee creator);
 
     Page<ManualVoucherListResponseDto> getList(int page, int size);
+
+    ManualVoucherResponseDto getDetail(Long id);
 }

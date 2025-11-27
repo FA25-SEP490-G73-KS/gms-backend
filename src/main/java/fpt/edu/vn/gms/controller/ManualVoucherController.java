@@ -11,6 +11,8 @@ import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.ManualVoucherService;
 import fpt.edu.vn.gms.utils.AppRoutes;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
@@ -37,17 +39,17 @@ public class ManualVoucherController {
     @Operation(
             summary = "Tạo phiếu THU / CHI thủ công",
             description = """
-                Tạo phiếu thu hoặc chi thủ công (không phải giao dịch thật).
-               \s
-                • type = THU | CHI \s
-                • amount: số tiền \s
-                • target: đối tượng thu/chi \s
-                • description: nội dung \s
-                • attachmentUrl: link file chứng từ (nếu có) \s
-                • approvedByEmployeeId: người duyệt
-               \s
-                Phiếu tạo ra sẽ có trạng thái PENDING.
-               \s"""
+                     Tạo phiếu thu hoặc chi thủ công (không phải giao dịch thật).
+                    \s
+                     • type = THU | CHI \s
+                     • amount: số tiền \s
+                     • target: đối tượng thu/chi \s
+                     • description: nội dung \s
+                     • attachmentUrl: link file chứng từ (nếu có) \s
+                     • approvedByEmployeeId: người duyệt
+                    \s
+                     Phiếu tạo ra sẽ có trạng thái PENDING.
+                    \s"""
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -63,11 +65,11 @@ public class ManualVoucherController {
                     description = "Không tìm thấy người duyệt"
             )
     })
-    @PostMapping(
+    @PostMapping(path = "/from-part",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> createManualVoucher(
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> createManualVoucherFromPart(
             @RequestPart("data") String jsonData,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser Employee creator
@@ -77,16 +79,34 @@ public class ManualVoucherController {
         ManualVoucherCreateRequest request =
                 objectMapper.readValue(jsonData, ManualVoucherCreateRequest.class);
 
-        ManualVoucherResponseDto dto = manualVoucherService.create(request, file, creator);
+        ManualVoucherResponseDto dto = manualVoucherService.createFromStockReceipt(request, file, creator);
 
         return ResponseEntity.status(201)
                 .body(ApiResponse.created("Tạo phiếu thu/chi thành công", dto));
     }
 
+    @PostMapping
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> createManualVoucher(
+            @RequestBody ManualVoucherCreateRequest request
+    ) {
+        return null;
+    }
+
     @GetMapping
     @Operation(
-            summary = "Lấy danh sách phiếu thu - chi"
-    )
+            summary = "Lấy danh sách phiếu thu - chi")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Danh sách phiếu thu-chi",
+                    content = @Content(schema = @Schema(implementation = ManualVoucherListResponseDto.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Lỗi máy chủ",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
+    })
     public ResponseEntity<ApiResponse<Page<ManualVoucherListResponseDto>>> getManualVouchers(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "6") @Min(6) int size
@@ -99,6 +119,39 @@ public class ManualVoucherController {
     }
 
 
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Lấy chi tiết phiếu thu - chi",
+            description = "API trả về thông tin chi tiết của một phiếu thu - chi theo ID"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Lấy chi tiết phiếu thu - chi thành công",
+                    content = @Content(
+                            schema = @Schema(implementation = ManualVoucherResponseDto.class)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Không tìm thấy phiếu thu - chi",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Lỗi máy chủ",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
+    })
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> getManualVoucherById(
+            @PathVariable Long id
+    ) {
+
+        ManualVoucherResponseDto voucher = manualVoucherService.getDetail(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Danh sách chi tiết thu-chi", voucher)
+        );
+    }
 
 }
-

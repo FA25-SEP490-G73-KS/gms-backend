@@ -45,6 +45,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
     ManualVoucherMapper manualVoucherMapper;
     CodeSequenceService codeSequenceService;
     FileStorageService fileStorageService;
+    private final ManualVoucherRepository manualVoucherRepository;
 
 
     @Transactional
@@ -99,7 +100,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
     @Override
     @Transactional
-    public ManualVoucherResponseDto create(ManualVoucherCreateRequest req,
+    public ManualVoucherResponseDto createFromStockReceipt(ManualVoucherCreateRequest req,
                                            MultipartFile file,
                                            Employee creator) {
 
@@ -171,5 +172,13 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
         // 3. Không xác định
         return "Không xác định";
+    }
+
+    @Override
+    public ManualVoucherResponseDto getDetail(Long id) {
+        ManualVoucher voucher = manualRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+
+        return manualVoucherMapper.toDto(voucher);
     }
 }
