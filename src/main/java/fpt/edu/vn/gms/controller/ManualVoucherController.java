@@ -65,11 +65,11 @@ public class ManualVoucherController {
                     description = "Không tìm thấy người duyệt"
             )
     })
-    @PostMapping(path = "/from-part",
+    @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> createManualVoucherFromPart(
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> create(
             @RequestPart("data") String jsonData,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser Employee creator
@@ -79,17 +79,10 @@ public class ManualVoucherController {
         ManualVoucherCreateRequest request =
                 objectMapper.readValue(jsonData, ManualVoucherCreateRequest.class);
 
-        ManualVoucherResponseDto dto = manualVoucherService.createFromStockReceipt(request, file, creator);
+        ManualVoucherResponseDto dto = manualVoucherService.create(request, file, creator);
 
         return ResponseEntity.status(201)
                 .body(ApiResponse.created("Tạo phiếu thu/chi thành công", dto));
-    }
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> createManualVoucher(
-            @RequestBody ManualVoucherCreateRequest request
-    ) {
-        return null;
     }
 
     @GetMapping

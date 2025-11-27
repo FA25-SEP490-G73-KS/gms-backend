@@ -45,7 +45,6 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
     ManualVoucherMapper manualVoucherMapper;
     CodeSequenceService codeSequenceService;
     FileStorageService fileStorageService;
-    private final ManualVoucherRepository manualVoucherRepository;
 
 
     @Transactional
@@ -100,7 +99,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
     @Override
     @Transactional
-    public ManualVoucherResponseDto createFromStockReceipt(ManualVoucherCreateRequest req,
+    public ManualVoucherResponseDto create(ManualVoucherCreateRequest req,
                                            MultipartFile file,
                                            Employee creator) {
 
@@ -135,7 +134,10 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
         manualRepo.save(voucher);
 
-        return manualVoucherMapper.toDto(voucher);
+        ManualVoucherResponseDto dto = manualVoucherMapper.toDto(voucher);
+        dto.setTargetName(resolveTargetName(voucher));
+
+        return dto;
     }
 
     @Override
@@ -152,6 +154,17 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
             return dto;
         });
+    }
+
+    @Override
+    public ManualVoucherResponseDto getDetail(Long id) {
+        ManualVoucher voucher = manualRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+
+        ManualVoucherResponseDto dto = manualVoucherMapper.toDto(voucher);
+        dto.setTargetName(resolveTargetName(voucher));
+
+        return dto;
     }
 
     private String resolveTargetName(ManualVoucher mv) {
@@ -172,13 +185,5 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
         // 3. Không xác định
         return "Không xác định";
-    }
-
-    @Override
-    public ManualVoucherResponseDto getDetail(Long id) {
-        ManualVoucher voucher = manualRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
-
-        return manualVoucherMapper.toDto(voucher);
     }
 }
