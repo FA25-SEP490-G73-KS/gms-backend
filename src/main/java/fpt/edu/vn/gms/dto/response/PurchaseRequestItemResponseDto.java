@@ -15,7 +15,8 @@ public class PurchaseRequestItemResponseDto {
     private Long itemId;
     private Long partId;
     private String partName;
-    private double quantity;
+    private Double quantity;
+    private Double quantityReceived;
     private BigDecimal estimatedPurchasePrice;
     private ManagerReviewStatus reviewStatus;
     private PurchaseReqItemStatus status;

@@ -15,7 +15,7 @@ public class ManualVoucherResponseDto {
     private String type; // NCC / LUONG / KHAC
 
     private BigDecimal amount;
-    private String target;
+    private String category;
     private String description;
 
     private LocalDateTime createdAt;

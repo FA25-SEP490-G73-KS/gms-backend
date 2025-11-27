@@ -15,6 +15,7 @@ public class PurchaseRequestResponseDto {
 
     private Long id;
     private String code;
+    private String quotationCode;
     private String licensePlate;
     private PurchaseRequestStatus status;
     private ManagerReviewStatus reviewStatus;

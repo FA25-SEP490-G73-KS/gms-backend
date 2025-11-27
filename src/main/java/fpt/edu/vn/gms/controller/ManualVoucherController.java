@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.ManualVoucherCreateRequest;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.ManualVoucherListResponseDto;
 import fpt.edu.vn.gms.dto.response.ManualVoucherResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.ManualVoucherService;
@@ -12,14 +13,15 @@ import fpt.edu.vn.gms.utils.AppRoutes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 
 @Tag(name = "manual-voucher", description = "Phiếu thu-chi")
 @CrossOrigin(origins = "${fe-local-host}")
@@ -80,5 +82,23 @@ public class ManualVoucherController {
         return ResponseEntity.status(201)
                 .body(ApiResponse.created("Tạo phiếu thu/chi thành công", dto));
     }
+
+    @GetMapping
+    @Operation(
+            summary = "Lấy danh sách phiếu thu - chi"
+    )
+    public ResponseEntity<ApiResponse<Page<ManualVoucherListResponseDto>>> getManualVouchers(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "6") @Min(6) int size
+    ) {
+
+        Page<ManualVoucherListResponseDto> result =
+                manualVoucherService.getList(page, size);
+
+        return ResponseEntity.ok(ApiResponse.success("Danh sách phiếu thu-chi", result));
+    }
+
+
+
 }
 

@@ -4,8 +4,26 @@ import fpt.edu.vn.gms.entity.PurchaseRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest, Long> {
 
-    Page<PurchaseRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
-}
+        @Query("""
+            SELECT new fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto(
+                pr.id,
+                pr.code,
+                pq.code,
+                v.licensePlate,
+                pr.status,
+                pr.reviewStatus,
+                pr.totalEstimatedAmount,
+                pr.createdAt
+            )
+            FROM PurchaseRequest pr
+            LEFT JOIN pr.relatedQuotation pq
+            LEFT JOIN pq.serviceTicket st
+            LEFT JOIN st.vehicle v
+            ORDER BY pr.createdAt DESC
+          """)
+        Page<PurchaseRequest> findAll(Pageable pageable);
+    }

@@ -2,10 +2,12 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.common.enums.Role;
+import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.PurchaseRequestDetailMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestItemMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
 import fpt.edu.vn.gms.repository.*;
@@ -34,16 +36,18 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final NotificationService notificationService;
     private final PurchaseRequestMapper purchaseRequestMapper;
     private final PurchaseRequestItemMapper purchaseRequestItemMapper;
+    private final PurchaseRequestDetailMapper purchaseRequestDetailMapper;
 
     public Page<PurchaseRequestResponseDto> getPurchaseRequests(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<PurchaseRequest> prPage = purchaseRequestRepo.findAllByOrderByCreatedAtDesc(pageable);
+        Page<PurchaseRequest> prPage = purchaseRequestRepo.findAll(pageable);
         return prPage.map(purchaseRequestMapper::toResponseDto);
     }
 
-    public List<PurchaseRequestItemResponseDto> getPurchaseRequestItems(Long prId) {
-        List<PurchaseRequestItem> items = purchaseRequestItemRepo.findByPurchaseRequestId(prId);
-        return items.stream().map(purchaseRequestItemMapper::toResponseDto).collect(Collectors.toList());
+    public PurchaseRequestDetailDto getPurchaseRequestItems(Long prId) {
+        PurchaseRequest item = purchaseRequestRepo.findById(prId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy pr + " + prId));
+        return purchaseRequestDetailMapper.toDetailDto(item);
     }
 
     @Transactional
