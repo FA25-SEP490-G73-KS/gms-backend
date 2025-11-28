@@ -75,7 +75,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
         BigDecimal amount = unitPrice.multiply(BigDecimal.valueOf(item.getQuantityReceived()));
 
         // ===== Tạo phiếu chi =====
-        ManualVoucher voucher = ManualVoucher.builder()
+        LedgerVoucher voucher = LedgerVoucher.builder()
                 .code(codeSequenceService.generateCode("PAY"))
                 .type(ManualVoucherType.PAYMENT)
                 .status(ManualVoucherStatus.APPROVED)
@@ -114,7 +114,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
         Employee employee = employeeRepo.findById(req.getApprovedByEmployeeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quản lý!"));
 
-        ManualVoucher voucher = ManualVoucher.builder()
+        LedgerVoucher voucher = LedgerVoucher.builder()
                 .code(codeSequenceService.generateCode(prefix))
                 .type(req.getType())
                 .category(req.getCategory())
@@ -144,7 +144,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
     public Page<ManualVoucherListResponseDto> getList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ManualVoucher> manualVouchers = manualRepo.findAll(pageable);
+        Page<LedgerVoucher> manualVouchers = manualRepo.findAll(pageable);
 
         return manualVouchers.map(mv -> {
             ManualVoucherListResponseDto dto = manualVoucherMapper.toListDto(mv);
@@ -158,7 +158,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
     @Override
     public ManualVoucherResponseDto getDetail(Long id) {
-        ManualVoucher voucher = manualRepo.findById(id)
+        LedgerVoucher voucher = manualRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
 
         ManualVoucherResponseDto dto = manualVoucherMapper.toDto(voucher);
@@ -167,7 +167,7 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
         return dto;
     }
 
-    private String resolveTargetName(ManualVoucher mv) {
+    private String resolveTargetName(LedgerVoucher mv) {
 
         // 1. Người nhận (chi lương)
         if (mv.getRelatedEmployeeId() != null) {

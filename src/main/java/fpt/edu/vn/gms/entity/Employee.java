@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -38,6 +39,9 @@ public class Employee {
 
     @Column(name = "hire_date")
     private LocalDateTime hireDate;
+
+    @Column(name = "daily_salary", precision = 18, scale = 2)
+    private BigDecimal dailySalary;
 
     // Active, Nghỉ việc, Tạm ngưng
     @Column(name = "status", length = 50)

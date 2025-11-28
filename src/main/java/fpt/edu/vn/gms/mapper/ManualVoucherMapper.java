@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.mapper;
 
 import fpt.edu.vn.gms.dto.response.ManualVoucherListResponseDto;
 import fpt.edu.vn.gms.dto.response.ManualVoucherResponseDto;
-import fpt.edu.vn.gms.entity.ManualVoucher;
+import fpt.edu.vn.gms.entity.LedgerVoucher;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -20,8 +20,8 @@ public interface ManualVoucherMapper {
     @Mapping(target = "approvedBy", source = "approvedBy.fullName")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "attachmentUrl", source = "attachmentUrl")
-    ManualVoucherResponseDto toDto(ManualVoucher entity);
+    ManualVoucherResponseDto toDto(LedgerVoucher entity);
 
     @Mapping(target = "targetName", ignore = true)
-    ManualVoucherListResponseDto toListDto(ManualVoucher mv);
+    ManualVoucherListResponseDto toListDto(LedgerVoucher mv);
 }

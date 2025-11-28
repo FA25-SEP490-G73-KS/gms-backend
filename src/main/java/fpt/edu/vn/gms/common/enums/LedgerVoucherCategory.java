@@ -1,7 +1,8 @@
 package fpt.edu.vn.gms.common.enums;
 
 public enum LedgerVoucherCategory {
-    SALARY,
+    ADVANCE_SALARY,
+    SALARY_PAYMENT,
     ELECTRICITY,
     SUPPLIER_PAYMENT,
     OTHER

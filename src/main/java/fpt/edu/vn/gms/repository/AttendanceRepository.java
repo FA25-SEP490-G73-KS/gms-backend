@@ -37,4 +37,28 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
   Optional<Attendance> findByEmployeeAndDate(Employee employee, LocalDate date);
 
   List<Attendance> findByDateBetween(LocalDate start, LocalDate end);
+
+  @Query("""
+        SELECT COUNT(a)
+        FROM Attendance a
+        WHERE a.employee.employeeId = :employeeId
+          AND MONTH(a.date) = :month
+          AND YEAR(a.date) = :year
+          AND a.isPresent = true
+    """)
+  Integer countPresentDays(@Param("employeeId") Long employeeId,
+                           @Param("month") Integer month,
+                           @Param("year") Integer year);
+
+    @Query("""
+      SELECT COUNT(a)
+      FROM Attendance a
+      WHERE a.employee.employeeId = :employeeId
+        AND MONTH(a.date) = :month
+        AND YEAR(a.date) = :year
+        AND a.isPresent = false
+    """)
+  Integer countAbsentDays(@Param("employeeId") Long employeeId,
+                          @Param("month") Integer month,
+                          @Param("year") Integer year);
 }

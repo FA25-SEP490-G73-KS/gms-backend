@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ManualVoucher {
+public class LedgerVoucher {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expense_voucher_id")
+    @Column(name = "ledger_id")
     private Long id;
 
     @Column(name = "code", length = 50, nullable = false, unique = true)
