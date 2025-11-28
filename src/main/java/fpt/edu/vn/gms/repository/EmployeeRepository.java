@@ -7,9 +7,12 @@ import fpt.edu.vn.gms.entity.Account;
 import fpt.edu.vn.gms.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     /**
@@ -28,4 +31,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByRole(Role role);
 
     Optional<Employee> findByAccount(Account account);
+
+    @Query("SELECT e FROM Employee e LEFT JOIN Attendance a ON e.employeeId = a.employee.id WHERE a.isPresent IS NOT NULL AND a.date = :date")
+    Set<Employee> findEmployeesWithAttendances(@Param("date") LocalDate date);
 }

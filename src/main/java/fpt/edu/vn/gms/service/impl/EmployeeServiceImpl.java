@@ -2,7 +2,6 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.EmployeeDto;
 import fpt.edu.vn.gms.dto.response.EmployeeInfoResponseDto;
-import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.mapper.EmployeeMapper;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
 import fpt.edu.vn.gms.service.EmployeeService;
