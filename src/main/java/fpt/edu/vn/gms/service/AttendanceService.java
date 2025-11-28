@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface AttendanceService {
-  void markAttendances(List<AttendanceRequestDTO> requests, Long managerId);
+  void markAttendances(LocalDate date, List<AttendanceRequestDTO> requests, Long managerId);
 
   List<AttendanceResponseDTO> getAttendancesByDate(LocalDate date);
 

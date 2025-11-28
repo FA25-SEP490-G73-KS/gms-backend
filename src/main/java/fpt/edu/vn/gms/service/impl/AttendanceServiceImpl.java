@@ -47,7 +47,15 @@ public class AttendanceServiceImpl implements AttendanceService {
 
   @Override
   @Transactional
-  public void markAttendances(List<AttendanceRequestDTO> requests, Long managerId) {
+  public void markAttendances(LocalDate date, List<AttendanceRequestDTO> requests, Long managerId) {
+    if (date.isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("Không được chỉnh sửa điểm danh của ngày hôm trước.");
+    }
+
+    if (date.isAfter(LocalDate.now())) {
+      throw new IllegalArgumentException("Không được chỉnh sửa điểm danh của ngày hôm sau.");
+    }
+
     Map<Long, AttendanceRequestDTO> uniqueRequests = requests.stream()
         .collect(Collectors.toMap(
             AttendanceRequestDTO::getEmployeeId,
@@ -62,7 +70,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
       att.setEmployee(emp);
       att.setIsPresent(req.getIsPresent());
-      att.setDate(LocalDate.now());
+      att.setDate(date);
       att.setNote(req.getNote());
       att.setRecordedBy(managerId);
       att.setRecordedAt(LocalDateTime.now());

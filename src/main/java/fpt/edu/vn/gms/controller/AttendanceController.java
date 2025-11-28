@@ -42,9 +42,10 @@ public class AttendanceController {
   @PostMapping("/mark")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAttendances(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
       @RequestBody @Valid List<AttendanceRequestDTO> requests,
       @CurrentUser Employee manager) {
-    attendanceService.markAttendances(requests, manager.getEmployeeId());
+    attendanceService.markAttendances(date == null ? LocalDate.now() : date, requests, manager.getEmployeeId());
   }
 
   // Lấy danh sách điểm danh theo ngày
