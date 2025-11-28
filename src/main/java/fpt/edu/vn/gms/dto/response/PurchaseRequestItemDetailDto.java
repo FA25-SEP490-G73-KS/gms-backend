@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.response;
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class PurchaseRequestItemDetailDto {
 
     private Long itemId;
@@ -20,8 +22,8 @@ public class PurchaseRequestItemDetailDto {
     private String vehicleModel;
     private Double quantityInStock;
     private Double quantityOrdered;
-    private BigDecimal unitPrice;      // p.purchasePrice
-    private BigDecimal totalPrice;     // pri.estimatedPurchasePrice
+    private BigDecimal unitPrice; // p.purchasePrice
+    private BigDecimal totalPrice; // pri.estimatedPurchasePrice
     private PurchaseReqItemStatus status;
     private ManagerReviewStatus reviewStatus;
     private String note;

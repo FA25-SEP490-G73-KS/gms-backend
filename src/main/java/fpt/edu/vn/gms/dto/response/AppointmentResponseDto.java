@@ -3,7 +3,6 @@ package fpt.edu.vn.gms.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
-import fpt.edu.vn.gms.entity.ServiceType;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -18,6 +17,7 @@ import java.util.List;
 public class AppointmentResponseDto {
 
     private Long appointmentId;
+    private String appointmentCode;
     private Long customerId;
     private String customerName;
     private String customerPhone;

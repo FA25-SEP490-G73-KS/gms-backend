@@ -1,10 +1,12 @@
 package fpt.edu.vn.gms.dto.request;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
+@Builder
 public class PartUpdateReqDto {
 
     @NotBlank(message = "Tên linh kiện không được để trống")

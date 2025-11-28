@@ -40,11 +40,10 @@ import java.util.*;
 @Slf4j
 public class PriceQuotationServiceImpl implements PriceQuotationService {
 
-    PriceQuotationRepository quotationRepository;
+    PriceQuotationRepository priceQuotationRepository;
     ServiceTicketRepository serviceTicketRepository;
     PartRepository partRepository;
     PurchaseRequestRepository purchaseRequestRepository;
-    PriceQuotationRepository priceQuotationRepository;
     NotificationService notificationService;
     CodeSequenceService codeSequenceService;
     HtmlTemplateService htmlTemplateService;
@@ -55,7 +54,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
 
-        Page<PriceQuotation> quotations = quotationRepository.findAll(pageable);
+        Page<PriceQuotation> quotations = priceQuotationRepository.findAll(pageable);
 
         return quotations.map(priceQuotationMapper::toResponseDto);
     }
@@ -88,7 +87,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     @Override
     public PriceQuotationResponseDto recalculateEstimateAmount(Long quotationId) {
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         // Tính toán lại tổng dự kiến dựa trên items
@@ -99,7 +98,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setEstimateAmount(totalEstimate);
         quotation.setUpdatedAt(LocalDateTime.now());
 
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
@@ -107,7 +106,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
 
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         quotation.setUpdatedAt(LocalDateTime.now());
@@ -135,7 +134,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // --- Tự động check trạng thái ---
         updateQuotationStatusAfterItemUpdate(quotation);
 
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
@@ -157,12 +156,12 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         }
 
         quotation.setUpdatedAt(LocalDateTime.now());
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
     }
 
     @Override
     public PriceQuotationResponseDto getById(Long id) {
-        return priceQuotationMapper.toResponseDto(quotationRepository.findById(id).orElse(null));
+        return priceQuotationMapper.toResponseDto(priceQuotationRepository.findById(id).orElse(null));
     }
 
     private void applyItemUpdates(PriceQuotationItem item, PriceQuotationItemRequestDto dto) {
@@ -212,13 +211,13 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public PriceQuotationResponseDto updateQuotationStatusManual(Long id, ChangeQuotationStatusReqDto reqDto) {
 
-        PriceQuotation quotation = quotationRepository.findById(id)
+        PriceQuotation quotation = priceQuotationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Quotation không tồn tại!!!"));
 
         if (quotation.getPriceQuotationId() != null
                 && quotation.getStatus() == PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
             quotation.setStatus(reqDto.getStatus());
-            quotationRepository.save(quotation);
+            priceQuotationRepository.save(quotation);
         } else {
             throw new RuntimeException("Không thể thay đổi trạng thái khi kho chưa xác nhận!!");
         }
@@ -230,7 +229,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public PriceQuotationResponseDto confirmQuotationByCustomer(Long quotationId) {
 
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         if (quotation.getStatus() != PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
@@ -321,7 +320,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
 
         // Lưu lại báo giá
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
@@ -358,7 +357,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     public PriceQuotationResponseDto rejectQuotationByCustomer(Long quotationId, String reason) {
 
         // Lấy báo giá
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         if (quotation.getStatus() != PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM) {
@@ -369,7 +368,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setStatus(PriceQuotationStatus.CUSTOMER_REJECTED);
         quotation.setUpdatedAt(LocalDateTime.now());
 
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         // Lấy nhân viên phụ trách (advisor)
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
@@ -394,7 +393,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     @Override
     public PriceQuotationResponseDto sendQuotationToCustomer(Long quotationId) {
 
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         if (quotation.getStatus() == PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM) {
@@ -404,7 +403,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setStatus(PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
         quotation.setUpdatedAt(LocalDateTime.now());
 
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         return priceQuotationMapper.toResponseDto(quotation);
     }

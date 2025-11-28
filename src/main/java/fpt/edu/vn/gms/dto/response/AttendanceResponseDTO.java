@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import fpt.edu.vn.gms.common.enums.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AttendanceResponseDTO {
   private Long employeeId;
   private String employeeName;

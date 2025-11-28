@@ -1,12 +1,13 @@
 package fpt.edu.vn.gms.dto.response;
 
+import lombok.Builder;
 import lombok.Data;
-
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 public class StockReceiptItemResponseDto {
 
     private Long receiptItemId;
@@ -19,7 +20,7 @@ public class StockReceiptItemResponseDto {
     private String unit;
 
     private Double requestedQuantity;
-    private Double quantityReceived;      // đợt này
+    private Double quantityReceived; // đợt này
     private Double totalQuantityReceived; // tổng đã nhận cho PR item
 
     private String attachmentUrl;
