@@ -38,6 +38,7 @@ public final class AppRoutes {
   public static final String MANUAL_VOUCHER_PREFIX = API_PREFIX + "/manual-vouchers";
   public static final String DISCOUNT_POLICY_PREFIX = API_PREFIX + "/discount-policies";
   public static final String UNIT_PREFIX = API_PREFIX + "/units";
+  public static final String ATTENDANCES_PREFIX = API_PREFIX + "/attendances";
 
   public static final List<String> whitelistedRoutes = List.of(
       API_PREFIX + "/docs/**",
