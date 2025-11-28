@@ -2,9 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
-import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.DiscountPolicy;
 import fpt.edu.vn.gms.entity.ServiceTicket;
@@ -13,12 +11,14 @@ import fpt.edu.vn.gms.mapper.CustomerMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.DiscountPolicyRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
+import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.CustomerService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +36,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     CustomerRepository customerRepository;
     DiscountPolicyRepository discountPolicyRepository;
+    VehicleRepository vehicleRepository;
     CustomerMapper customerMapper;
     ServiceTicketRepository serviceTicketRepository;
 
@@ -164,5 +165,33 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setDiscountPolicy(bestPolicy);
 
         customerRepository.save(customer);
+    }
+
+    @Override
+    public Page<CustomerListResponseDto> getCustomers(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return customerRepository.getAllCustomers(pageable);
+    }
+
+    @Override
+    public CustomerDetailDto getCustomerDetail(Long customerId) {
+        CustomerDetailDto dto = customerRepository.getCustomerDetail(customerId);
+
+        dto.setVehicles(vehicleRepository.getCustomerVehicles(customerId));
+        dto.setHistory(null);
+
+        return dto;
+    }
+
+    @Override
+    public CustomerDetailDto getServiceHistory(Long customerId) {
+        CustomerDetailDto dto = customerRepository.getCustomerDetail(customerId);
+
+        dto.setHistory(serviceTicketRepository.getCustomerServiceHistory(customerId));
+        dto.setVehicles(null);
+
+        return dto;
     }
 }

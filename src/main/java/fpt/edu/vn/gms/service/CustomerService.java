@@ -2,9 +2,7 @@ package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
-import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
+import fpt.edu.vn.gms.dto.response.*;
 import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
@@ -28,4 +26,9 @@ public interface CustomerService {
 
     void updateTotalSpending(Long customerId, BigDecimal addtionalSpending);
 
+    Page<CustomerListResponseDto> getCustomers(int page, int size);
+
+    CustomerDetailDto getCustomerDetail(Long customerId);
+
+    CustomerDetailDto getServiceHistory(Long customerId);
 }

@@ -27,7 +27,7 @@ public class PurchaseRequest {
     private String code;
 
     // Liên kết đến báo giá
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "quotation_id")
     private PriceQuotation relatedQuotation;
 

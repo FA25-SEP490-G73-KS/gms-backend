@@ -14,6 +14,8 @@ import java.util.List;
 public interface PurchaseRequestMapper {
 
     @Mapping(target = "licensePlate", source = "relatedQuotation.serviceTicket.vehicle.licensePlate")
+    @Mapping(target = "customerName", source = "relatedQuotation.serviceTicket.customer.fullName")
+    @Mapping(target = "createdBy", source = "relatedQuotation.serviceTicket.createdBy.fullName")
     PurchaseRequestResponseDto toResponseDto(PurchaseRequest request);
 
 }

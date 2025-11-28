@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.repository;
 
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
+import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryDto;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,5 +47,20 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
     """)
     List<Object[]> countTicketsByTypeForMonth(@Param("year") int year, @Param("month") int month);
 
-
+    @Query("""
+    SELECT new fpt.edu.vn.gms.dto.response.CustomerServiceHistoryDto(
+        st.serviceTicketCode,
+        v.licensePlate,
+        st.createdAt,
+        st.deliveryAt,
+        pq.estimateAmount,
+        st.status
+    )
+    FROM ServiceTicket st
+    JOIN st.vehicle v
+    JOIN st.priceQuotation pq
+    WHERE st.customer.customerId = :customerId
+    ORDER BY st.createdAt DESC
+    """)
+    List<CustomerServiceHistoryDto> getCustomerServiceHistory(Long customerId);
 }
