@@ -85,7 +85,7 @@ public class ServiceTicket {
     @Column(name = "delivery_at")
     private LocalDate deliveryAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by_employee_id")
     private Employee createdBy;
 

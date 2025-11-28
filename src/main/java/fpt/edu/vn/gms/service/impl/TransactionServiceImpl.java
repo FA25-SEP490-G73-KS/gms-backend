@@ -49,13 +49,14 @@ public class TransactionServiceImpl implements TransactionService {
   public TransactionResponseDto createTransaction(CreateTransactionRequestDto request)
       throws Exception {
     Invoice invoice = request.getInvoice();
+    Debt debt = request.getDebt();
 
     String customerFullName = request.getCustomerFullName();
     String customerPhone = request.getCustomerPhone();
     Long price = request.getPrice();
     PaymentTransactionType type = request.getType();
 
-    Transaction transaction = Transaction.builder()
+    Transaction transaction = Transaction.builder().debt(debt)
         .invoice(invoice)
         .customerFullName(customerFullName)
         .customerPhone(customerPhone)

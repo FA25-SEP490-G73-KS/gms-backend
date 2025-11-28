@@ -27,7 +27,7 @@ public class PriceQuotation {
     @Column(unique = true, length = 50)
     private String code;
 
-    @OneToOne(mappedBy = "priceQuotation", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "priceQuotation")
     private ServiceTicket serviceTicket;
 
     @Column(name = "estimate_amount", precision = 18, scale = 2)

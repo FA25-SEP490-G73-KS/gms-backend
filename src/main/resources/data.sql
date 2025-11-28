@@ -123,3 +123,8 @@ VALUES (
            "1De-78C8yMm2q3mKXmRrR07KEHI56_K60vTI3uSvzYjTacyDjaBLVq_pO5AYLVvtS_mqK8zac6PGiZ9jWI2iNtsLENUgFF1-BBLF3VjcwYejq2GurMQF3I2t40hb5ua28wuH4CW9k20NfNHJbJtHUq25ObwHEybqTAjE0eWRwN88hsDQp0N8RXI2SHlCE_XsDxvCUSiQucWrgNaVrN_X1HZrUYpzGSqrFVX_6-9iyWaLopOVot3vD4syO0ND6SScD"
        );
 
+INSERT INTO unit (name)
+VALUES ("cái"),
+       ("bộ"),
+       ("lít"),
+       ("cặp");

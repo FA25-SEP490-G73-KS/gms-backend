@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
 import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
 import fpt.edu.vn.gms.common.enums.ManualVoucherType;
 import jakarta.persistence.*;
@@ -27,16 +28,21 @@ public class ManualVoucher {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
-    private ManualVoucherType type;  // THU, CHI
+    private ManualVoucherType type;
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
     private BigDecimal amount; // tổng tiền chi
 
-    @Column(name = "target", length = 100)
-    private String target; // VD: "NCC"
+    private Long relatedEmployeeId; // nếu chi lương
+
+    private Long relatedSupplierId; // nếu chi NCC
 
     @Column(name = "description", length = 255)
     private String description; // "Thanh toán vật tư: Dầu máy 5W-30"
+
+    @Enumerated(EnumType.STRING)
+    private LedgerVoucherCategory category;
+    // ví dụ: SALARY, ELECTRICITY, SUPPLIER_PAYMENT, OTHER
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -59,13 +65,9 @@ public class ManualVoucher {
     @Column(name = "status", nullable = false, length = 20)
     private ManualVoucherStatus status;
 
-    // Một ExpenseVoucher gắn với đúng một StockReceiptItem
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_receipt_item_id", unique = true)
-    private StockReceiptItem stockReceiptItem;
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
 }

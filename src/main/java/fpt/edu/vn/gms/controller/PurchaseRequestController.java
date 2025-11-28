@@ -1,13 +1,9 @@
 package fpt.edu.vn.gms.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
-import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
-import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import fpt.edu.vn.gms.service.StockReceiptService;
@@ -26,8 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(path = AppRoutes.PURCHASE_REQUEST_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -75,7 +69,7 @@ public class PurchaseRequestController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi server nội bộ")
     })
     @GetMapping("/{prId}")
-    public ResponseEntity<ApiResponse<List<PurchaseRequestItemResponseDto>>> listPRItems(
+    public ResponseEntity<ApiResponse<PurchaseRequestDetailDto>> prItems(
             @Parameter(description = "ID của Purchase Request cần lấy chi tiết")
             @PathVariable Long prId) {
 

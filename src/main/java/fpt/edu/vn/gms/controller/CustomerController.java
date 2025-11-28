@@ -1,17 +1,16 @@
 package fpt.edu.vn.gms.controller;
 
+import com.google.protobuf.Api;
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.CustomerDetailResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerResponseDto;
-import fpt.edu.vn.gms.dto.response.CustomerServiceHistoryResponseDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
@@ -137,5 +136,56 @@ public class CustomerController {
         })
         public ResponseEntity<CustomerServiceHistoryResponseDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
             return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
+        }
+
+        @Operation(
+                summary = "Lấy danh sách khách hàng (manager)",
+                description = "API trả về danh sách khách hàng với tìm kiếm, lọc trạng thái, phân trang"
+        )
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Danh sách khách hàng",
+                content = @Content(schema = @Schema(implementation = CustomerListResponseDto.class))
+        )
+        @GetMapping("/manager")
+        public ResponseEntity<ApiResponse<Page<CustomerListResponseDto>>> getCustomers(
+                @RequestParam(defaultValue = "0") @Min(0) int page,
+                @RequestParam(defaultValue = "6") @Min(1) int size
+        ) {
+                return ResponseEntity.ok(
+                        ApiResponse.success("Danh sách khách hàng!", customerService.getCustomers(page, size))
+                );
+        }
+
+        @Operation(
+                summary = "Lấy thông tin chi tiết khách hàng (manager)",
+                description = "Bao gồm thông tin cá nhân, tổng chi tiêu, số xe, số lần sửa xe và danh sách xe"
+        )
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Thông tin chi tiết khách hàng",
+                content = @Content(schema = @Schema(implementation = CustomerDetailDto.class))
+        )
+        @GetMapping("/manager/{customerId}/vehicles")
+        public ResponseEntity<ApiResponse<CustomerDetailDto>> getCustomerDetail(
+                @PathVariable Long customerId
+        ) {
+                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!", customerService.getCustomerDetail(customerId)));
+        }
+
+        @Operation(
+                summary = "Lịch sử dịch vụ của khách hàng (manager)",
+                description = "Trả về danh sách Service Ticket theo customerId"
+        )
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Danh sách lịch sử dịch vụ",
+                content = @Content(schema = @Schema(implementation = CustomerServiceHistoryDto.class))
+        )
+        @GetMapping("/manager/{customerId}/service-history")
+        public ResponseEntity<ApiResponse<CustomerDetailDto>> getServiceHistory(
+                @PathVariable Long customerId
+        ) {
+                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!", customerService.getServiceHistory(customerId)));
         }
 }
