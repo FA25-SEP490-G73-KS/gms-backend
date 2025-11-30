@@ -24,7 +24,7 @@ public class Part {
     @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private PartCategory category;
 
@@ -59,7 +59,7 @@ public class Part {
     private Double reorderLevel;
 
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "supplier")
     private Supplier supplier;
 
     @Column(name = "is_universal", nullable = false)

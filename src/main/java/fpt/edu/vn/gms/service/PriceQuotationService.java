@@ -3,15 +3,16 @@ package fpt.edu.vn.gms.service;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PriceQuotationService {
-    PriceQuotationResponseDto createQuotation(Long ticketId);
+    ServiceTicketResponseDto createQuotation(Long ticketId);
 
     Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable);
 
-    PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto);
+    ServiceTicketResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto);
 
     PriceQuotationResponseDto recalculateEstimateAmount(Long quotationId);
 

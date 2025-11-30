@@ -62,7 +62,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     @Transactional
     @Override
-    public PriceQuotationResponseDto createQuotation(Long ticketId) {
+    public ServiceTicketResponseDto createQuotation(Long ticketId) {
 
         // Lấy service ticket theo id
         ServiceTicket serviceTicket = serviceTicketRepository.findById(ticketId)
@@ -76,14 +76,13 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 .build();
 
         // Gán 2 chiều
+        serviceTicket.setStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
+
         quotation.setServiceTicket(serviceTicket);
         serviceTicket.setPriceQuotation(quotation);
 
-        // Lưu (vì cascade = ALL nên chỉ cần save ticket)
-        serviceTicketRepository.save(serviceTicket);
-
         // Trả về DTO
-        return priceQuotationMapper.toResponseDto(quotation);
+        return serviceTicketMapper.toResponseDto(serviceTicketRepository.save(serviceTicket));
     }
 
     @Override
@@ -105,7 +104,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     }
 
     @Override
-    public PriceQuotationResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
+    public ServiceTicketResponseDto updateQuotationItems(Long quotationId, PriceQuotationRequestDto dto) {
 
         PriceQuotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
@@ -137,7 +136,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         quotationRepository.save(quotation);
 
-        return priceQuotationMapper.toResponseDto(quotation);
+        return serviceTicketMapper.toResponseDto(quotation.getServiceTicket());
     }
 
     private void updateQuotationStatusAfterItemUpdate(PriceQuotation quotation) {
@@ -168,10 +167,16 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     private void applyItemUpdates(PriceQuotationItem item, PriceQuotationItemRequestDto dto) {
         item.setItemName(dto.getItemName());
         item.setItemType(dto.getType());
-        item.setQuantity(dto.getQuantity());
+
+        double quantity = dto.getQuantity() == null ? 1.0 : dto.getQuantity();
+        item.setQuantity(quantity);
+
         item.setUnit(dto.getUnit());
-        item.setUnitPrice(dto.getUnitPrice());
-        item.setTotalPrice(dto.getUnitPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
+
+        BigDecimal unitPrice = dto.getUnitPrice() == null ? BigDecimal.ZERO : dto.getUnitPrice();
+        item.setUnitPrice(unitPrice);
+
+        item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(quantity)));
         item.setWarehouseNote(null);
 
         // Xử lý riêng cho PART

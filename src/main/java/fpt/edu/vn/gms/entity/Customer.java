@@ -17,7 +17,12 @@ import fpt.edu.vn.gms.common.enums.CustomerType;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "customer")
+@Table(name = "customer", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_customer_phone_active",
+                columnNames = {"phone", "is_active"}
+        )
+})
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,4 +58,14 @@ public class Customer {
     @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     @Builder.Default
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    private List<Debt> debts;
+
+    @PrePersist
+    public void applyDefaultDiscount() {
+        if (this.discountPolicy == null) {
+            this.discountPolicy = DiscountPolicy.builder().discountPolicyId(1L).build();
+        }
+    }
 }

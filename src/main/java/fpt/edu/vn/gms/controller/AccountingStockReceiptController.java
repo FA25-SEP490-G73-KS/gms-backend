@@ -34,7 +34,6 @@ public class AccountingStockReceiptController {
     private final StockReceiptService stockReceiptService;
     private final ManualVoucherService manualVoucherService;
 
-    // ====== LIST HEADER ======
     @Operation(
             summary = "Danh sách phiếu nhập kho cho kế toán",
             description = """
@@ -61,7 +60,6 @@ public class AccountingStockReceiptController {
         );
     }
 
-    // ====== LIST ITEMS ======
     @Operation(
             summary = "Lấy danh sách dòng nhập kho theo STK",
             description = "Dùng cho bảng con hiển thị các linh kiện trong một phiếu nhập."
@@ -84,7 +82,6 @@ public class AccountingStockReceiptController {
         );
     }
 
-    // ====== PAY ONE ITEM ======
     @Operation(
             summary = "Kế toán xác nhận thanh toán cho một dòng nhập kho",
             description = """

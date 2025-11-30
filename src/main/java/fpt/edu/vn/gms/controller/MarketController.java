@@ -33,4 +33,15 @@ public class MarketController {
                 ApiResponse.success("Lấy danh sách thị trường", markets)
         );
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Market>> getMarketById(
+            @PathVariable Long id
+    ) {
+
+        Market markets = marketService.getById(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Thị trường với id " + id, markets)
+        );
+    }
 }

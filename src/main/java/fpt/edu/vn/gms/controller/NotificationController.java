@@ -1,7 +1,9 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,9 +41,8 @@ public class NotificationController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<ApiResponse<List<NotificationResponseDto>>> getUserNotifications(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        String recipientPhone = userDetails.getUsername();
-        List<NotificationResponseDto> notifications = notificationService.getNotificationsForUser(recipientPhone);
+            @CurrentUser Employee employee) {
+        List<NotificationResponseDto> notifications = notificationService.getNotificationsForUser(employee.getPhone());
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Successfully", notifications));
     }

@@ -24,6 +24,10 @@ public class PartDuringReviewDto {
     private BigDecimal purchasePrice;
 
     @NotNull
+    @Positive
+    private BigDecimal sellingPrice;
+
+    @NotNull
     private Boolean specialPart;
 
     @NotNull
@@ -34,6 +38,9 @@ public class PartDuringReviewDto {
 
     @NotNull
     private Long supplierId;
+
+    @NotNull
+    private Long brandId;
 
     @NotNull
     private Long vehicleModelId;

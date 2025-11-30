@@ -7,6 +7,7 @@ import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
 import fpt.edu.vn.gms.dto.request.PartDuringReviewDto;
+import fpt.edu.vn.gms.dto.request.PartUpdateDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
@@ -65,7 +66,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
 
         Page<PriceQuotation> quotations = quotationRepository
-                .findByStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM, pageable);
+                .findAll(pageable);
 
         log.info("Found {} quotations waiting for warehouse approval", quotations.getTotalElements());
 
@@ -153,7 +154,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
             log.warn("Quotation {} REJECTED by warehouse", quotation.getPriceQuotationId());
 
-            quotation.setStatus(PriceQuotationStatus.WAREHOUSE_CONFIRMED);
+            quotation.setStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM);
             quotationRepository.save(quotation);
 
             if (advisor != null) {
@@ -197,7 +198,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     // ---------------------------------------------------------
 
     @Transactional
-    public PartReqDto updatePartDuringWarehouseReview(Long itemId, PartDuringReviewDto dto) {
+    public void updatePartDuringWarehouseReview(Long itemId, PartUpdateDto dto) {
 
         log.info("Updating part during warehouse review — itemId={} dto={}", itemId, dto);
 
@@ -217,37 +218,37 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
         // --- Tính giá bán ---
         BigDecimal purchase = dto.getPurchasePrice();
-        BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10));
+        BigDecimal selling = dto.getSellingPrice();
 
         // Update part info
-        part.setName(dto.getName());
+//        part.setName(dto.getName());
         part.setPurchasePrice(purchase);
         part.setSellingPrice(selling);
-        part.setUniversal(dto.getUniversal());
-        part.setSpecialPart(dto.getSpecialPart());
-        part.setNote(dto.getNote());
+//        part.setUniversal(dto.getUniversal());
+//        part.setSpecialPart(dto.getSpecialPart());
+//        part.setNote(dto.getNote());
 
-        // Reference fields
-        PartCategory category = partCategoryRepo.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
-
-        Market market = marketRepo.findById(dto.getMarketId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
-
-        Unit unit = unitRepo.findById(dto.getUnitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
-
-        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
-
-        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
-
-        part.setCategory(category);
-        part.setMarket(market);
-        part.setUnit(unit);
-        part.setVehicleModel(model);
-        part.setSupplier(supplier);
+//        // Reference fields
+//        PartCategory category = partCategoryRepo.findById(dto.getCategoryId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+//
+//        Market market = marketRepo.findById(dto.getMarketId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
+//
+//        Unit unit = unitRepo.findById(dto.getUnitId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
+//
+//        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
+//
+//        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
+//
+//        part.setCategory(category);
+//        part.setMarket(market);
+//        part.setUnit(unit);
+//        part.setVehicleModel(model);
+//        part.setSupplier(supplier);
 
         Part savedPart = partRepository.save(part);
 
@@ -257,7 +258,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         log.info("Merging updated Part {} into Item {}", savedPart.getPartId(), itemId);
 
         item.setItemName(savedPart.getName());
-        item.setUnit(unit.getName());
         item.setUnitPrice(savedPart.getSellingPrice());
         item.setTotalPrice(savedPart.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
 
@@ -287,7 +287,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         // GỬI NOTIFICATION
         checkAllItemsAndSendNotification(item.getPriceQuotation());
 
-        return partMapper.toDto(savedPart);
+//        return partMapper.toDto(savedPart);
     }
 
     @Transactional
@@ -332,7 +332,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                 .unit(unit)
                 .vehicleModel(model)
                 .purchasePrice(dto.getPurchasePrice())
-                .sellingPrice(dto.getPurchasePrice().multiply(BigDecimal.valueOf(1.10)))
+                .sellingPrice(dto.getSellingPrice())
                 .supplier(supplier)
                 .discountRate(BigDecimal.ZERO)
                 .quantityInStock(0.0)

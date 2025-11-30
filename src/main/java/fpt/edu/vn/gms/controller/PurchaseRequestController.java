@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
+import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Employee;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -69,13 +71,80 @@ public class PurchaseRequestController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi server nội bộ")
     })
     @GetMapping("/{prId}")
-    public ResponseEntity<ApiResponse<PurchaseRequestDetailDto>> prItems(
+    public ResponseEntity<ApiResponse<PrDetailInfoReviewDto>> prItems(
             @Parameter(description = "ID của Purchase Request cần lấy chi tiết")
             @PathVariable Long prId) {
 
         log.info("[PR] Fetch items for PR {}", prId);
 
         return ResponseEntity.ok(ApiResponse.success("Chi tiết PR items", prService.getPurchaseRequestItems(prId)));
+    }
+
+    @Operation(
+            summary = "Chi tiết từng đơn mua hàng trong pr"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy chi tiết item thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy PR"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi server nội bộ")
+    })
+    @GetMapping("/item/{itemId}")
+    public ResponseEntity<ApiResponse<PurchaseRequestItemResponseDto>> prItem(
+            @Parameter(description = "ID của Purchase Request Item cần lấy chi tiết")
+            @PathVariable Long itemId) {
+
+        log.info("[PR] Fetch items for PR {}", itemId);
+
+        return ResponseEntity.ok(ApiResponse.success("Chi tiết PR item", prService.getItem(itemId)));
+    }
+
+    @PostMapping
+    @Operation(
+            summary = "Tạo yêu cầu mua hàng",
+            description = """
+                API dùng để tạo phiếu yêu cầu mua hàng trong các trường hợp:
+                - Kho hết linh kiện
+                - Cần nhập mới để bổ sung tồn kho
+                - Báo giá yêu cầu nhập hàng (không đủ tồn kho)
+                
+                **Nghiệp vụ xử lý:**
+                - Tạo mới PurchaseRequest
+                - Thêm danh sách PurchaseRequestItem
+                - Tính tổng estimatedAmount dựa trên purchasePrice của linh kiện
+                - Không tạo deduction
+                - Không liên quan đến xuất kho
+                """
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Tạo phiếu yêu cầu mua hàng thành công",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Dữ liệu đầu vào không hợp lệ",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Không tìm thấy dữ liệu liên quan (nhân viên, part...)",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Lỗi hệ thống",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
+    })
+    public ResponseEntity<ApiResponse<?>> createPurchaseRequest(
+            @RequestBody @Valid PurchaseRequestCreateDto dto
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Tạo yêu cầu mua hàng thành công",
+                        prService.createRequest(dto))
+        );
     }
 
 

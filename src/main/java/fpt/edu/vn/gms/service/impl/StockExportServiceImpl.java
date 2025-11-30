@@ -1,9 +1,13 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.DeductionType;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.dto.PartItemDto;
+import fpt.edu.vn.gms.dto.request.StockExportCreateDto;
 import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
 import fpt.edu.vn.gms.dto.response.StockExportResponse;
+import fpt.edu.vn.gms.dto.response.StockExportResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
@@ -19,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +39,7 @@ public class StockExportServiceImpl implements StockExportService {
     private final StockExportRepository exportRepository;
     private final EmployeeRepository employeeRepository;
     private final StockExportItemRepository stockExportItemRepository;
+    private final DeductionRepository deductionRepository;
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
     private final PriceQuotationItemMapper itemMapper;
@@ -140,6 +147,80 @@ public class StockExportServiceImpl implements StockExportService {
         stockExportItemRepository.save(exportItem);
 
         return itemMapper.toStockExportItemResponse(item);
+    }
+
+    @Transactional
+    @Override
+    public StockExportResponseDto createExport(StockExportCreateDto dto) {
+
+        Employee creator = employeeRepository.findById(dto.getCreatedById())
+                .orElseThrow(() -> new RuntimeException("Người tạo không tồn tại"));
+
+        Employee receiver = employeeRepository.findById(dto.getReceiverId())
+                .orElseThrow(() -> new RuntimeException("Người nhận không tồn tại"));
+
+        Employee damagedBy = null;
+
+        boolean isEmployeeDamage = "Hỏng do nhân viên".equals(dto.getReason());
+
+        if (isEmployeeDamage) {
+            damagedBy = employeeRepository.findById(dto.getDamagedById())
+                    .orElseThrow(() -> new RuntimeException("Người gây hỏng không tồn tại"));
+        }
+
+        StockExport export = StockExport.builder()
+                .code(codeSequenceService.generateCode("EXP"))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        exportRepository.save(export);
+
+        BigDecimal totalDamageCost = BigDecimal.ZERO;
+
+        for (PartItemDto itemDto : dto.getItems()) {
+
+            Part part = partRepository.findById(itemDto.getPartId())
+                    .orElseThrow(() -> new RuntimeException("Part không tồn tại"));
+
+            if (part.getQuantityInStock() < itemDto.getQuantity()) {
+                throw new RuntimeException("Không đủ hàng trong kho: " + part.getName());
+            }
+
+            part.setQuantityInStock(part.getQuantityInStock() - itemDto.getQuantity());
+            partRepository.save(part);
+
+            StockExportItem exportItem = StockExportItem.builder()
+                    .stockExport(export)
+                    .quotationItem(null)
+                    .quantity(itemDto.getQuantity())
+                    .unit(part.getUnit().getName())
+                    .receiver(receiver)
+                    .build();
+
+            stockExportItemRepository.save(exportItem);
+
+            if (isEmployeeDamage) {
+                BigDecimal damageCost = part.getSellingPrice()
+                        .multiply(BigDecimal.valueOf(itemDto.getQuantity()));
+
+                totalDamageCost = totalDamageCost.add(damageCost);
+            }
+        }
+
+        if (isEmployeeDamage) {
+            Deduction deduction = Deduction.builder()
+                    .employee(damagedBy)
+                    .type(DeductionType.DAMAGE)
+                    .reason(dto.getNote())
+                    .amount(totalDamageCost)
+                    .date(LocalDate.now())
+                    .createdBy(creator.getFullName())
+                    .build();
+
+            deductionRepository.save(deduction);
+        }
+
+        return new StockExportResponseDto(export.getId(), export.getCode(), export.getCreatedAt());
     }
 
 }

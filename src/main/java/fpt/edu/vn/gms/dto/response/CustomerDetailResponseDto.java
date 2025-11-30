@@ -20,6 +20,6 @@ public class CustomerDetailResponseDto {
     private String address;
     private CustomerType customerType;
     private CustomerLoyaltyLevel loyaltyLevel;
-    private List<String> licensePlates;
+    private List<VehicleResponseDto> vehicles;
 }
 

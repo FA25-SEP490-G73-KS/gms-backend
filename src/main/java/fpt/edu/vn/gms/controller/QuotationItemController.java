@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.dto.request.PartDuringReviewDto;
+import fpt.edu.vn.gms.dto.request.PartUpdateDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
@@ -77,16 +78,16 @@ public class QuotationItemController {
                     ApiResponse(responseCode = "404", description = "Không tìm thấy item hoặc part",
                     content = @Content(schema = @Schema(hidden = true)))
     })
-    public ResponseEntity<ApiResponse<PartReqDto>> updatePartDuringReview(
+    public ResponseEntity<ApiResponse<Void>> updatePartDuringReview(
             @PathVariable Long itemId,
-            @Valid @RequestBody PartDuringReviewDto dto
+            @Valid @RequestBody PartUpdateDto dto
     ) {
 
         log.info("API DUYỆT ITEM BÁO GIÁ -> itemId={}, dto={}", itemId, dto);
 
-        PartReqDto updatedPart = warehouseQuotationService.updatePartDuringWarehouseReview(itemId, dto);
+        warehouseQuotationService.updatePartDuringWarehouseReview(itemId, dto);
 
-        return ResponseEntity.ok(ApiResponse.success("Duyệt item báo giá thành công", updatedPart));
+        return ResponseEntity.ok(ApiResponse.success("Duyệt item báo giá thành công", null));
     }
 
     @PostMapping("/{itemId}/confirm/create")

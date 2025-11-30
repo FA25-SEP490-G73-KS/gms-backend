@@ -8,18 +8,24 @@ import fpt.edu.vn.gms.dto.PayDebtRequestDto;
 import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
+import fpt.edu.vn.gms.dto.response.ServiceTicketDebtDetail;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.ServiceTicket;
+import fpt.edu.vn.gms.entity.Transaction;
 import fpt.edu.vn.gms.exception.CustomerNotFoundException;
 import fpt.edu.vn.gms.exception.DebtNotFoundException;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.exception.ServiceTicketNotFoundException;
+import fpt.edu.vn.gms.mapper.CustomerDebtMapper;
 import fpt.edu.vn.gms.mapper.DebtMapper;
+import fpt.edu.vn.gms.mapper.ServiceTicketDebtDetailMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
 import fpt.edu.vn.gms.repository.DebtRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
+import fpt.edu.vn.gms.repository.TransactionRepository;
 import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.DebtService;
 import fpt.edu.vn.gms.service.TransactionService;
@@ -30,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,9 +56,12 @@ public class DebtServiceImpl implements DebtService {
 
         DebtRepository debtRepository;
         CustomerRepository customerRepository;
+        TransactionRepository transactionRepository;
         CustomerService customerService;
         ServiceTicketRepository serviceTicketRepository;
         DebtMapper debtMapper;
+        CustomerDebtMapper customerDebtMapper;
+        ServiceTicketDebtDetailMapper serviceTicketDebtDetailMapper;
         TransactionService transactionService;
 
         @Override
@@ -62,23 +73,54 @@ public class DebtServiceImpl implements DebtService {
 
         @Override
         @Transactional(readOnly = true)
-        public Page<DebtDetailResponseDto> getDebtsByCustomer(Long customerId, DebtStatus status, String keyword,
-                        int page,
-                        int size,
-                        String sort) {
-                log.info("Fetching debts for customerId={} with status={} keyword={} page={} size={} sort={}",
-                                customerId, status, keyword, page, size, sort);
+        public DebtDetailResponseDto getDebtsByCustomer(Long customerId,
+                                                             DebtStatus status,
+                                                             String keyword,
+                                                             int page,
+                                                             int size,
+                                                             String sort) {
 
+                log.info("Fetching debts for customerId={} status={} keyword={} page={} size={} sort={}",
+                        customerId, status, keyword, page, size, sort);
+
+                // Lấy customer
                 Customer customer = customerRepository.findById(customerId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
 
+                // Build pageable
                 Pageable pageable = buildPageable(page, size, sort);
                 String normalizedKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
 
-                Page<Debt> debts = debtRepository.findByCustomerAndFilter(customer.getCustomerId(), status,
-                                normalizedKeyword,
-                                pageable);
-                return debts.map(debtMapper::toDto);
+                // Lấy danh sách công nợ của KH
+                Page<Debt> debts = debtRepository.findByCustomerAndFilter(
+                        customer.getCustomerId(),
+                        status,
+                        normalizedKeyword,
+                        pageable
+                );
+
+                // Map sang DTO từng debt
+                List<CustomerDebtResponseDto> debtList = customerDebtMapper.toDto(debts.getContent());
+
+                // Tính tổng "còn lại"
+                BigDecimal totalRemaining = debts.getContent().stream()
+                        .map(Debt::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // Lấy biển số đầu tiên
+                String licensePlate = customer.getVehicles().isEmpty()
+                        ? null
+                        : customer.getVehicles().get(0).getLicensePlate();
+
+                // Build response cho FE
+                return DebtDetailResponseDto.builder()
+                        .customerName(customer.getFullName())
+                        .phone(customer.getPhone())
+                        .licensePlate(licensePlate)
+                        .address(customer.getAddress())
+                        .debts(debtList)
+                        .totalRemainingAmount(totalRemaining)
+                        .build();
         }
 
         private Pageable buildPageable(int page, int size, String sort) {
@@ -159,4 +201,21 @@ public class DebtServiceImpl implements DebtService {
 
         }
 
+
+        @Override
+        public ServiceTicketDebtDetail getDebtDetailByServiceTicketId(Long serviceTicketId) {
+
+                // 1. Lấy phiếu dịch vụ
+                ServiceTicket serviceTicket = serviceTicketRepository.findById(serviceTicketId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ"));
+
+                String customerPhone = serviceTicket.getCustomer().getPhone();
+
+                // 2. Lấy lịch sử theo SỐ ĐIỆN THOẠI
+                List<Transaction> transactions =
+                        transactionRepository.findAllByCustomerPhone(customerPhone);
+
+                // 3. Map về DTO detail
+                return serviceTicketDebtDetailMapper.toDebtDetail(serviceTicket, transactions);
+        }
 }

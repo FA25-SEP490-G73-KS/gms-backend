@@ -33,20 +33,35 @@ public class AttendanceController {
   AttendanceService attendanceService;
 
   // Lưu điểm danh hàng loạt
-  @Operation(summary = "Điểm danh hàng loạt cho nhân viên", description = "MANAGER thực hiện điểm danh cho toàn bộ nhân viên trong ngày. Tích chọn có mặt hoặc vắng mặt, sau đó nhấn Lưu để ghi nhận.")
-  @ApiResponses(value = {
-      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Điểm danh thành công"),
-      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
-  })
-  @AllowRoles(Role.MANAGER)
   @PostMapping("/mark")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void markAttendances(
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-      @RequestBody @Valid List<AttendanceRequestDTO> requests,
-      @CurrentUser Employee manager) {
-    attendanceService.markAttendances(date == null ? LocalDate.now() : date, requests, manager.getEmployeeId());
+  @Operation(
+          summary = "Điểm danh hàng loạt cho nhân viên",
+          description = "MANAGER thực hiện điểm danh trong ngày, trả về danh sách điểm danh mới nhất."
+  )
+  @ApiResponses(value = {
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Điểm danh thành công")
+  })
+  public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> markAttendances(
+          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+          @RequestBody @Valid List<AttendanceRequestDTO> requests,
+          @CurrentUser Employee manager
+  ) {
+
+    LocalDate targetDate = (date == null ? LocalDate.now() : date);
+
+    attendanceService.markAttendances(targetDate, requests, manager.getEmployeeId());
+
+    // Trả về danh sách điểm danh mới nhất
+    List<AttendanceResponseDTO> updatedList = attendanceService.getAttendancesByDate(targetDate);
+
+    return ResponseEntity.ok(
+            ApiResponse.success(
+                    "Điểm danh thành công",
+                    updatedList
+            )
+    );
   }
+
 
   // Lấy danh sách điểm danh theo ngày
   @Operation(summary = "Lấy danh sách điểm danh theo ngày", description = "MANAGER lấy danh sách trạng thái điểm danh của tất cả nhân viên trong một ngày cụ thể.")

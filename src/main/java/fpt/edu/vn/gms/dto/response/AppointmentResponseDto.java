@@ -30,6 +30,6 @@ public class AppointmentResponseDto {
     private String note;
 
     // NEW
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDateTime createdAt;
 }

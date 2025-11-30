@@ -6,13 +6,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +22,7 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PART_CATEGORY_PREFIX;
 @RestController
 @RequestMapping(path = PART_CATEGORY_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PartCategoryController {
 
     PartCategoryService partCategoryService;
@@ -39,4 +39,17 @@ public class PartCategoryController {
         );
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Chi tiết linh kiện")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy thành công"),
+            @ApiResponse(responseCode = "500", description = "Lỗi hệ thống")
+    })
+    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<PartCategory>> getCategoryById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                fpt.edu.vn.gms.dto.response.ApiResponse.success("Lấy linh kiện thành công!", partCategoryService.getById(id))
+        );
+    }
 }

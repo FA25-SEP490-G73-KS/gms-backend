@@ -7,6 +7,7 @@ import fpt.edu.vn.gms.dto.PayDebtRequestDto;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
+import fpt.edu.vn.gms.dto.response.ServiceTicketDebtDetail;
 import fpt.edu.vn.gms.service.DebtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -56,7 +57,7 @@ public class DebtController {
 
         @GetMapping
         @Operation(summary = "Lấy danh sách công nợ theo khách hàng")
-        public ResponseEntity<ApiResponse<Page<DebtDetailResponseDto>>> getDebts(
+        public ResponseEntity<ApiResponse<DebtDetailResponseDto>> getDebts(
                         @RequestParam Long customerId,
                         @RequestParam(required = false) DebtStatus status,
                         @RequestParam(required = false) String keyword,
@@ -94,6 +95,15 @@ public class DebtController {
                         @RequestBody @Valid PayDebtRequestDto request) throws Exception {
                 return ResponseEntity.ok(ApiResponse.success("Tạo giao dịch thành công",
                                 debtService.payDebt(id, request)));
+        }
+
+        @GetMapping("/{serviceTicketId}/debt-detail")
+        @Operation(summary = "Lấy chi tiết công nợ của phiếu dịch vụ")
+        public ResponseEntity<ApiResponse<ServiceTicketDebtDetail>> getDebtDetail(
+                @PathVariable Long serviceTicketId
+        ) {
+                var result = debtService.getDebtDetailByServiceTicketId(serviceTicketId);
+                return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết công nợ thành công", result));
         }
 
 }

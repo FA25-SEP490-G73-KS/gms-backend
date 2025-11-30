@@ -17,6 +17,9 @@ public class PriceQuotationResponseDto {
     private String code;
     private String serviceTicketCode;
     private String licensePlate;
+    private String customerName;
+    private String customerPhone;
+    private String createdBy;
     private PriceQuotationStatus status;
     private List<PriceQuotationItemResponseDto> items;
     private BigDecimal estimateAmount;

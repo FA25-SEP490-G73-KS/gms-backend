@@ -2,6 +2,9 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.common.enums.Role;
+import fpt.edu.vn.gms.dto.PartItemDto;
+import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
+import fpt.edu.vn.gms.dto.response.PrDetailInfoReviewDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
@@ -11,9 +14,12 @@ import fpt.edu.vn.gms.mapper.PurchaseRequestDetailMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestItemMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,33 +27,97 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
-    private final PurchaseRequestRepository purchaseRequestRepo;
-    private final PurchaseRequestItemRepository purchaseRequestItemRepo;
-    private final AccountRepository accountRepository;
-    private final NotificationService notificationService;
-    private final PurchaseRequestMapper purchaseRequestMapper;
-    private final PurchaseRequestItemMapper purchaseRequestItemMapper;
-    private final PurchaseRequestDetailMapper purchaseRequestDetailMapper;
+    PurchaseRequestRepository purchaseRequestRepo;
+    PurchaseRequestItemRepository purchaseRequestItemRepo;
+    AccountRepository accountRepository;
+    NotificationService notificationService;
+    EmployeeRepository employeeRepo;
+    PartRepository partRepo;
+    CodeSequenceService codeSequenceService;
+    PurchaseRequestItemMapper purchaseRequestItemMapper;
+    PurchaseRequestDetailMapper purchaseRequestDetailMapper;
+    PurchaseRequestMapper purchaseRequestMapper;
 
     public Page<PurchaseRequestResponseDto> getPurchaseRequests(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<PurchaseRequest> prPage = purchaseRequestRepo.findAll(pageable);
-        return prPage.map(purchaseRequestMapper::toResponseDto);
+        return purchaseRequestRepo.findAllCustom(pageable);
     }
 
-    public PurchaseRequestDetailDto getPurchaseRequestItems(Long prId) {
+    public PrDetailInfoReviewDto getPurchaseRequestItems(Long prId) {
         PurchaseRequest item = purchaseRequestRepo.findById(prId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy pr + " + prId));
-        return purchaseRequestDetailMapper.toDetailDto(item);
+        return purchaseRequestMapper.toDto(item);
     }
+
+    @Override
+    public PurchaseRequestItemResponseDto getItem(Long itemId) {
+
+        PurchaseRequestItem item = purchaseRequestItemRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không có đơn mua hàng!"));
+
+        return purchaseRequestItemMapper.toResponseDto(item);
+    }
+
+    @Transactional
+    @Override
+    public PurchaseRequestDetailDto createRequest(PurchaseRequestCreateDto dto) {
+
+        Employee creator = employeeRepo.findById(dto.getCreatedById())
+                .orElseThrow(() -> new RuntimeException("Người tạo không tồn tại"));
+
+        PurchaseRequest request = PurchaseRequest.builder()
+                .code(codeSequenceService.generateCode("PR"))
+                .reason(dto.getReason())
+                .createdBy(creator.getEmployeeId())
+                .reason(dto.getNote())
+                .status(PurchaseRequestStatus.PENDING)
+                .reviewStatus(ManagerReviewStatus.PENDING)
+                .build();
+
+        purchaseRequestRepo.save(request);
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (PartItemDto itemDto : dto.getItems()) {
+
+            Part part = partRepo.findById(itemDto.getPartId())
+                    .orElseThrow(() -> new RuntimeException("Part không tồn tại"));
+
+            BigDecimal estimatedPrice = part.getPurchasePrice()
+                    .multiply(BigDecimal.valueOf(itemDto.getQuantity()));
+
+            total = total.add(estimatedPrice);
+
+            PurchaseRequestItem item = PurchaseRequestItem.builder()
+                    .purchaseRequest(request)
+                    .part(part)
+                    .partName(part.getName())
+                    .unit(part.getUnit().getName())
+                    .quantity(itemDto.getQuantity())
+                    .estimatedPurchasePrice(part.getPurchasePrice())
+                    .status(PurchaseReqItemStatus.PENDING)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
+                    .build();
+
+            purchaseRequestItemRepo.save(item);
+        }
+
+        request.setTotalEstimatedAmount(total);
+        purchaseRequestRepo.save(request);
+
+        return purchaseRequestDetailMapper.toDetailDto(request);
+    }
+
 
     @Transactional
     @Override

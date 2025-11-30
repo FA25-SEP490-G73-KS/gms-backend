@@ -34,14 +34,6 @@ public class Invoice {
     @JoinColumn(name = "service_ticket_id")
     private ServiceTicket serviceTicket;
 
-    // Tổng tiền hàng
-    @Column(name = "item_total", precision = 18, scale = 2)
-    private BigDecimal itemTotal;
-
-    // Chiết khấu (mặc định)
-    @Column(name = "discount", precision = 18, scale = 2)
-    private BigDecimal discount;
-
     // Tiền cọc đã nhận
     @Column(name = "deposit_received", precision = 18, scale = 2)
     private BigDecimal depositReceived;

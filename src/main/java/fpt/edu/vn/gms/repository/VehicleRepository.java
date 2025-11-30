@@ -36,4 +36,5 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     WHERE v.customer.customerId = :customerId
     """)
     List<VehicleInfoDto> getCustomerVehicles(Long customerId);
+
 }

@@ -21,4 +21,10 @@ public class CustomerResponseDto {
     private CustomerType customerType;
     private BigDecimal totalSpending;
     private CustomerLoyaltyLevel loyaltyLevel;
+
+    public CustomerResponseDto(Long customerId, String fullName, String phone) {
+        this.customerId = customerId;
+        this.fullName = fullName;
+        this.phone = phone;
+    }
 }

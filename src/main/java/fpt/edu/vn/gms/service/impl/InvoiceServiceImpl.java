@@ -7,12 +7,14 @@ import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
 import fpt.edu.vn.gms.dto.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
 import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.PaymentNotFoundException;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.CustomerDebtMapper;
 import fpt.edu.vn.gms.mapper.DebtMapper;
 import fpt.edu.vn.gms.mapper.InvoiceMapper;
 import fpt.edu.vn.gms.repository.*;
@@ -49,9 +51,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         TransactionRepository transactionRepo;
         TransactionService transactionService;
         CodeSequenceService codeSequenceService;
-        DebtMapper debtMapper;
+        CustomerDebtMapper customerDebtMapper;
         InvoiceMapper mapper;
-        CustomerRepository customerRepository;
         CustomerService customerService;
 
         @Override
@@ -81,6 +82,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                                                 ? customer.getDiscountPolicy().getDiscountRate()
                                                 : BigDecimal.ZERO;
 
+                System.out.println(discountRate);
+
                 BigDecimal discount = itemTotal
                                 .multiply(discountRate)
                                 .divide(BigDecimal.valueOf(100));
@@ -99,11 +102,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
                 // Tạo payment
                 invoiceRepo.save(Invoice.builder()
-                                .code(codeSequenceService.generateCode("PAY"))
+                                .code(codeSequenceService.generateCode("HD"))
                                 .serviceTicket(serviceTicket)
                                 .quotation(priceQuotation)
-                                .itemTotal(itemTotal)
-                                .discount(discount)
                                 .depositReceived(depositAmount)
                                 .finalAmount(amountPaid)
                                 .createdBy("hệ thống")
@@ -142,7 +143,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         @Override
         @Transactional
-        public DebtDetailResponseDto createDebtFromInvoice(Long paymentId, LocalDate dueDate) {
+        public CustomerDebtResponseDto createDebtFromInvoice(Long paymentId, LocalDate dueDate) {
                 log.info("Creating debt from paymentId={} with dueDate={}", paymentId, dueDate);
 
                 Invoice payment = invoiceRepo.findById(paymentId)
@@ -208,9 +209,9 @@ public class InvoiceServiceImpl implements InvoiceService {
                 log.info("Created debt id={} for customer={} paymentId={} amount={} dueDate={}",
                                 debt.getId(), customer.getCustomerId(), paymentId, newDebtAmount, dueDate);
 
-                DebtDetailResponseDto dto = debtMapper.toDto(debt);
+                CustomerDebtResponseDto dto = customerDebtMapper.toDto(debt);
                 // remaining = amount - paidAmount (hiện bằng amount)
-                dto.setAmount(newDebtAmount);
+                dto.setTotalAmount(newDebtAmount);
                 dto.setPaidAmount(debt.getPaidAmount());
 
                 return dto;
@@ -241,7 +242,9 @@ public class InvoiceServiceImpl implements InvoiceService {
                         invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
                         customerService.updateTotalSpending(customerId, amount);
                 } else {
-                        BigDecimal finalAmount = invoice.getFinalAmount();
+                        BigDecimal finalAmount = invoice.getFinalAmount().subtract(amount);
+                        invoice.setFinalAmount(finalAmount);
+
                         InvoiceStatus status = amount.compareTo(finalAmount) >= 0
                                         ? InvoiceStatus.PAID_IN_FULL
                                         : InvoiceStatus.UNDERPAID;

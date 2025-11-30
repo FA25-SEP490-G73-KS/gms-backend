@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.request.PartDuringReviewDto;
+import fpt.edu.vn.gms.dto.request.PartUpdateDto;
 import fpt.edu.vn.gms.dto.request.WarehouseReviewItemDto;
 import fpt.edu.vn.gms.dto.response.*;
 import org.springframework.data.domain.Page;
@@ -11,7 +12,7 @@ public interface WarehouseQuotationService {
 
     Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size);
 
-    PartReqDto updatePartDuringWarehouseReview(Long itemId, PartDuringReviewDto dto);
+    void updatePartDuringWarehouseReview(Long itemId, PartUpdateDto dto);
 
     PartReqDto createPartDuringWarehouseReview(Long itemId, PartDuringReviewDto dto);
 }

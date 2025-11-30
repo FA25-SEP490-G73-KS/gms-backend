@@ -12,19 +12,18 @@ public interface InvoiceMapper {
 
     @Mapping(source = "serviceTicket.serviceTicketCode", target = "serviceTicketCode")
     @Mapping(source = "serviceTicket.customer.fullName", target = "customerName")
-    @Mapping(source = "serviceTicket.vehicle.licensePlate", target = "licensePlate")
+    @Mapping(source = "quotation.estimateAmount", target = "finalAmount")
+    @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(source = "serviceTicket.status", target = "serviceTicketStatus")
     InvoiceListResDto toListDto(Invoice payment);
 
     @Mapping(target = "serviceTicket", source = "serviceTicket", qualifiedByName = "toServiceTicketResponseDto")
-    @Mapping(target = "customerName", source = "serviceTicket.customerName")
-    @Mapping(target = "items", source = "quotation.items")
-    @Mapping(target = "totalItemPrice", source = "itemTotal")
     // Amount in words (nếu bạn tự thêm sau)
     @Mapping(target = "amountInWords", ignore = true)
     InvoiceDetailResDto toDetailDto(Invoice payment);
 
     @AfterMapping
     default void fillAmountInWords(Invoice payment, @MappingTarget InvoiceDetailResDto.InvoiceDetailResDtoBuilder dto) {
-        dto.amountInWords(NumberToVietnameseWordsUtils.convert(payment.getItemTotal().longValue()));
+        dto.amountInWords(NumberToVietnameseWordsUtils.convert(payment.getQuotation().getEstimateAmount().longValue()));
     }
 }

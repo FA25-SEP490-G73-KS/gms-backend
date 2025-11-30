@@ -2,7 +2,6 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
 import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
@@ -14,6 +13,7 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
+import fpt.edu.vn.gms.utils.PhoneUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -23,8 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -75,6 +73,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
 
         // Check customer theo số điện thoại
+        dto.setPhoneNumber(PhoneUtils.normalize(dto.getPhoneNumber()));
+
         Optional<Customer> existingCustomer = customerRepo.findByPhone(dto.getPhoneNumber());
 
         Customer customer;

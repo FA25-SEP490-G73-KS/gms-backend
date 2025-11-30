@@ -21,7 +21,7 @@ public class PurchaseRequestResponseDto {
     private String code;
     private String quotationCode;
     private String customerName;
-    private String licensePlate;
+    private String customerPhone;
     private String createdBy;
     private PurchaseRequestStatus status;
     private ManagerReviewStatus reviewStatus;

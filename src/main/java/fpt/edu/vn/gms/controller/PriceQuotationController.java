@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
+import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,15 +57,15 @@ public class PriceQuotationController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> createQuotation(
+        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> createQuotation(
                         @RequestParam("ticketId") Long ticketId) {
 
-                PriceQuotationResponseDto responseDto = priceQuotationService.createQuotation(ticketId);
+                ServiceTicketResponseDto responseDto = priceQuotationService.createQuotation(ticketId);
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Tạo phiếu báo giá thành công!!!", responseDto));
         }
 
-        @PutMapping("/{id}")
+        @PatchMapping("/{id}")
         @Operation(summary = "Cập nhật các mục trong báo giá", description = "Cập nhật các mục trong một phiếu báo giá đã có.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật báo giá thành công"),
@@ -72,11 +73,11 @@ public class PriceQuotationController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy báo giá", content = @Content(schema = @Schema(hidden = true))),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateItems(
+        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateItems(
                         @PathVariable Long id,
                         @RequestBody PriceQuotationRequestDto dto) {
 
-                PriceQuotationResponseDto response = priceQuotationService.updateQuotationItems(id, dto);
+                ServiceTicketResponseDto response = priceQuotationService.updateQuotationItems(id, dto);
 
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá thành công!", response));
         }
@@ -108,7 +109,7 @@ public class PriceQuotationController {
                 return ResponseEntity.ok(ApiResponse.success("Lấy báo giá thành công!", response));
         }
 
-        @PatchMapping("/{id}")
+        @PatchMapping("/{id}/status")
         @Operation(summary = "Cập nhật trạng thái báo giá thủ công", description = "Cập nhật trạng thái của một phiếu báo giá một cách thủ công.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),

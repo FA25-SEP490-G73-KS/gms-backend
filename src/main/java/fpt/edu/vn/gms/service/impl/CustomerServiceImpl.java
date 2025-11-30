@@ -5,6 +5,7 @@ import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.DiscountPolicy;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerMapper;
@@ -13,6 +14,7 @@ import fpt.edu.vn.gms.repository.DiscountPolicyRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.repository.VehicleRepository;
 import fpt.edu.vn.gms.service.CustomerService;
+import fpt.edu.vn.gms.utils.PhoneUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -77,11 +79,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponseDto createCustomer(CustomerRequestDto customerDto) {
 
+        customerDto.setPhone(PhoneUtils.normalize(customerDto.getPhone()));
+
         if (customerRepository.existsByPhone(customerDto.getPhone())) {
-            throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");
+
+            Customer oldCustomer = customerRepository.findByPhone(customerDto.getPhone())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng!"));
+
+            oldCustomer.setIsActive(false);
+            customerRepository.save(oldCustomer);
         }
 
         Customer customer = customerMapper.toEntity(customerDto);
+
         Customer saved = customerRepository.save(customer);
 
         return customerMapper.toDto(saved);
@@ -92,6 +102,8 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer existing = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng với ID: " + id));
+
+        dto.setPhone(PhoneUtils.normalize(dto.getPhone()));
 
         if (!existing.getPhone().equals(dto.getPhone()) && customerRepository.existsByPhone(dto.getPhone())) {
             throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");

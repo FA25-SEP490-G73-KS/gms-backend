@@ -11,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { VehicleMapper.class })
 public interface CustomerMapper {
 
     @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
@@ -20,7 +20,7 @@ public interface CustomerMapper {
     List<CustomerResponseDto> toDtoList(List<Customer> customers);
 
     @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
-    @Mapping(target = "licensePlates", expression = "java(mapLicensePlates(customer.getVehicles()))")
+    @Mapping(target = "vehicles", source = "vehicles")
     CustomerDetailResponseDto toDetailDto(Customer customer);
 
     Customer toEntity(CustomerRequestDto dto);

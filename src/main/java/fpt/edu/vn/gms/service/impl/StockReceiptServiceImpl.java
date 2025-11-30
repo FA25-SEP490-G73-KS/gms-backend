@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,10 +47,6 @@ public class StockReceiptServiceImpl implements StockReceiptService {
     FileStorageService fileStorageService;
     StockReceiptItemMapper stockReceiptItemMapper;
     StockReceiptMapper stockReceiptMapper;
-
-    // =======================================================================
-    //  MAIN FUNCTION
-    // =======================================================================
 
     @Transactional
     @Override
@@ -156,6 +151,11 @@ public class StockReceiptServiceImpl implements StockReceiptService {
             Employee employee,
             StockReceipt receipt
     ) {
+
+        if (prItem.getReviewStatus().equals(ManagerReviewStatus.PENDING)) {
+            throw new RuntimeException("Quản lý chưa duyệt không thể nhập kho!");
+        }
+
         StockReceiptItem item = StockReceiptItem.builder()
                 .stockReceipt(receipt)
                 .purchaseRequestItem(prItem)
@@ -166,33 +166,35 @@ public class StockReceiptServiceImpl implements StockReceiptService {
                 .receivedAt(LocalDateTime.now())
                 .receivedById(employee.getEmployeeId())
                 .receivedByName(employee.getFullName())
+                .actualUnitPrice(prItem.getQuotationItem().getPart().getPurchasePrice())
+                .actualTotalPrice(prItem.getQuotationItem().getPart().getPurchasePrice().multiply(BigDecimal.valueOf(req.getQuantityReceived())))
                 .build();
 
         return stockReceiptItemRepo.save(item);
     }
 
 
-    private void updateReceiptTotalAmount(
-            StockReceipt receipt,
-            PurchaseRequestItem prItem,
-            StockReceiveRequest request
-    ) {
-
-        if (prItem.getEstimatedPurchasePrice() == null
-                || prItem.getQuantity() == null || prItem.getQuantity() == 0) return;
-
-        BigDecimal unitPrice = prItem.getEstimatedPurchasePrice()
-                .divide(BigDecimal.valueOf(prItem.getQuantity()), 2, RoundingMode.HALF_UP);
-
-        BigDecimal lineAmount = unitPrice.multiply(
-                BigDecimal.valueOf(request.getQuantityReceived()));
-
-        receipt.setTotalAmount(
-                Optional.ofNullable(receipt.getTotalAmount()).orElse(BigDecimal.ZERO).add(lineAmount)
-        );
-
-        stockReceiptRepo.save(receipt);
-    }
+//    private void updateReceiptTotalAmount(
+//            StockReceipt receipt,
+//            PurchaseRequestItem prItem,
+//            StockReceiveRequest request
+//    ) {
+//
+//        if (prItem.getEstimatedPurchasePrice() == null
+//                || prItem.getQuantity() == null || prItem.getQuantity() == 0) return;
+//
+//        BigDecimal unitPrice = prItem.getEstimatedPurchasePrice()
+//                .divide(BigDecimal.valueOf(prItem.getQuantity()), 2, RoundingMode.HALF_UP);
+//
+//        BigDecimal lineAmount = unitPrice.multiply(
+//                BigDecimal.valueOf(request.getQuantityReceived()));
+//
+//        receipt.setTotalAmount(
+//                Optional.ofNullable(receipt.getTotalAmount()).orElse(BigDecimal.ZERO).add(lineAmount)
+//        );
+//
+//        stockReceiptRepo.save(receipt);
+//    }
 
     private void updatePartStock(PurchaseRequestItem prItem, StockReceiveRequest request) {
 

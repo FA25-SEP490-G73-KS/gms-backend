@@ -4,6 +4,8 @@ import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.request.PartResDto;
+import fpt.edu.vn.gms.entity.Part;
+import fpt.edu.vn.gms.mapper.PartMapper;
 import fpt.edu.vn.gms.service.PartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +29,7 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PARTS_PREFIX;
 public class PartController {
 
         private final PartService partService;
+        private final PartMapper partMapper;
 
         @GetMapping
         @Operation(summary = "Tìm tất cả linh kiện", description = "Lấy danh sách tất cả các linh kiện với phân trang.")
@@ -43,6 +46,39 @@ public class PartController {
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Danh sách linh kiện", partList));
         }
+
+        @GetMapping("/{id}")
+        @Operation(
+                summary = "Lấy linh kiện theo ID",
+                description = "API trả về thông tin chi tiết một linh kiện theo ID."
+        )
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "200",
+                        description = "Lấy linh kiện thành công",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = PartReqDto.class))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "404",
+                        description = "Không tìm thấy linh kiện",
+                        content = @Content(schema = @Schema(hidden = true))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "500",
+                        description = "Lỗi máy chủ nội bộ",
+                        content = @Content(schema = @Schema(hidden = true))
+                )
+        })
+        public ResponseEntity<ApiResponse<PartReqDto>> getPartById(@PathVariable Long id) {
+
+                PartReqDto dto = partService.getPartById(id);
+
+                return ResponseEntity.ok(
+                        ApiResponse.success("Thông tin linh kiện", dto)
+                );
+        }
+
 
         @PostMapping
         @Operation(summary = "Tạo linh kiện mới", description = "Tạo một linh kiện mới dựa trên thông tin được cung cấp.")

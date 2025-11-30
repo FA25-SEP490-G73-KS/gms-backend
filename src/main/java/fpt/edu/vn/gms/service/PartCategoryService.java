@@ -7,4 +7,6 @@ import java.util.List;
 public interface PartCategoryService {
 
     List<PartCategory> getAll();
+
+    PartCategory getById(Long id);
 }

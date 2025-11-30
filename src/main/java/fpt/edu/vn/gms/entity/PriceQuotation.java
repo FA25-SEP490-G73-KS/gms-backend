@@ -30,6 +30,9 @@ public class PriceQuotation {
     @OneToOne(mappedBy = "priceQuotation")
     private ServiceTicket serviceTicket;
 
+    @Column(name = "discount", precision = 18, scale = 2)
+    private BigDecimal discount;
+
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
 

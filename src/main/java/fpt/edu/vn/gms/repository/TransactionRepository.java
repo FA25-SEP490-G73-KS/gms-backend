@@ -17,4 +17,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * Lấy tất cả transaction của một payment nhưng chỉ lấy transaction active
    */
   List<Transaction> findByInvoiceAndIsActiveTrue(Invoice invoice);
+
+  List<Transaction> findAllByCustomerPhone(String phone);
 }

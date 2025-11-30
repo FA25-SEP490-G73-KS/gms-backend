@@ -23,4 +23,9 @@ public class PartCategoryServiceImpl implements PartCategoryService {
     public List<PartCategory> getAll() {
         return repository.findAll();
     }
+
+    @Override
+    public PartCategory getById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 }

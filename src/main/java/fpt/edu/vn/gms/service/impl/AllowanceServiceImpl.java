@@ -35,6 +35,8 @@ public class AllowanceServiceImpl implements AllowanceService {
                 .type(dto.getType())
                 .amount(dto.getAmount())
                 .createdAt(LocalDateTime.now())
+                .month(LocalDate.now().getMonthValue())
+                .year(LocalDate.now().getYear())
                 .createdBy(accountance.getFullName())
                 .build();
 

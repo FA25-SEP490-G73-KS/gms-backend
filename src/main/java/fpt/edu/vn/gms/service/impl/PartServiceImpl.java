@@ -28,6 +28,7 @@ public class PartServiceImpl implements PartService {
     private final MarketRepository marketRepo;
     private final UnitRepository unitRepo;
     private final VehicleModelRepository vehicleModelRepo;
+    private final SupplierRepository supplierRepo;
     private final PartMapper partMapper;
 
     @Override
@@ -39,6 +40,14 @@ public class PartServiceImpl implements PartService {
 
         // map entity -> dto
         return parts.map(partMapper::toDto);
+    }
+
+    @Override
+    public PartReqDto getPartById(Long id) {
+
+        Part part = partRepository.findById(id).orElse(null);
+
+        return partMapper.toDto(part);
     }
 
     @Override
@@ -103,48 +112,72 @@ public class PartServiceImpl implements PartService {
         Part part = partRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + id));
 
-        log.debug("Part before update: {}", part);
+        log.debug("Part BEFORE update: {}", part);
 
-        // Category
-        PartCategory category = categoryRepo.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+        if (dto.getName() != null) {
+            part.setName(dto.getName());
+        }
 
-        // Market
-        Market market = marketRepo.findById(dto.getMarketId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
+        if (dto.getNote() != null) {
+            part.setNote(dto.getNote());
+        }
 
-        // Unit
-        Unit unit = unitRepo.findById(dto.getUnitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
+        if (dto.getReorderLevel() != null) {
+            part.setReorderLevel(dto.getReorderLevel());
+        }
 
-        // Vehicle Model
-        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
+        if (dto.getCategoryId() != null) {
+            PartCategory category = categoryRepo.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+            part.setCategory(category);
+        }
 
-        // --- Tính giá bán ---
-        BigDecimal purchase = dto.getPurchasePrice();
-        BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10));
+        if (dto.getMarketId() != null) {
+            Market market = marketRepo.findById(dto.getMarketId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
+            part.setMarket(market);
+        }
 
-        // Update data
-        part.setName(dto.getName());
-        part.setCategory(category);
-        part.setMarket(market);
-        part.setVehicleModel(model);
-        part.setUnit(unit);
+        if (dto.getUnitId() != null) {
+            Unit unit = unitRepo.findById(dto.getUnitId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
+            part.setUnit(unit);
+        }
 
-        part.setPurchasePrice(purchase);
-        part.setSellingPrice(selling);
+        if (dto.getVehicleModelId() != null) {
+            VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
+            part.setVehicleModel(model);
+        }
+
+        if (dto.getPurchasePrice() != null) {
+            BigDecimal purchase = dto.getPurchasePrice();
+            BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10)); // auto tính giá bán
+            part.setPurchasePrice(purchase);
+            part.setSellingPrice(selling);
+        }
+
+        if (dto.getSellingPrice() != null) {
+            part.setSellingPrice(dto.getSellingPrice()); // nếu muốn override giá bán
+        }
+
+        if (dto.getSupplierId() != null) {
+            Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
+            part.setSupplier(supplier);
+        }
+
         part.setUniversal(dto.isUniversal());
         part.setSpecialPart(dto.isSpecialPart());
-        part.setNote(dto.getNote());
 
         Part saved = partRepository.save(part);
 
         log.info("Updated part id={} successfully", id);
-        log.debug("Part after update: {}", saved);
+        log.debug("Part AFTER update: {}", saved);
 
         return partMapper.toDto(saved);
     }
+
 
     @Override
     public Page<PartReqDto> getPartByCategory(String categoryName, int page, int size) {

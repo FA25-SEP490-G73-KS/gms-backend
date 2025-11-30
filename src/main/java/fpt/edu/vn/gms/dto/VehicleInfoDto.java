@@ -22,4 +22,6 @@ public class VehicleInfoDto {
         this.vin = vin;
         this.year = year;
     }
+
+
 }

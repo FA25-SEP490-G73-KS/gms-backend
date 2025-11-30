@@ -63,4 +63,12 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
     ORDER BY st.createdAt DESC
     """)
     List<CustomerServiceHistoryDto> getCustomerServiceHistory(Long customerId);
+
+    @Query("""
+       SELECT st FROM ServiceTicket st
+       JOIN FETCH st.customer
+       JOIN FETCH st.vehicle
+       WHERE st.serviceTicketId = :id
+       """)
+    Optional<ServiceTicket> findDetail(@Param("id") Long id);
 }

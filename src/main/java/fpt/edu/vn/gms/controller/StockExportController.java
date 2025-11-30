@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.dto.request.ExportItemRequest;
+import fpt.edu.vn.gms.dto.request.StockExportCreateDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
 import fpt.edu.vn.gms.dto.response.StockExportResponse;
@@ -8,6 +9,7 @@ import fpt.edu.vn.gms.service.StockExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
@@ -57,6 +59,53 @@ public class StockExportController {
                 List<StockExportItemResponse> quotation = stockExportService.getExportingQuotationById(id);
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.success("Chi tiết stock-out", quotation));
+        }
+
+        @PostMapping
+        @Operation(
+                summary = "Tạo phiếu xuất kho",
+                description = """
+                API dùng để tạo phiếu xuất kho trong các trường hợp:
+                - Xuất kho phục vụ sửa chữa nội bộ
+                - Xuất kho do nhân viên làm hỏng (sẽ tự động tạo deduction)
+                
+                **Nghiệp vụ:**
+                - Trừ tồn kho của từng linh kiện
+                - Tạo danh sách StockExportItem
+                - Nếu lý do = `employee_damage` thì bắt buộc gửi `damagedById`
+                - Tự động tạo bản ghi Deduction cho nhân viên gây lỗi
+                """
+        )
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "200",
+                        description = "Tạo phiếu xuất kho thành công",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = ApiResponse.class))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "400",
+                        description = "Dữ liệu đầu vào không hợp lệ",
+                        content = @Content(schema = @Schema(hidden = true))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "404",
+                        description = "Không tìm thấy dữ liệu liên quan (nhân viên, part...)",
+                        content = @Content(schema = @Schema(hidden = true))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "500",
+                        description = "Lỗi hệ thống",
+                        content = @Content(schema = @Schema(hidden = true))
+                )
+        })
+        public ResponseEntity<ApiResponse<?>> createStockExport(
+                @RequestBody @Valid StockExportCreateDto dto
+        ) {
+                return ResponseEntity.ok(
+                        ApiResponse.success("Tạo phiếu xuất kho thành công",
+                                stockExportService.createExport(dto))
+                );
         }
 
         @PostMapping("/item/{itemId}/export")

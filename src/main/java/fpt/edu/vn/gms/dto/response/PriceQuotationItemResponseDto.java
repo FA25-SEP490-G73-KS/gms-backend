@@ -16,7 +16,15 @@ public class PriceQuotationItemResponseDto {
     private Long priceQuotationItemId;
     private Long partId;
     private String partName;
-    private Integer quantity;
+    private String categoryName;
+    private String marketName;
+    private String supplierName;
+    private String brandName;
+    private String modelName;
+    private BigDecimal purchasePrice;
+    private BigDecimal sellingPrice;
+
+    private Double quantity;
     private String unit;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;

@@ -17,8 +17,7 @@ public interface ServiceTicketMapper {
     @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "createdBy", source = "createdBy.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh
-                                                                                                              // sách
-                                                                                                              // tên
+                                                                                                              // sách// tên
     @Mapping(target = "customer", source = "customer")
     @Mapping(target = "vehicle", source = "vehicle")
     ServiceTicketResponseDto toResponseDto(ServiceTicket serviceTicket);

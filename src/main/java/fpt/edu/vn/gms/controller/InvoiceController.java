@@ -4,10 +4,7 @@ import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateDebtFromPaymentReq;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
-import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
-import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.service.InvoiceService;
 import fpt.edu.vn.gms.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -101,7 +98,7 @@ public class InvoiceController {
                         @RequestBody @Validated CreateDebtFromPaymentReq request) {
                 log.info("Request create debt from paymentId={} dueDate={}", paymentId, request.getDueDate());
 
-                DebtDetailResponseDto debt = invoiceService.createDebtFromInvoice(paymentId, request.getDueDate());
+                CustomerDebtResponseDto debt = invoiceService.createDebtFromInvoice(paymentId, request.getDueDate());
 
                 if (debt == null) {
                         return ResponseEntity.ok(ApiResponse.success("Không còn công nợ cần tạo", null));

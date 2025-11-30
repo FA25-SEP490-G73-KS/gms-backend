@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.common.enums;
 
-public enum PriceQuotationStatus {
+public enum
+PriceQuotationStatus {
     DRAFT,
     WAITING_WAREHOUSE_CONFIRM,
     WAREHOUSE_CONFIRMED,

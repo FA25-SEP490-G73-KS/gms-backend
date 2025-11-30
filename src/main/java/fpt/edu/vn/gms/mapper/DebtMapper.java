@@ -8,8 +8,9 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = { TransactionMapper.class, ServiceTicketMapper.class })
 public interface DebtMapper {
 
-    @Mapping(source = "customer.fullName", target = "customerFullName")
-    @Mapping(source = "serviceTicket", target = "serviceTicket", qualifiedByName = "toServiceTicketResponseDto")
-    @Mapping(source = "transactions", target = "transactions")
+    @Mapping(source = "customer.fullName", target = "customerName")
+    @Mapping(source = "customer.phone", target = "phone")
+    @Mapping(source = "serviceTicket.vehicleLicensePlate", target = "licensePlate")
+    @Mapping(source = "customer.address", target = "address")
     DebtDetailResponseDto toDto(Debt debt);
 }

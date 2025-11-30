@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,9 +11,12 @@ import java.util.List;
 
 @Data
 @Builder
-
+@Getter
 @Schema(description = "Request tạo/cập nhật phiếu dịch vụ")
 public class ServiceTicketRequestDto {
+
+    @Schema(description = "Có phải là chủ sở hữu của xe?")
+    private Boolean forceAssignVehicle;
 
     @Schema(description = "ID lịch hẹn (nullable nếu tạo mới)")
     private Long appointmentId;

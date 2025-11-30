@@ -12,8 +12,7 @@ import java.util.List;
 @Mapper(
         componentModel = "spring",
         uses = {
-                PurchaseRequestMapper.class,
-                PurchaseRequestItemMapper.class
+                PurchaseRequestMapper.class, PurchaseRequestItemMapper.class
         }
 )
 public interface PurchaseRequestDetailMapper {

@@ -5,6 +5,11 @@ import fpt.edu.vn.gms.dto.VehicleInfoDto;
 import fpt.edu.vn.gms.dto.VehicleModelDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.LicensePlateCheckResponseDto;
+import fpt.edu.vn.gms.dto.response.PlateCheckResponse;
+import fpt.edu.vn.gms.entity.Customer;
+import fpt.edu.vn.gms.entity.Vehicle;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.repository.VehicleRepository;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.validation.Valid;
 import fpt.edu.vn.gms.service.VehicleService;
@@ -30,40 +35,35 @@ import static fpt.edu.vn.gms.utils.AppRoutes.VEHICLES_PREFIX;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final VehicleRepository vehicleRepository;
 
-        @PostMapping("/check-license-plate")
-        @Operation(
-                summary = "Kiểm tra biển số xe đã tồn tại và customerId",
-                description = "Kiểm tra biển số xe đã tồn tại trong hệ thống và customerId có trùng khớp không.",
-                requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                        required = true,
-                        content = @Content(
-                                schema = @Schema(implementation = fpt.edu.vn.gms.dto.request.LicensePlateCheckRequest.class),
-                                examples = @ExampleObject(
-                                        name = "Example request",
-                                        value = "{\n  \"licensePlate\": \"30A-12345\",\n  \"customerId\": 1\n}"
-                                )
-                        )
-                ),
-                responses = {
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                                responseCode = "200",
-                                description = "Kết quả kiểm tra biển số xe",
-                                content = @Content(
-                                        schema = @Schema(implementation = fpt.edu.vn.gms.dto.response.LicensePlateCheckResponseDto.class),
-                                        examples = @ExampleObject(
-                                                name = "Example response",
-                                                value = "{\n  \"isExists\": true,\n  \"isSameCustomer\": false,\n  \"licensePlate\": \"30A-12345\",\n  \"customerName\": \"Nguyen Van A\",\n  \"customerPhone\": \"0912345678\"\n}"
-                                        )
-                                )
-                        )
-                }
-        )
-        public ResponseEntity<LicensePlateCheckResponseDto> checkLicensePlateAndCustomer(
-                        @Valid @RequestBody fpt.edu.vn.gms.dto.request.LicensePlateCheckRequest request) {
-                LicensePlateCheckResponseDto response = vehicleService.checkLicensePlateAndCustomer(request.getLicensePlate(), request.getCustomerId());
-                return ResponseEntity.ok(response);
+    @GetMapping("/check-plate")
+    public ResponseEntity<ApiResponse<PlateCheckResponse>> checkPlate(
+            @RequestParam String plate,
+            @RequestParam(required = false) Long customerId) {
+
+        plate = plate.trim().toUpperCase();
+
+        Vehicle vehicle = vehicleRepository.findByLicensePlate(plate)
+                .orElseThrow(() -> new ResourceNotFoundException("Xe không tồn tại!"));
+
+        // TH1: Không tìm thấy xe → FE cho user nhập mới
+        if (vehicle == null) {
+            return ResponseEntity.ok(ApiResponse.success("NOT_FOUND",
+                    PlateCheckResponse.status("NOT_FOUND")));
         }
+
+        // TH2: Xe có chủ nhưng khác với customer hiện tại → Cảnh báo
+        Customer owner = vehicle.getCustomer();
+        if (owner != null && (customerId == null || !owner.getCustomerId().equals(customerId))) {
+            return ResponseEntity.ok(ApiResponse.success("OWNED_BY_OTHER",
+                    PlateCheckResponse.ownerConflict(owner)));
+        }
+
+        // TH3: Xe thuộc customer hiện tại → OK
+        return ResponseEntity.ok(ApiResponse.success("OK",
+                PlateCheckResponse.ok(vehicle)));
+    }
 
 
     @GetMapping("/brands")

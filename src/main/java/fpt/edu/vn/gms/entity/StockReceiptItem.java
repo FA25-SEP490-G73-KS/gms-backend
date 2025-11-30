@@ -50,6 +50,7 @@ public class StockReceiptItem {
     private LocalDateTime receivedAt;
 
     private String receivedByName;
+
     private Long receivedById;
 
     @Column(name = "is_paid")

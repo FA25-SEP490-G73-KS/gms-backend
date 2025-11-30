@@ -24,4 +24,9 @@ public class MarketServiceImpl implements MarketService {
         log.info("Fetching all markets");
         return marketRepo.findAll();
     }
+
+    @Override
+    public Market getById(Long id) {
+        return marketRepo.findById(id).orElse(null);
+    }
 }
