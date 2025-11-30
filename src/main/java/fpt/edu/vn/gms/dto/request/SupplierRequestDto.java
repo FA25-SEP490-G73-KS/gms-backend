@@ -4,12 +4,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Schema(description = "DTO yêu cầu tạo/cập nhật nhà cung cấp")
+@Builder
 public class SupplierRequestDto {
     @NotBlank(message = "Tên nhà cung cấp không được để trống")
     @Size(max = 150, message = "Tên nhà cung cấp tối đa 150 ký tự")
@@ -29,4 +31,3 @@ public class SupplierRequestDto {
     @Schema(description = "Địa chỉ nhà cung cấp", example = "123 Đường Lê Lợi, Quận 1, TP.HCM")
     private String address;
 }
-

@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -21,14 +20,15 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AllowanceServiceImpl implements AllowanceService {
 
-    EmployeeRepository employeeRepository;
-    AllowanceRepository allowanceRepository;
+        EmployeeRepository employeeRepository;
+        AllowanceRepository allowanceRepository;
 
-    @Override
-    public AllowanceDto createAllowance(AllowanceRequestDto dto, Employee accountance) {
+        @Override
+        public AllowanceDto createAllowance(AllowanceRequestDto dto, Employee accountance) {
 
-        Employee employee = employeeRepository.findById(dto.getEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+                Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+
 
         Allowance allowance = Allowance.builder()
                 .employee(employee)
@@ -40,14 +40,23 @@ public class AllowanceServiceImpl implements AllowanceService {
                 .createdBy(accountance.getFullName())
                 .build();
 
-        allowanceRepository.save(allowance);
+                Allowance allowance = Allowance.builder()
+                                .employee(employee)
+                                .type(dto.getType())
+                                .amount(dto.getAmount())
+                                .createdAt(LocalDateTime.now())
+                                .createdBy(accountance.getFullName())
+                                .build();
 
-        return AllowanceDto
-                .builder()
-                .type(allowance.getType().getVietnamese())
-                .amount(allowance.getAmount())
-                .createdAt(allowance.getCreatedAt())
-                .build();
-    }
+
+                allowanceRepository.save(allowance);
+
+                return AllowanceDto
+                                .builder()
+                                .type(allowance.getType().getVietnamese())
+                                .amount(allowance.getAmount())
+                                .createdAt(allowance.getCreatedAt())
+                                .build();
+        }
 
 }

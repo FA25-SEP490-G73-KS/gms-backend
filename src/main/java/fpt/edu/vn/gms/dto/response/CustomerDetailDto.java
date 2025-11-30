@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.response;
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 import fpt.edu.vn.gms.dto.VehicleInfoDto;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class CustomerDetailDto {
 
     // Lay chi tiet khach hang (manager)

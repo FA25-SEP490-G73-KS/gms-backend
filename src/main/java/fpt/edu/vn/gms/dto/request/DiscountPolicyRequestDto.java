@@ -3,10 +3,12 @@ package fpt.edu.vn.gms.dto.request;
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
+@Builder
 public class DiscountPolicyRequestDto {
   @NotNull(message = "Cấp độ khách hàng không được để trống")
   private CustomerLoyaltyLevel loyaltyLevel;

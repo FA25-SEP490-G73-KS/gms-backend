@@ -3,10 +3,12 @@ package fpt.edu.vn.gms.dto;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class TransactionResponseDto {
   private Long id;
   private String paymentLinkId;

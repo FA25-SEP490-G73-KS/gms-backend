@@ -117,7 +117,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         // Giới hạn số lần đặt lịch theo ngày
         int countToday = appointmentRepo.countByCustomerAndAppointmentDate(customer, dto.getAppointmentDate());
         if (countToday >= MAX_APPOINTMENTS_PER_DAY) {
-            throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY + " lịch trong ngày " + dto.getAppointmentDate());
+            throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY
+                    + " lịch trong ngày " + dto.getAppointmentDate());
         }
 
         // Check vehicle theo license plate
@@ -173,7 +174,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             // Don't fail the appointment creation if notification fails
         }
 
-
         return AppointmentMapper.toDto(saved);
     }
 
@@ -206,8 +206,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                         entry.getKey().getLabel(),
                         entry.getKey().getStartTime(),
                         entry.getKey().getEndTime(),
-                        entry.getValue().size()
-                ))
+                        entry.getValue().size()))
                 .sorted(Comparator.comparing(AppointmentBySlotResponse::getStartTime))
                 .collect(Collectors.toList());
     }
@@ -216,7 +215,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDto getAppointmentById(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
-
 
         return AppointmentMapper.toDto(appointment);
     }
