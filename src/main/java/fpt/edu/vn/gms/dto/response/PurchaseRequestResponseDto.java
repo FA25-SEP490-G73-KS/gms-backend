@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.dto.response;
 
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseRequestType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class PurchaseRequestResponseDto {
     private String customerName;
     private String customerPhone;
     private String createdBy;
+    private PurchaseRequestType type;
     private PurchaseRequestStatus status;
     private ManagerReviewStatus reviewStatus;
     private BigDecimal totalEstimatedAmount;

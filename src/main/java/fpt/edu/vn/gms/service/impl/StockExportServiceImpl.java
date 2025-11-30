@@ -16,6 +16,7 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.StockExportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -83,6 +84,10 @@ public class StockExportServiceImpl implements StockExportService {
             throw new RuntimeException("Chỉ xuất kho cho PART item");
         }
 
+        if (item.getExportStatus() != ExportStatus.WAITING_TO_EXPORT) {
+            throw new RuntimeException("Linh kiện chưa được nhập về! Vui lòng đợi.");
+        }
+
         Part part = item.getPart();
         if (part == null) {
             throw new RuntimeException("Item không có Part để xuất");
@@ -125,7 +130,7 @@ public class StockExportServiceImpl implements StockExportService {
         ).orElseGet(() -> {
             StockExport ex = StockExport.builder()
                     .quotation(item.getPriceQuotation())
-                    .code(codeSequenceService.generateCode("EX"))
+                    .code(codeSequenceService.generateCode("XK"))
                     .createdAt(LocalDateTime.now())
                     .build();
             return exportRepository.save(ex);

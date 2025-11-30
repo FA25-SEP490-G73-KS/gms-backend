@@ -11,6 +11,7 @@ public interface PriceQuotationMapper {
 
     @Mapping(target = "priceQuotationId", source = "priceQuotationId")
     @Mapping(target = "serviceTicketCode", source = "serviceTicket.serviceTicketCode")
+    @Mapping(target = "status", source = "status")
     @Mapping(target = "licensePlate", source = "serviceTicket.vehicle.licensePlate")
     @Mapping(target = "customerName", source = "serviceTicket.customerName")
     @Mapping(target = "customerPhone", source = "serviceTicket.customerPhone")

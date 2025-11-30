@@ -14,16 +14,10 @@ import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
 public class PriceQuotationItemResponseDto {
 
     private Long priceQuotationItemId;
-    private Long partId;
-    private String partName;
-    private String categoryName;
-    private String marketName;
-    private String supplierName;
-    private String brandName;
-    private String modelName;
-    private BigDecimal purchasePrice;
-    private BigDecimal sellingPrice;
 
+    private PartReqDto part;
+
+    private String itemName;
     private Double quantity;
     private String unit;
     private BigDecimal unitPrice;

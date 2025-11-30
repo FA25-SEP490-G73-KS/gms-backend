@@ -18,6 +18,7 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
             st.customer.fullName,
             v.licensePlate,
             st.createdBy.fullName,
+            pr.type,
             pr.status,
             pr.reviewStatus,
             pr.totalEstimatedAmount,

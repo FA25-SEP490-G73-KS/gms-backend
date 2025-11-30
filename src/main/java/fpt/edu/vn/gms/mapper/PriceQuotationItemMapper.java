@@ -7,25 +7,18 @@ import fpt.edu.vn.gms.entity.PriceQuotationItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { PartMapper.class })
 public interface PriceQuotationItemMapper {
 
     @Mapping(target = "priceQuotationItemId", source = "priceQuotationItemId")
-    @Mapping(target = "partId", source = "part.partId")
-    @Mapping(target = "partName", source = "itemName")
-    @Mapping(target = "categoryName", source = "part.category.name")
-    @Mapping(target = "marketName", source = "part.market.name")
-    @Mapping(target = "supplierName", source = "part.supplier.name")
-    @Mapping(target = "brandName", source = "part.vehicleModel.brand.name")
-    @Mapping(target = "modelName", source = "part.vehicleModel.name")
-    @Mapping(target = "purchasePrice", source = "part.purchasePrice")
-    @Mapping(target = "sellingPrice", source = "part.sellingPrice")
+    @Mapping(target = "part", source = "part")
+    @Mapping(target = "itemName", source = "itemName")
     @Mapping(target = "itemType", source = "itemType")
     @Mapping(target = "unit", source = "unit")
     PriceQuotationItemResponseDto toResponseDto(PriceQuotationItem entity);
 
     @Mapping(target = "itemId", source = "priceQuotationItemId")
-    @Mapping(target = "itemName", source = "itemName")
+    @Mapping(target = "sku", source = "part.sku")
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "quantityInStock", source = "part.quantityInStock")
     @Mapping(target = "exportedQuantity", source = "exportedQuantity")

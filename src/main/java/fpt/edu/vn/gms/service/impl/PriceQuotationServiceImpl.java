@@ -75,6 +75,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                 .estimateAmount(BigDecimal.ZERO)
                 .build();
 
+        quotation.setDiscount(serviceTicket.getCustomer().getDiscountPolicy().getDiscountRate());
+
         // Gán 2 chiều
         serviceTicket.setStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
 
@@ -285,6 +287,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .code(codeSequenceService.generateCode("PR"))
                     .relatedQuotation(quotation)
                     .status(PurchaseRequestStatus.PENDING)
+                    .type(PurchaseRequestType.QUOTATION)
                     .reviewStatus(ManagerReviewStatus.PENDING)
                     .createdAt(LocalDateTime.now())
                     .totalEstimatedAmount(totalEstimatedAmount)
@@ -494,7 +497,11 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         for (var item : ticket.getPriceQuotation().getItems()) {
             Map<String, Object> row = new HashMap<>();
             row.put("index", index++);
-            row.put("name", item.getPartName());
+            row.put("name",
+                    item.getPart() != null
+                            ? item.getPart().getName()
+                            : item.getItemName()
+            );
             row.put("unit", item.getUnit());
             row.put("quantity", item.getQuantity());
             row.put("unitPrice", df.format(item.getUnitPrice()).replace(",", "."));

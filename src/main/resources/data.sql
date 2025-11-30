@@ -70,18 +70,25 @@ INSERT INTO vehicle_model (brand_id, name) VALUES
                                                (3, 'Focus'),
                                                (3, 'Ranger');
 
-INSERT INTO suppliers (name, phone, email, address, is_active) VALUES
-                                                                   ('Petrolimex Lubricants', '0123456789', 'contact@petrolimex.com', 'Hà Nội, Việt Nam', true),
-                                                                   ('Vinfast Spare Parts', '0987654321', 'support@vinfastauto.com', 'Hải Phòng, Việt Nam', true),
-                                                                   ('Motul Vietnam', '0909090909', 'info@motul.com.vn', 'TP. Hồ Chí Minh, Việt Nam', true),
-                                                                   ('Castrol BP Vietnam', '0912345678', 'support@castrol.vn', 'Hà Nội, Việt Nam', true),
-                                                                   ('Yamaha Genuine Parts', '0933221100', 'parts@yamaha-motor.com.vn', 'Bình Dương, Việt Nam', true);
 
 INSERT INTO unit (name)
 VALUES ("cái"),
        ("bộ"),
        ("lít"),
        ("cặp");
+
+INSERT INTO suppliers (name, phone, email, address, is_active) VALUES
+        ('Toyota Genuine Parts', '0901122334', 'sale@toyota-parts.vn', 'Số 1 Phạm Văn Đồng, Hà Nội', TRUE),
+        ('Honda Việt Nam', '0912345678', 'contact@honda.vn', 'Phúc Thắng, Phúc Yên, Vĩnh Phúc', TRUE),
+        ('Phutungoto88', '0988776655', 'support@phutungoto88.vn', 'Hoàng Quốc Việt, Cầu Giấy, Hà Nội', TRUE),
+        ('An Phú Auto Parts', '0905566778', 'info@anphuauto.vn', 'Quận 7, TP.HCM', TRUE),
+        ('Ngọc Hùng Auto', '0977334455', 'ngochungauto@gmail.com', 'Ba Đình, Hà Nội', TRUE),
+        ('Nippon Japan Parts', '0966123456', 'sales@nipponparts.jp', 'Tokyo, Japan', TRUE),
+        ('Thai Motor Parts', '0822233344', 'order@thaimotorparts.co.th', 'Bangkok, Thailand', TRUE),
+        ('GS Battery Supplier', '0944667788', 'gsdealer@gsbattery.com', 'KCN Tân Bình, TP.HCM', TRUE),
+        ('Autotech USA', '+1-202-777-8899', 'contact@autotechusa.com', 'Washington DC, USA', TRUE),
+        ('Euro Auto Supply', '+49-175-233-2211', 'euro@supply.eu', 'Berlin, Germany', TRUE);
+
 
 INSERT INTO part (
     part_name,
@@ -96,20 +103,42 @@ INSERT INTO part (
     reorder_level,
     special_part,
     vehicle_model,
-    unit,
+    sku,
     supplier
 ) VALUES
-      ('Lọc nhớt động cơ',        10, 1, false, 80000, 120000, 0.00, 50, 0, 10, false, 1, 1, 1),
-      ('Lọc nhớt động cơ',        10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2, 1, 1),
-      ('Dầu động cơ 10W-40',      10, 1, true , 250000, 320000, 5.00, 100, 5, 20, false,3, 1, 1),
-      ('Bugi đánh lửa',            1, 2, false, 40000 , 80000 , 0.00, 80, 2, 15, false, 4, 1, 1),
-      ('Phanh đĩa trước',          4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5, 1, 1),
-      ('Ắc quy GS 12V-45Ah',       7, 2, true , 950000,1200000, 3.00, 20, 1, 5, false, 1, 1, 1),
-      ('Dây curoa tổng',           1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2, 1, 1),
-      ('Lọc gió điều hoà',         6, 3, true , 50000 , 90000 , 0.00, 60, 0, 15, false, 3, 1, 1),
-      ('Gạt mưa trước',            8, 1, true , 30000 , 60000 , 0.00,120, 0, 30, false, 4, 1, 1),
-      ('Đèn pha LED',              8, 3, false, 700000, 950000, 0.00, 15, 0, 5, false,5, 1, 1),
-      ('Cảm biến ABS',             7, 4, false, 450000, 600000, 0.00, 10, 0, 3, false, 1, 1, 1);
+      ('Lọc nhớt động cơ', 10, 1, false, 80000, 120000, 0.00, 50, 0, 10, false, 1,
+       'LOCNHODONGCO-VIOS-VN', 1),
+
+      ('Lọc nhớt động cơ', 10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2,
+       'LOCNHODONGCO-COROLLA-JP', 2),
+
+      ('Dầu động cơ 10W-40', 10, 1, true, 250000, 320000, 5.00, 100, 5, 20, false, 3,
+       'DAUDONGCO10W40-CIVIC-VN', 3),
+
+      ('Bugi đánh lửa', 1, 2, false, 40000, 80000, 0.00, 80, 2, 15, false, 4,
+       'BUGIDANHLUA-CITY-JP', 4),
+
+      ('Phanh đĩa trước', 4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5,
+       'PHANHDIATRUOC-FOCUS-JP', 5),
+
+      ('Ắc quy GS 12V-45Ah', 7, 2, true, 950000, 1200000, 3.00, 20, 1, 5, false, 1,
+       'ACQUYGS12V45AH-VIOS-JP', 6),
+
+      ('Dây curoa tổng', 1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2,
+       'DAYCUROATONG-COROLLA-JP', 7),
+
+      ('Lọc gió điều hoà', 6, 3, true, 50000, 90000, 0.00, 60, 0, 15, false, 3,
+       'LOCGIODIEUHOA-CIVIC-US', 8),
+
+      ('Gạt mưa trước', 8, 1, true, 30000, 60000, 0.00, 120, 0, 30, false, 4,
+       'GATMUATRUOC-CITY-VN', 9),
+
+      ('Đèn pha LED', 8, 3, false, 700000, 950000, 0.00, 15, 0, 5, false, 5,
+       'DENPHALED-FOCUS-US', 10),
+
+      ('Cảm biến ABS', 7, 4, false, 450000, 600000, 0.00, 10, 0, 3, false, 1,
+       'CAMBIENABS-VIOS-EU',1);
+
 
 INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
 VALUES

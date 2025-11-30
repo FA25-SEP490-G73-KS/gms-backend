@@ -21,6 +21,9 @@ public class Part {
     @Column(name = "part_id")
     private Long partId;
 
+    @Column(unique = true, length = 50)
+    private String sku;
+
     @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
@@ -45,18 +48,21 @@ public class Part {
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
 
-    @Column(name = "quantity_in_stock")
-    private Double quantityInStock;
+    @Column(name = "quantity_in_stock", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double quantityInStock = 0.0;
 
     @ManyToOne
     @JoinColumn(name = "unit")
     private Unit unit;
 
-    @Column(name = "reserved_quantity")
-    private Double reservedQuantity;
+    @Column(name = "reserved_quantity", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double reservedQuantity = 0.0;
 
-    @Column(name = "reorder_level")
-    private Double reorderLevel;
+    @Column(name = "reorder_level", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double reorderLevel = 0.0;
 
     @ManyToOne
     @JoinColumn(name = "supplier")
@@ -71,6 +77,6 @@ public class Part {
     @Column(length = 100, nullable = true)
     private String note;
 
-    @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "part")
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();
 }

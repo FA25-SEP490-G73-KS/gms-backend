@@ -3,8 +3,6 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.request.PartResDto;
-import fpt.edu.vn.gms.entity.Part;
 import fpt.edu.vn.gms.mapper.PartMapper;
 import fpt.edu.vn.gms.service.PartService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,7 +86,7 @@ public class PartController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<PartReqDto>> createPart(
-                        @RequestBody PartResDto part) {
+                        @RequestBody PartUpdateReqDto part) {
 
                 PartReqDto resDto = partService.createPart(part);
                 return ResponseEntity.status(201)

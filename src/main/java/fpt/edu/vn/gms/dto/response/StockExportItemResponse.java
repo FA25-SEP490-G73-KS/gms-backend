@@ -9,7 +9,7 @@ import lombok.Data;
 public class StockExportItemResponse {
 
     private Long itemId;
-    private String itemName;
+    private String sku;
     private double quantity;
     private double quantityInStock;
     private double exportedQuantity;

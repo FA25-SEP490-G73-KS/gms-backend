@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PartMapper {
 
+    @Mapping(target = "sku", source = "sku")
     @Mapping(target = "categoryName", source = "category.name")
     @Mapping(target = "marketName", source = "market.name")
     @Mapping(target = "quantity", source = "quantityInStock")

@@ -1,9 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.request.PartDuringReviewDto;
-import fpt.edu.vn.gms.dto.request.PartUpdateDto;
+import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.service.QuotaitonItemService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
@@ -58,6 +56,16 @@ public class QuotationItemController {
         return ResponseEntity.ok(ApiResponse.success("Từ chối item thành công", res));
     }
 
+    @PatchMapping("/{itemId}/confirm")
+    public ResponseEntity<ApiResponse<PriceQuotationItemResponseDto>> confirmItem(
+            @PathVariable Long itemId,
+            @RequestBody String warehouseNote
+    ) {
+        PriceQuotationItemResponseDto res = warehouseQuotationService.confirmItemDuringWarehouseReview(itemId, warehouseNote);
+
+        return ResponseEntity.ok(ApiResponse.success("Đã xác nhận", res));
+    }
+
     @PatchMapping("/{itemId}/confirm/update")
     @Operation(
             summary = "Kho duyệt item báo giá & cập nhật Part",
@@ -80,7 +88,7 @@ public class QuotationItemController {
     })
     public ResponseEntity<ApiResponse<Void>> updatePartDuringReview(
             @PathVariable Long itemId,
-            @Valid @RequestBody PartUpdateDto dto
+            @Valid @RequestBody PartUpdateReqDto dto
     ) {
 
         log.info("API DUYỆT ITEM BÁO GIÁ -> itemId={}, dto={}", itemId, dto);
@@ -91,11 +99,11 @@ public class QuotationItemController {
     }
 
     @PostMapping("/{itemId}/confirm/create")
-    public ResponseEntity<ApiResponse<PartReqDto>> createPartDuringReview(
+    public ResponseEntity<ApiResponse<PriceQuotationItemResponseDto>> createPartDuringReview(
             @PathVariable Long itemId,
-            @RequestBody PartDuringReviewDto dto) {
+            @RequestBody PartUpdateReqDto dto) {
 
-        PartReqDto result = warehouseQuotationService.createPartDuringWarehouseReview(itemId, dto);
+        PriceQuotationItemResponseDto result = warehouseQuotationService.createPartDuringWarehouseReview(itemId, dto);
 
         return ResponseEntity.ok(ApiResponse.success("Tạo Part mới thành công", result));
     }

@@ -2,13 +2,14 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
-import fpt.edu.vn.gms.dto.request.PartResDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PartMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.PartService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,15 +22,17 @@ import java.math.BigDecimal;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PartServiceImpl implements PartService {
 
-    private final PartRepository partRepository;
-    private final CategoryRepository categoryRepo;
-    private final MarketRepository marketRepo;
-    private final UnitRepository unitRepo;
-    private final VehicleModelRepository vehicleModelRepo;
-    private final SupplierRepository supplierRepo;
-    private final PartMapper partMapper;
+    SkuGenerator skuGenerator;
+    PartRepository partRepository;
+    CategoryRepository categoryRepo;
+    MarketRepository marketRepo;
+    UnitRepository unitRepo;
+    VehicleModelRepository vehicleModelRepo;
+    SupplierRepository supplierRepo;
+    PartMapper partMapper;
 
     @Override
     public Page<PartReqDto> getAllPart(int page, int size) {
@@ -52,7 +55,7 @@ public class PartServiceImpl implements PartService {
 
     @Override
     @Transactional
-    public PartReqDto createPart(PartResDto dto) {
+    public PartReqDto createPart(PartUpdateReqDto dto) {
 
         log.info("Creating new part with name={}", dto.getName());
 
@@ -73,8 +76,12 @@ public class PartServiceImpl implements PartService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính!"));
 
         // --- Vehicle Model ---
-        VehicleModel vehicleModel = vehicleModelRepo.findById(dto.getVehicleModel())
+        VehicleModel vehicleModel = vehicleModelRepo.findById(dto.getVehicleModelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe!"));
+
+        // --- Supplier ---
+        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " +  + dto.getSupplierId()));
 
         // --- Tính giá bán ---
         BigDecimal purchase = dto.getPurchasePrice();
@@ -88,13 +95,14 @@ public class PartServiceImpl implements PartService {
                 .market(market)
                 .purchasePrice(purchase)
                 .sellingPrice(selling)
-                .quantityInStock(dto.getQuantity())
                 .discountRate(BigDecimal.valueOf(10.0))
+                .supplier(supplier)
                 .unit(unit)
                 .isUniversal(dto.isUniversal())
                 .specialPart(dto.isSpecialPart())
-                .note(dto.getNote())
                 .build();
+
+        part.setSku(skuGenerator.generateSku(part));
 
         Part saved = partRepository.save(part);
 
@@ -169,6 +177,8 @@ public class PartServiceImpl implements PartService {
 
         part.setUniversal(dto.isUniversal());
         part.setSpecialPart(dto.isSpecialPart());
+
+        part.setSku(skuGenerator.generateSku(part));
 
         Part saved = partRepository.save(part);
 

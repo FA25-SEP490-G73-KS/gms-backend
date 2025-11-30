@@ -13,6 +13,9 @@ public class PartReqDto {
     @Schema(description = "ID linh kiện", example = "12")
     private Long partId;
 
+    @Schema(description = "Mã Sku")
+    private String sku;
+
     @Schema(description = "Tên linh kiện")
     private String name;
 

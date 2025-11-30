@@ -6,8 +6,7 @@ import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
-import fpt.edu.vn.gms.dto.request.PartDuringReviewDto;
-import fpt.edu.vn.gms.dto.request.PartUpdateDto;
+import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
@@ -18,6 +17,7 @@ import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.NotificationService;
+import fpt.edu.vn.gms.service.PartService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +42,7 @@ import java.util.Optional;
 public class WarehouseQuotationServiceImpl implements WarehouseQuotationService {
 
     NotificationService notificationService;
+    PartService partService;
     PartRepository partRepository;
     PriceQuotationRepository quotationRepository;
     PriceQuotationItemRepository priceQuotationItemRepo;
@@ -54,9 +55,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     PriceQuotationMapper priceQuotationMapper;
     PartMapper partMapper;
 
-    // ---------------------------------------------------------
-    // LẤY DANH SÁCH BÁO GIÁ CHỜ KHO DUYỆT
-    // ---------------------------------------------------------
 
     @Override
     public Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size) {
@@ -90,9 +88,58 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         });
     }
 
-    // ---------------------------------------------------------
-    // DUYỆT ITEM BÁO GIÁ (CHỌN PART)
-    // ---------------------------------------------------------
+    @Transactional
+    public PriceQuotationItemResponseDto confirmItemDuringWarehouseReview(Long itemId, String warehouseNote) {
+
+        log.info("Confirming item during warehouse review — itemId={} note={}", itemId, warehouseNote);
+
+        PriceQuotationItem item = priceQuotationItemRepo.findById(itemId)
+                .orElseThrow(() -> {
+                    log.error("Item {} not found when confirming", itemId);
+                    return new ResourceNotFoundException("Không tìm thấy item báo giá");
+                });
+
+        Part part = item.getPart();
+        if (part == null) {
+            log.error("Item {} cannot be confirmed because it has no Part assigned", itemId);
+            throw new IllegalStateException("Item chưa gắn Part — không thể xác nhận");
+        }
+
+        // ===== 1. Ghi chú kho nếu có =====
+        if (warehouseNote != null) {
+            item.setWarehouseNote(warehouseNote);
+        }
+
+        // ===== 2. Set trạng thái kho xác nhận =====
+        item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
+
+        // ===== 3. Kiểm tra tồn kho =====
+        double availableQty =
+                Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
+                        - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+
+        if (availableQty >= item.getQuantity()) {
+            item.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
+        } else {
+            item.setInventoryStatus(PriceQuotationItemStatus.OUT_OF_STOCK);
+        }
+
+        // ===== 4. Cập nhật lại item =====
+        priceQuotationItemRepo.save(item);
+
+        log.info("Item {} confirmed — status={}, inventory={}",
+                itemId, item.getWarehouseReviewStatus(), item.getInventoryStatus());
+
+        // ===== 5. Cập nhật tổng báo giá =====
+        recalculateQuotationTotal(item.getPriceQuotation());
+
+        // ===== 6. Kiểm tra tất cả item (để gửi notification nếu cần) =====
+        checkAllItemsAndSendNotification(item.getPriceQuotation());
+
+        // ===== 7. Trả về DTO =====
+        return priceQuotationItemMapper.toResponseDto(item);
+    }
+
 
     @Transactional
     public PriceQuotationItemResponseDto rejectItemDuringWarehouseReview(Long itemId, String warehouseNote) {
@@ -121,9 +168,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         return priceQuotationItemMapper.toResponseDto(item);
     }
 
-    // ---------------------------------------------------------
-    // CHECK TẤT CẢ ITEM — GỬI THÔNG BÁO
-    // ---------------------------------------------------------
 
     private void checkAllItemsAndSendNotification(PriceQuotation quotation) {
 
@@ -193,12 +237,8 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         }
     }
 
-    // ---------------------------------------------------------
-    // UPDATE PART + MERGE ITEM
-    // ---------------------------------------------------------
-
     @Transactional
-    public void updatePartDuringWarehouseReview(Long itemId, PartUpdateDto dto) {
+    public void updatePartDuringWarehouseReview(Long itemId, PartUpdateReqDto dto) {
 
         log.info("Updating part during warehouse review — itemId={} dto={}", itemId, dto);
 
@@ -221,36 +261,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         BigDecimal selling = dto.getSellingPrice();
 
         // Update part info
-//        part.setName(dto.getName());
-        part.setPurchasePrice(purchase);
-        part.setSellingPrice(selling);
-//        part.setUniversal(dto.getUniversal());
-//        part.setSpecialPart(dto.getSpecialPart());
-//        part.setNote(dto.getNote());
-
-//        // Reference fields
-//        PartCategory category = partCategoryRepo.findById(dto.getCategoryId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
-//
-//        Market market = marketRepo.findById(dto.getMarketId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
-//
-//        Unit unit = unitRepo.findById(dto.getUnitId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
-//
-//        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
-//
-//        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
-//
-//        part.setCategory(category);
-//        part.setMarket(market);
-//        part.setUnit(unit);
-//        part.setVehicleModel(model);
-//        part.setSupplier(supplier);
-
-        Part savedPart = partRepository.save(part);
+        PartReqDto savedPart = partService.updatePart(part.getPartId(), dto);
 
         log.info("Part {} updated successfully", savedPart.getPartId());
 
@@ -262,13 +273,13 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         item.setTotalPrice(savedPart.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
 
 
-        if (dto.getWarehouseNote() != null) {
-            item.setWarehouseNote(dto.getWarehouseNote());
+        if (dto.getNote() != null) {
+            item.setWarehouseNote(dto.getNote());
         }
 
         item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
 
-        double availableQty = Optional.ofNullable(savedPart.getQuantityInStock()).orElse(0.0)
+        double availableQty = Optional.ofNullable(savedPart.getQuantity()).orElse(0.0)
                 - Optional.ofNullable(savedPart.getReservedQuantity()).orElse(0.0);
 
         item.setInventoryStatus(availableQty >= item.getQuantity()
@@ -286,12 +297,10 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
         // GỬI NOTIFICATION
         checkAllItemsAndSendNotification(item.getPriceQuotation());
-
-//        return partMapper.toDto(savedPart);
     }
 
     @Transactional
-    public PartReqDto createPartDuringWarehouseReview(Long itemId, PartDuringReviewDto dto) {
+    public PriceQuotationItemResponseDto createPartDuringWarehouseReview(Long itemId, PartUpdateReqDto dto) {
 
         log.info("Creating NEW part for UNKNOWN item — itemId={} dto={}", itemId, dto);
 
@@ -306,57 +315,23 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
             throw new IllegalStateException("Item đã có Part — không thể tạo Part mới");
         }
 
-        // ===== LOAD foreign references =====
-        PartCategory category = partCategoryRepo.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
-
-        Market market = marketRepo.findById(dto.getMarketId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
-
-        Unit unit = unitRepo.findById(dto.getUnitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
-
-        VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
-
-        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
-
-        // ===== CREATE NEW PART =====
-        log.info("Building new Part entity from warehouse input...");
-
-        Part newPart = Part.builder()
-                .name(dto.getName())
-                .category(category)
-                .market(market)
-                .unit(unit)
-                .vehicleModel(model)
-                .purchasePrice(dto.getPurchasePrice())
-                .sellingPrice(dto.getSellingPrice())
-                .supplier(supplier)
-                .discountRate(BigDecimal.ZERO)
-                .quantityInStock(0.0)
-                .reservedQuantity(0.0)
-                .reorderLevel(0.0)
-                .isUniversal(dto.getUniversal())
-                .specialPart(dto.getSpecialPart())
-                .note(dto.getNote())
-                .build();
-
-        Part savedPart = partRepository.save(newPart);
+        PartReqDto savedPart = partService.createPart(dto);
 
         log.info("Created new Part id={} for item {}", savedPart.getPartId(), itemId);
 
+        Part part = partRepository.findById(savedPart.getPartId())
+                .orElseThrow(() -> new ResourceNotFoundException("Linh kiện chưa được tạo!"));
+
         // ===== MERGE NEW PART INTO ITEM =====
-        item.setPart(savedPart);
+        item.setPart(part);
         item.setItemName(savedPart.getName());
-        item.setUnit(unit.getName());
+        item.setUnit(part.getUnit().getName());
         item.setUnitPrice(savedPart.getSellingPrice());
         item.setTotalPrice(savedPart.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
 
         // cập nhật ghi chú kho
-        if (dto.getWarehouseNote() != null) {
-            item.setWarehouseNote(dto.getWarehouseNote());
+        if (dto.getNote() != null) {
+            item.setWarehouseNote(dto.getNote());
         }
 
         // vì item UNKNOWN nên khi tạo part → set status = CONFIRMED
@@ -378,7 +353,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         // GỬI NOTIFICATION
         checkAllItemsAndSendNotification(item.getPriceQuotation());
 
-        return partMapper.toDto(savedPart);
+        return priceQuotationItemMapper.toResponseDto(item);
     }
 
     private void recalculateQuotationTotal(PriceQuotation quotation) {
