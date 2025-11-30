@@ -50,11 +50,11 @@ public class LedgerVoucher {
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by_employee_id")
     private Employee createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "approved_by_employee_id")
     private Employee approvedBy;
 

@@ -11,8 +11,10 @@ public class SkuGenerator {
 
     public String generateSku(Part part) {
         String cat = SkuUtils.toCode(part.getName());
-        String model = SkuUtils.toCode(part.getVehicleModel().getName());
+        String modelName = (part.getVehicleModel() == null || part.getVehicleModel().getName() == null)
+                ? "ALL"
+                : part.getVehicleModel().getName();
         String market = SkuUtils.toCode(part.getMarket().getName());
-        return cat + "-" + model + "-" + market;
+        return cat + "-" + modelName + "-" + market;
     }
 }

@@ -35,6 +35,9 @@ public class ManualVoucherResponseDto {
     @Schema(description = "Ngày tạo phiếu")
     private LocalDateTime createdAt;
 
+    @Schema(description = "Ngày quản lý duyệt")
+    private LocalDateTime approvedAt;
+
     @Schema(description = "Người lập phiếu")
     private String createdBy;
 

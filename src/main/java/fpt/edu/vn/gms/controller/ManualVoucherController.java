@@ -147,4 +147,15 @@ public class ManualVoucherController {
         );
     }
 
+    @PostMapping("/{id}")
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> approveVoucher(
+            @PathVariable Long id,
+            @CurrentUser Employee approver
+    ) {
+        ManualVoucherResponseDto result = manualVoucherService.approveVoucher(id, approver);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Duyệt phiếu thu/chi thành công", result)
+        );
+    }
 }

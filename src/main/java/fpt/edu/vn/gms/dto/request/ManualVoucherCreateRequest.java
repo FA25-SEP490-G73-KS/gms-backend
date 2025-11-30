@@ -8,11 +8,12 @@ import java.math.BigDecimal;
 
 @Data
 public class ManualVoucherCreateRequest {
+
     private ManualVoucherType type;
     private LedgerVoucherCategory category;
-    private BigDecimal amount;
+    private Long relatedEmployeeId;
+    private Long relatedSupplierId;
     private String description;
-    private String attachmentUrl;
-    private Long approvedByEmployeeId;
+    private BigDecimal amount;
 }
 

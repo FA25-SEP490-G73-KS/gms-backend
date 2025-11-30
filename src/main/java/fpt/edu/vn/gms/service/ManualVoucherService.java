@@ -19,4 +19,6 @@ public interface ManualVoucherService {
     Page<ManualVoucherListResponseDto> getList(int page, int size);
 
     ManualVoucherResponseDto getDetail(Long id);
+
+    ManualVoucherResponseDto approveVoucher(Long voucherId, Employee approver);
 }

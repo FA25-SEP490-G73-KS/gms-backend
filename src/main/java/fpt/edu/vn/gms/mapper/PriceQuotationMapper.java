@@ -19,6 +19,7 @@ public interface PriceQuotationMapper {
     PriceQuotationResponseDto toResponseDto(PriceQuotation entity);
 
     @Mapping(target = "priceQuotationId", source = "priceQuotationId")
+    @Mapping(target = "priceQuotationCode", source = "code")
     @Mapping(target = "customerName", source = "serviceTicket.customer.fullName")
     @Mapping(target = "licensePlate", source = "serviceTicket.vehicle.licensePlate")
     @Mapping(target = "createdAt", source = "createdAt")

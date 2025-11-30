@@ -111,8 +111,9 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
         String prefix = req.getType() == ManualVoucherType.PAYMENT ? "PAY" : "RECEIPT";
 
-        Employee employee = employeeRepo.findById(req.getApprovedByEmployeeId())
+        Employee employee = employeeRepo.findById(3L)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quản lý!"));
+
 
         LedgerVoucher voucher = LedgerVoucher.builder()
                 .code(codeSequenceService.generateCode(prefix))
@@ -120,6 +121,8 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
                 .category(req.getCategory())
                 .amount(req.getAmount())
                 .description(req.getDescription())
+                .relatedSupplierId(req.getRelatedSupplierId())
+                .relatedEmployeeId(req.getRelatedEmployeeId())
                 .attachmentUrl(fileUrl)
                 .createdBy(creator)
                 .status(ManualVoucherStatus.PENDING)
@@ -127,10 +130,6 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Employee approver = employeeRepo.findById(req.getApprovedByEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người duyệt"));
-
-        voucher.setApprovedBy(approver);
 
         manualRepo.save(voucher);
 
@@ -185,5 +184,35 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
 
         // 3. Không xác định
         return "Không xác định";
+    }
+
+    @Override
+    public ManualVoucherResponseDto approveVoucher(Long voucherId, Employee approver) {
+
+        LedgerVoucher voucher = manualRepo.findById(voucherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+
+        if (voucher.getStatus() == ManualVoucherStatus.APPROVED) {
+            throw new RuntimeException("Phiếu đã được duyệt trước đó");
+        }
+
+        voucher.setStatus(ManualVoucherStatus.APPROVED);
+        voucher.setApprovedAt(LocalDateTime.now());
+        voucher.setApprovedBy(approver);
+
+        manualRepo.save(voucher);
+
+        // Map sang DTO
+        return ManualVoucherResponseDto.builder()
+                .id(voucher.getId())
+                .code(voucher.getCode())
+                .type(voucher.getType().getValue())
+                .amount(voucher.getAmount())
+                .description(voucher.getDescription())
+                .status(voucher.getStatus().getValue())
+                .approvedAt(voucher.getApprovedAt())
+                .approvedBy(voucher.getApprovedBy().getFullName())
+                .attachmentUrl(voucher.getAttachmentUrl())
+                .build();
     }
 }
