@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.PurchaseRequestType;
 import lombok.AllArgsConstructor;
@@ -28,5 +29,7 @@ public class PurchaseRequestResponseDto {
     private PurchaseRequestStatus status;
     private ManagerReviewStatus reviewStatus;
     private BigDecimal totalEstimatedAmount;
+
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDateTime createdAt;
 }

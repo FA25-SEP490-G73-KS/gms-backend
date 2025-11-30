@@ -138,6 +138,7 @@ public class CustomerController {
             return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
         }
 
+
         @Operation(
                 summary = "Lấy danh sách khách hàng (manager)",
                 description = "API trả về danh sách khách hàng với tìm kiếm, lọc trạng thái, phân trang"

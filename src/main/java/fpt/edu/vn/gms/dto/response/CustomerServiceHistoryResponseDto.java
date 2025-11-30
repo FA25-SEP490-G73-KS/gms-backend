@@ -15,6 +15,7 @@ public class CustomerServiceHistoryResponseDto {
     @Data
     @Builder
     public static class VehicleServiceInfo {
+        private Long id;
         private String licensePlate;
         private String modelName;
         private String brandName;

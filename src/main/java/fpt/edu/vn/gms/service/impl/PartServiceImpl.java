@@ -75,9 +75,14 @@ public class PartServiceImpl implements PartService {
         Unit unit = unitRepo.findById(dto.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính!"));
 
+        VehicleModel vehicleModel = null;
+
         // --- Vehicle Model ---
-        VehicleModel vehicleModel = vehicleModelRepo.findById(dto.getVehicleModelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe!"));
+        if (!dto.isUniversal()) {
+
+             vehicleModel = vehicleModelRepo.findById(dto.getVehicleModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe!"));
+        }
 
         // --- Supplier ---
         Supplier supplier = supplierRepo.findById(dto.getSupplierId())

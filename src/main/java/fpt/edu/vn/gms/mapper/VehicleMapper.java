@@ -12,6 +12,7 @@ import java.util.List;
 public interface VehicleMapper {
 
     // map vehicle -> vehicle info
+    @Mapping(target = "vehicleId", source = "vehicleId")
     @Mapping(target = "brandId", source = "vehicleModel.brand.brandId")
     @Mapping(target = "brandName", source = "vehicleModel.brand.name")
     @Mapping(target = "vehicleModelName", source = "vehicleModel.name")

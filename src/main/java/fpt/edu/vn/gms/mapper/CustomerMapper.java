@@ -19,6 +19,7 @@ public interface CustomerMapper {
 
     List<CustomerResponseDto> toDtoList(List<Customer> customers);
 
+
     @Mapping(target = "loyaltyLevel", source = "discountPolicy.loyaltyLevel")
     @Mapping(target = "vehicles", source = "vehicles")
     CustomerDetailResponseDto toDetailDto(Customer customer);

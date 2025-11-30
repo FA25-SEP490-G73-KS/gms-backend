@@ -48,19 +48,20 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
     List<Object[]> countTicketsByTypeForMonth(@Param("year") int year, @Param("month") int month);
 
     @Query("""
-    SELECT new fpt.edu.vn.gms.dto.response.CustomerServiceHistoryDto(
-        st.serviceTicketCode,
-        v.licensePlate,
-        st.createdAt,
-        st.deliveryAt,
-        pq.estimateAmount,
-        st.status
-    )
-    FROM ServiceTicket st
-    JOIN st.vehicle v
-    JOIN st.priceQuotation pq
-    WHERE st.customer.customerId = :customerId
-    ORDER BY st.createdAt DESC
+        SELECT new fpt.edu.vn.gms.dto.response.CustomerServiceHistoryDto(
+            st.serviceTicketId,
+            st.serviceTicketCode,
+            v.licensePlate,
+            st.createdAt,
+            st.deliveryAt,
+            pq.estimateAmount,
+            st.status
+        )
+        FROM ServiceTicket st
+        JOIN st.vehicle v
+        LEFT JOIN PriceQuotation pq ON pq.serviceTicket.serviceTicketId = st.serviceTicketId
+        WHERE st.customer.customerId = :customerId
+        ORDER BY st.createdAt DESC
     """)
     List<CustomerServiceHistoryDto> getCustomerServiceHistory(Long customerId);
 

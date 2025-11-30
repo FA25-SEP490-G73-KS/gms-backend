@@ -128,6 +128,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerServiceHistoryResponseDto getCustomerServiceHistoryByPhone(String phone) {
         Customer customer = customerRepository.findByPhone(phone)
                 .orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!"));
+
         // Lấy tất cả service ticket hoàn thành của customer
         List<ServiceTicket> completedTickets = serviceTicketRepository.findAll().stream()
                 .filter(st -> st.getCustomer() != null
@@ -139,11 +140,13 @@ public class CustomerServiceImpl implements CustomerService {
                 .collect(java.util.stream.Collectors.groupingBy(
                         st -> st.getVehicle().getLicensePlate(),
                         java.util.stream.Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))));
+
         List<CustomerServiceHistoryResponseDto.VehicleServiceInfo> vehicles = vehicleMap.values().stream()
                 .filter(java.util.Optional::isPresent)
                 .map(opt -> {
                     ServiceTicket st = opt.get();
                     return CustomerServiceHistoryResponseDto.VehicleServiceInfo.builder()
+                            .id(st.getVehicle().getVehicleId())
                             .licensePlate(st.getVehicle().getLicensePlate())
                             .modelName(st.getVehicle().getVehicleModel().getName())
                             .brandName(st.getVehicle().getVehicleModel().getBrand().getName())
@@ -153,6 +156,7 @@ public class CustomerServiceImpl implements CustomerService {
                             .build();
                 })
                 .toList();
+
         return CustomerServiceHistoryResponseDto.builder()
                 .fullName(customer.getFullName())
                 .phone(customer.getPhone())
@@ -189,6 +193,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerDetailDto getCustomerDetail(Long customerId) {
+
         CustomerDetailDto dto = customerRepository.getCustomerDetail(customerId);
 
         dto.setVehicles(vehicleRepository.getCustomerVehicles(customerId));
