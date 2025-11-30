@@ -5,7 +5,7 @@ import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.dto.CreateDebtDto;
 import fpt.edu.vn.gms.dto.CustomerDebtSummaryDto;
 import fpt.edu.vn.gms.dto.PayDebtRequestDto;
-import fpt.edu.vn.gms.dto.TransactionMethod;
+import fpt.edu.vn.gms.common.enums.TransactionMethod;
 import fpt.edu.vn.gms.dto.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;

@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
-import fpt.edu.vn.gms.dto.TransactionMethod;
+import fpt.edu.vn.gms.common.enums.TransactionMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

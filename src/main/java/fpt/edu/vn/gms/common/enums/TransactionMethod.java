@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto;
+package fpt.edu.vn.gms.common.enums;
 
 import java.util.stream.Stream;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
