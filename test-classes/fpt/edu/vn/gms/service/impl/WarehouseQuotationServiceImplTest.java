@@ -145,7 +145,7 @@ class WarehouseQuotationServiceImplTest {
         when(priceQuotationItemRepo.findById(1L)).thenReturn(Optional.of(item));
 
         PriceQuotationItemResponseDto responseDto = PriceQuotationItemResponseDto.builder()
-                .itemId(1L)
+                .priceQuotationItemId(1L)
                 .build();
         when(priceQuotationItemMapper.toResponseDto(item)).thenReturn(responseDto);
 
@@ -194,7 +194,9 @@ class WarehouseQuotationServiceImplTest {
 
         when(priceQuotationItemRepo.findById(1L)).thenReturn(Optional.of(item));
 
-        PriceQuotationItemResponseDto dto = PriceQuotationItemResponseDto.builder().itemId(1L).build();
+        PriceQuotationItemResponseDto dto = PriceQuotationItemResponseDto.builder()
+                .priceQuotationItemId(1L)
+                .build();
         when(priceQuotationItemMapper.toResponseDto(item)).thenReturn(dto);
 
         PriceQuotationItemResponseDto result =
@@ -211,7 +213,7 @@ class WarehouseQuotationServiceImplTest {
     void updatePartDuringWarehouseReview_ShouldUpdatePartAndItem() {
         Part part = Part.builder()
                 .partId(1L)
-                .quantity(10.0)
+                .quantityInStock(10.0)
                 .reservedQuantity(2.0)
                 .build();
 
@@ -316,7 +318,7 @@ class WarehouseQuotationServiceImplTest {
         when(partRepository.findById(100L)).thenReturn(Optional.of(part));
 
         PriceQuotationItemResponseDto responseDto = PriceQuotationItemResponseDto.builder()
-                .itemId(1L)
+                .priceQuotationItemId(1L)
                 .build();
         when(priceQuotationItemMapper.toResponseDto(item)).thenReturn(responseDto);
 

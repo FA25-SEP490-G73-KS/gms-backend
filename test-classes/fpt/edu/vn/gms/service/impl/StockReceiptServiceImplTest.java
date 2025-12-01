@@ -116,7 +116,7 @@ class StockReceiptServiceImplTest {
                 .build();
 
         prItem = PurchaseRequestItem.builder()
-                .id(5L)
+                .itemId(5L)
                 .purchaseRequest(purchaseRequest)
                 .part(part)
                 .quantity(10.0)
@@ -165,7 +165,7 @@ class StockReceiptServiceImplTest {
                 .build();
         when(stockReceiptItemRepo.save(any(StockReceiptItem.class))).thenReturn(receiptItem);
 
-        StockReceiptItemResponseDto dto = new StockReceiptItemResponseDto();
+        StockReceiptItemResponseDto dto = StockReceiptItemResponseDto.builder().build();
         when(stockReceiptItemMapper.toDto(receiptItem)).thenReturn(dto);
 
         StockReceiptItemResponseDto result =
@@ -240,7 +240,7 @@ class StockReceiptServiceImplTest {
 
         when(stockReceiptRepo.searchForAccounting("SR", pageable)).thenReturn(page);
 
-        StockReceiptResponseDto dto = new StockReceiptResponseDto();
+        StockReceiptResponseDto dto = StockReceiptResponseDto.builder().build();
         when(stockReceiptMapper.toDto(receipt)).thenReturn(dto);
 
         Page<StockReceiptResponseDto> result = service.getReceiptsForAccounting(0, 5, "SR");
@@ -259,7 +259,7 @@ class StockReceiptServiceImplTest {
         List<StockReceiptItem> items = List.of(StockReceiptItem.builder().build());
         when(stockReceiptItemRepo.findByStockReceipt(receipt)).thenReturn(items);
 
-        StockReceiptItemResponseDto dto = new StockReceiptItemResponseDto();
+        StockReceiptItemResponseDto dto = StockReceiptItemResponseDto.builder().build();
         when(stockReceiptItemMapper.toDtos(items)).thenReturn(List.of(dto));
 
         List<StockReceiptItemResponseDto> result = service.getReceiptItems(1L);

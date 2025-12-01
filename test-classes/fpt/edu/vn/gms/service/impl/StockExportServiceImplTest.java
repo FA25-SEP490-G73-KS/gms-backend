@@ -71,7 +71,7 @@ class StockExportServiceImplTest {
         when(quotationRepository.findByExportStatus(ExportStatus.WAITING_TO_EXPORT, pageable))
                 .thenReturn(page);
 
-        StockExportResponse response = new StockExportResponse();
+        StockExportResponse response = StockExportResponse.builder().build();
         when(priceQuotationMapper.toStockExportResponse(quotation)).thenReturn(response);
 
         Page<StockExportResponse> result = service.getExportingQuotations(0, 5);
@@ -98,7 +98,7 @@ class StockExportServiceImplTest {
 
         when(quotationRepository.findById(10L)).thenReturn(Optional.of(quotation));
 
-        StockExportItemResponse itemResponse = new StockExportItemResponse();
+        StockExportItemResponse itemResponse = StockExportItemResponse.builder().build();
         when(itemMapper.toStockExportItemResponse(partItem)).thenReturn(itemResponse);
 
         List<StockExportItemResponse> result = service.getExportingQuotationById(10L);
@@ -156,7 +156,7 @@ class StockExportServiceImplTest {
                 .build();
         when(employeeRepository.findById(99L)).thenReturn(Optional.of(receiver));
 
-        StockExportItemResponse response = new StockExportItemResponse();
+        StockExportItemResponse response = StockExportItemResponse.builder().build();
         when(itemMapper.toStockExportItemResponse(item)).thenReturn(response);
 
         StockExportItemResponse result = service.exportItem(5L, 3.0, 99L);
@@ -279,29 +279,27 @@ class StockExportServiceImplTest {
                 .build();
         when(exportRepository.save(any(StockExport.class))).thenReturn(export);
 
-        PartItemDto item1 = PartItemDto.builder()
-                .partId(10L)
-                .quantity(2.0)
-                .build();
-        PartItemDto item2 = PartItemDto.builder()
-                .partId(11L)
-                .quantity(1.0)
-                .build();
+        PartItemDto item1 = new PartItemDto();
+        item1.setPartId(10L);
+        item1.setQuantity(2.0);
 
-        StockExportCreateDto dto = StockExportCreateDto.builder()
-                .createdById(1L)
-                .receiverId(2L)
-                .damagedById(3L)
-                .reason("Hỏng do nhân viên")
-                .note("Lỗi dùng sai")
-                .items(List.of(item1, item2))
-                .build();
+        PartItemDto item2 = new PartItemDto();
+        item2.setPartId(11L);
+        item2.setQuantity(1.0);
+
+        StockExportCreateDto dto = new StockExportCreateDto();
+        dto.setCreatedById(1L);
+        dto.setReceiverId(2L);
+        dto.setDamagedById(3L);
+        dto.setReason("Hỏng do nhân viên");
+        dto.setNote("Lỗi dùng sai");
+        dto.setItems(List.of(item1, item2));
 
         StockExportResponseDto result = service.createExport(dto);
 
         assertNotNull(result);
-        assertEquals(export.getId(), result.getId());
-        assertEquals(export.getCode(), result.getCode());
+        assertEquals(export.getId(), result.getExportId());
+        assertEquals(export.getCode(), result.getExportCode());
 
         // quantity decreased
         assertEquals(8.0, part1.getQuantityInStock());
@@ -325,10 +323,9 @@ class StockExportServiceImplTest {
 
     @Test
     void createExport_ShouldThrow_WhenCreatorOrReceiverNotFound() {
-        StockExportCreateDto dto = StockExportCreateDto.builder()
-                .createdById(1L)
-                .receiverId(2L)
-                .build();
+        StockExportCreateDto dto = new StockExportCreateDto();
+        dto.setCreatedById(1L);
+        dto.setReceiverId(2L);
 
         when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> service.createExport(dto));

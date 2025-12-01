@@ -112,15 +112,15 @@ class PartServiceImplTest {
                 .vehicleModelId(4L)
                 .supplierId(5L)
                 .purchasePrice(new BigDecimal("100000"))
-                .isUniversal(false)
-                .isSpecialPart(true)
+                .universal(false)
+                .specialPart(true)
                 .build();
 
-        PartCategory category = PartCategory.builder().categoryId(1L).build();
-        Market market = Market.builder().marketId(2L).build();
-        Unit unit = Unit.builder().unitId(3L).build();
+        PartCategory category = PartCategory.builder().id(1L).build();
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
         VehicleModel model = VehicleModel.builder().vehicleModelId(4L).build();
-        Supplier supplier = Supplier.builder().supplierId(5L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
 
         when(categoryRepo.findById(1L)).thenReturn(Optional.of(category));
         when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
@@ -166,13 +166,13 @@ class PartServiceImplTest {
                 .unitId(3L)
                 .supplierId(5L)
                 .purchasePrice(new BigDecimal("100000"))
-                .isUniversal(true)
-                .isSpecialPart(false)
+                .universal(true)
+                .specialPart(false)
                 .build();
 
-        Market market = Market.builder().marketId(2L).build();
-        Unit unit = Unit.builder().unitId(3L).build();
-        Supplier supplier = Supplier.builder().supplierId(5L).build();
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
 
         when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
         when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
@@ -224,17 +224,17 @@ class PartServiceImplTest {
                 .purchasePrice(new BigDecimal("200000"))
                 .sellingPrice(new BigDecimal("250000"))
                 .supplierId(5L)
-                .isUniversal(true)
-                .isSpecialPart(true)
+                .universal(true)
+                .specialPart(true)
                 .build();
 
         when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        PartCategory category = PartCategory.builder().categoryId(1L).build();
-        Market market = Market.builder().marketId(2L).build();
-        Unit unit = Unit.builder().unitId(3L).build();
+        PartCategory category = PartCategory.builder().id(1L).build();
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
         VehicleModel model = VehicleModel.builder().vehicleModelId(4L).build();
-        Supplier supplier = Supplier.builder().supplierId(5L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
 
         when(categoryRepo.findById(1L)).thenReturn(Optional.of(category));
         when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
