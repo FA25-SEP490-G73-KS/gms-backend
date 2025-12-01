@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -39,16 +40,6 @@ public class AllowanceServiceImpl implements AllowanceService {
                 .year(LocalDate.now().getYear())
                 .createdBy(accountance.getFullName())
                 .build();
-
-                Allowance allowance = Allowance.builder()
-                                .employee(employee)
-                                .type(dto.getType())
-                                .amount(dto.getAmount())
-                                .createdAt(LocalDateTime.now())
-                                .createdBy(accountance.getFullName())
-                                .build();
-
-
                 allowanceRepository.save(allowance);
 
                 return AllowanceDto
