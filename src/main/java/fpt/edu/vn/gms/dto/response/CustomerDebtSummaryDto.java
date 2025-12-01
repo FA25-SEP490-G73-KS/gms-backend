@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto;
+package fpt.edu.vn.gms.dto.response;
 
 import java.math.BigDecimal;
 
@@ -20,5 +20,4 @@ public class CustomerDebtSummaryDto {
   private BigDecimal totalPaidAmount;
   private BigDecimal totalRemaining;
   private String status;
-
 }

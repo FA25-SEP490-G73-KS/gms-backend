@@ -16,19 +16,21 @@ public interface CustomerService {
 
     Page<CustomerResponseDto> getAllCustomers(int page, int size);
 
+    Page<CustomerDetailDto> getCustomers(int page, int size);
+
     CustomerDetailResponseDto getByPhone(String phone);
 
     CustomerResponseDto createCustomer(CustomerRequestDto customerDto);
 
     CustomerResponseDto updateCustomer(Long id, CustomerRequestDto dto);
 
-    CustomerServiceHistoryResponseDto getCustomerServiceHistoryByPhone(String phone);
+    CustomerDetailDto getCustomerServiceHistoryByPhone(String phone);
 
     void updateTotalSpending(Long customerId, BigDecimal addtionalSpending);
-
-    Page<CustomerListResponseDto> getCustomers(int page, int size);
 
     CustomerDetailDto getCustomerDetail(Long customerId);
 
     CustomerDetailDto getServiceHistory(Long customerId);
+
+    CustomerResponseDto handleNotMe(String phone);
 }

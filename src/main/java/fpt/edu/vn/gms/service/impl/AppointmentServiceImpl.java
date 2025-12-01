@@ -68,11 +68,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     public AppointmentResponseDto createAppointment(AppointmentRequestDto dto) {
 
-        // Lấy giảm giá mặc định
         DiscountPolicy defaultPolicy = discountPolicyRepo.findByLoyaltyLevel(CustomerLoyaltyLevel.BRONZE)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chính sách giảm giá mặc định!"));
 
-        // Check customer theo số điện thoại
         dto.setPhoneNumber(PhoneUtils.normalize(dto.getPhoneNumber()));
 
         Optional<Customer> existingCustomer = customerRepo.findByPhone(dto.getPhoneNumber());
@@ -120,7 +118,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY + " lịch trong ngày " + dto.getAppointmentDate());
         }
 
-        // Check vehicle theo license plate
+        // Kiểm tra xe
         Vehicle vehicle = vehicleRepo.findByLicensePlate(dto.getLicensePlate())
                 .orElseGet(() -> {
                     // Nếu xe chưa tồn tại thì tạo mới, gán customer vào

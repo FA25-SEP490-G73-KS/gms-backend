@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto.response;
+package fpt.edu.vn.gms.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

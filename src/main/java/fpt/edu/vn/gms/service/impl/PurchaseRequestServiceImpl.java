@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.common.enums.Role;
-import fpt.edu.vn.gms.dto.PartItemDto;
+import fpt.edu.vn.gms.dto.request.PartItemDto;
 import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.response.PrDetailInfoReviewDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;

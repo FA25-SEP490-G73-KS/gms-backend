@@ -2,11 +2,11 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.DebtStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
-import fpt.edu.vn.gms.dto.CreateDebtDto;
-import fpt.edu.vn.gms.dto.CustomerDebtSummaryDto;
-import fpt.edu.vn.gms.dto.PayDebtRequestDto;
+import fpt.edu.vn.gms.dto.request.CreateDebtDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
+import fpt.edu.vn.gms.dto.request.PayDebtRequestDto;
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;

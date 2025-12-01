@@ -1,8 +1,9 @@
 package fpt.edu.vn.gms.controller;
 
-import com.google.protobuf.Api;
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.CustomerDto;
 import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
+import fpt.edu.vn.gms.dto.request.NotMeRequest;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,14 +22,6 @@ import java.util.List;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.CUSTOMERS_PREFIX;
 
-/**
- * REST Controller cho các thao tác liên quan đến khách hàng.
- * <p>
- * Quản lý thông tin khách hàng bao gồm: xem danh sách khách hàng, xem chi tiết
- * khách hàng theo ID.
- * Mỗi khách hàng bao gồm thông tin cá nhân, loại khách hàng và cấp độ thân
- * thiết.
- */
 
 @Tag(name = "customers", description = "Quản lý thông tin khách hàng")
 @CrossOrigin(origins = "${fe-local-host}")
@@ -130,11 +123,11 @@ public class CustomerController {
         @Operation(summary = "Lấy lịch sử sử dụng dịch vụ của khách hàng theo số điện thoại", description = "Trả về họ tên, số điện thoại, danh sách xe đã từng sửa chữa (biển số, model, hãng, ngày sửa gần nhất) dựa trên service ticket hoàn thành.")
         @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerServiceHistoryResponseDto.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDetailDto.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy khách hàng hoặc xe", content = @Content(schema = @Schema(hidden = true))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<CustomerServiceHistoryResponseDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
+        public ResponseEntity<CustomerDetailDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
             return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
         }
 
@@ -146,10 +139,10 @@ public class CustomerController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
                 description = "Danh sách khách hàng",
-                content = @Content(schema = @Schema(implementation = CustomerListResponseDto.class))
+                content = @Content(schema = @Schema(implementation = CustomerDetailDto.class))
         )
         @GetMapping("/manager")
-        public ResponseEntity<ApiResponse<Page<CustomerListResponseDto>>> getCustomers(
+        public ResponseEntity<ApiResponse<Page<CustomerDetailDto>>> getCustomers(
                 @RequestParam(defaultValue = "0") @Min(0) int page,
                 @RequestParam(defaultValue = "6") @Min(1) int size
         ) {
@@ -189,4 +182,87 @@ public class CustomerController {
         ) {
                 return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!", customerService.getServiceHistory(customerId)));
         }
+
+        @Public
+        @GetMapping("/check")
+        @Operation(
+                summary = "Kiểm tra khách hàng theo số điện thoại",
+                description = """
+            Kiểm tra xem khách hàng đã tồn tại trong hệ thống hay chưa.
+            
+            • Nếu tồn tại → hiện popup trả Về thông tin chi tiết khách hàng  
+            • Nếu chưa tồn tại → trả về DTO với các trường = null (FE tự hiểu là 'chưa có khách')
+            
+            API này không yêu cầu đăng nhập.
+            """
+        )
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "200",
+                        description = "Kiểm tra thành công",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CustomerDetailResponseDto.class)
+                        )
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "400",
+                        description = "Số điện thoại không hợp lệ",
+                        content = @Content(schema = @Schema(hidden = true))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "500",
+                        description = "Lỗi máy chủ nội bộ",
+                        content = @Content(schema = @Schema(hidden = true))
+                )
+        })
+        public ResponseEntity<ApiResponse<CustomerDetailResponseDto>> checkCustomerExists(
+                @RequestParam String phone
+        ) {
+                CustomerDetailResponseDto dto = customerService.getByPhone(phone);
+
+                return ResponseEntity.ok(ApiResponse.success("Kiểm tra khách đã tồn tại?", dto));
+        }
+
+        @Operation(
+                summary = "Xử lý trường hợp khách hàng chọn 'Không phải tôi'",
+                description = """
+            Khi khách hàng xác thực OTP nhưng chọn 'Không phải tôi', hệ thống sẽ:
+            
+            • Vô hiệu hóa khách hàng cũ (isActive = false)  
+            • Đổi số điện thoại của bản ghi cũ để tránh trùng lặp  
+            • Tạo một khách hàng mới với đúng số điện thoại đã nhập  
+            
+            API này giúp tách biệt dữ liệu của khách cũ – khách mới mà không gây xung đột.
+            
+            Không yêu cầu đăng nhập.
+            """
+        )
+        @ApiResponses(value = {
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "200",
+                        description = "Tạo khách hàng mới thành công",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CustomerResponseDto.class)
+                        )
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "400",
+                        description = "Số điện thoại không hợp lệ",
+                        content = @Content(schema = @Schema(hidden = true))
+                ),
+                @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "500",
+                        description = "Lỗi máy chủ nội bộ",
+                        content = @Content(schema = @Schema(hidden = true))
+                )
+        })
+        @PostMapping("/not-me")
+        @Public
+        public ResponseEntity<ApiResponse<CustomerResponseDto>> handleNotMe(@RequestBody NotMeRequest req) {
+                CustomerResponseDto result = customerService.handleNotMe(req.getPhone());
+                return ResponseEntity.ok(ApiResponse.success("Tạo khách mới!", result));
+        }
+
 }

@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto;
+package fpt.edu.vn.gms.dto.request;
 
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
 import io.swagger.v3.oas.annotations.media.Schema;

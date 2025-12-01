@@ -1,4 +1,4 @@
-package fpt.edu.vn.gms.dto;
+package fpt.edu.vn.gms.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class TransactionResponseDto {
+
   private Long id;
   private String paymentLinkId;
   private String customerFullName;

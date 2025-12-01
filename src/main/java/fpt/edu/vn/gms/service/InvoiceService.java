@@ -1,9 +1,8 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.request.PayInvoiceRequestDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
-import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.InvoiceDetailResDto;
 import fpt.edu.vn.gms.dto.response.InvoiceListResDto;
 import org.springframework.data.domain.Page;

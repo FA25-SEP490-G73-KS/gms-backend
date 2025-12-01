@@ -11,8 +11,10 @@ public class ManualVoucherCreateRequest {
 
     private ManualVoucherType type;
     private LedgerVoucherCategory category;
+
     private Long relatedEmployeeId;
     private Long relatedSupplierId;
+
     private String description;
     private BigDecimal amount;
 }

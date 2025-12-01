@@ -1,7 +1,7 @@
 package fpt.edu.vn.gms.repository;
 
 import fpt.edu.vn.gms.common.enums.DebtStatus;
-import fpt.edu.vn.gms.dto.CustomerDebtSummaryDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
 import fpt.edu.vn.gms.entity.Debt;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,17 +39,21 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
         Optional<Debt> findByIdAndCustomerCustomerId(Long debtId, Long customerId);
 
         @Query(value = """
-                        SELECT new fpt.edu.vn.gms.dto.CustomerDebtSummaryDto(
-                          d.customer.customerId,
-                          d.customer.fullName,
-                          d.customer.phone,
-                          COALESCE(SUM(d.amount), 0),
-                          COALESCE(SUM(d.paidAmount), 0),
-                          COALESCE(SUM(d.amount - d.paidAmount), 0),
-                          CASE WHEN SUM(d.amount) = SUM(d.paidAmount) THEN 'PAID_IN_FULL' ELSE 'OUTSTANDING' END
-                        )
-                        FROM Debt d
-                        GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone, d.createdAt
-                        """, countQuery = "SELECT COUNT(DISTINCT d.customer.customerId) FROM Debt d")
+                    SELECT new fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto(
+                        d.customer.customerId,
+                        d.customer.fullName,
+                        d.customer.phone,
+                        COALESCE(SUM(d.amount), CAST(0 AS bigdecimal)),
+                        COALESCE(SUM(d.paidAmount), CAST(0 AS bigdecimal)),
+                        COALESCE(SUM(d.amount - d.paidAmount), CAST(0 AS bigdecimal)),
+                        CASE WHEN SUM(d.amount) = SUM(d.paidAmount)
+                             THEN 'PAID_IN_FULL'
+                             ELSE 'OUTSTANDING'
+                        END
+                    )
+                    FROM Debt d
+                    GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone
+                """,
+                countQuery = "SELECT COUNT(DISTINCT d.customer.customerId) FROM Debt d")
         Page<CustomerDebtSummaryDto> findTotalDebtGroupedByCustomer(Pageable pageable);
 }

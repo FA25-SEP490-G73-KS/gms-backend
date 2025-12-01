@@ -10,7 +10,7 @@ import fpt.edu.vn.gms.common.enums.DebtStatus;
 import fpt.edu.vn.gms.common.enums.InvoiceStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.request.TransactionCallbackDto;
 import fpt.edu.vn.gms.entity.Debt;
