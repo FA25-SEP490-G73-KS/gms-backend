@@ -4,15 +4,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum ExportStatus {
-    WAITING_TO_CONFIRM("Chờ duyệt"),
-    WAITING_TO_EXECUTE("Chờ xử lý"),
-    COMPLETED("Hoàn thành");
+public enum ExportItemStatus {
+    EXPORTING("Đang xuất hàng"),
+    FINISHED("Hoàn thành");
 
     private final String value;
 
     @JsonValue
     public String getValue() {
-        return this.value;
+        return value;
     }
 }

@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.ExportStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,8 +31,27 @@ public class StockExport {
     @JoinColumn(name = "quotation_id")
     private PriceQuotation quotation;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "export_reason")
+    private String reason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ExportStatus status;
+
+    private String createdBy;
+
+    private String exportedBy;
+
+    private String approvedBy;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "exported_at")
+    private LocalDateTime exportedAt;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     @OneToMany(mappedBy = "stockExport", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StockExportItem> exportItems = new ArrayList<>();

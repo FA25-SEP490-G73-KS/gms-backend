@@ -15,6 +15,7 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
+import fpt.edu.vn.gms.service.StockExportService;
 import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
 import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
 import fpt.edu.vn.gms.utils.NumberToVietnameseWordsUtils;
@@ -51,6 +52,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     PdfGeneratorService pdfGeneratorService;
     PriceQuotationMapper priceQuotationMapper;
     ServiceTicketMapper serviceTicketMapper;
+    StockExportService stockExportService;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -275,7 +277,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             part.setReservedQuantity(currentReserved + item.getQuantity());
             partRepository.save(part);
 
-            item.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
         }
 
         // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
@@ -296,8 +297,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
                     .build();
 
             for (PriceQuotationItem item : partsToBuy) {
-
-                item.setExportStatus(ExportStatus.WAITING_PURCHASE);
 
                 double quantityToPurchase = getQuantityToPurchase(item);
 
@@ -326,10 +325,17 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             purchaseRequestRepository.save(purchaseRequest);
         }
 
-        quotation.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
-
         // Lưu lại báo giá
         quotationRepository.save(quotation);
+
+        // Tự động tạo phiếu xuất kho cho các linh kiện AVAILABLE
+        try {
+            stockExportService.createExportFromQuotation(quotation.getPriceQuotationId(),
+                    "Xuất kho theo báo giá đã được khách hàng xác nhận",
+                    quotation.getServiceTicket().getCreatedBy());
+        } catch (Exception e) {
+            log.error("Không thể tạo phiếu xuất kho từ báo giá {}: {}", quotationId, e.getMessage());
+        }
 
         NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 

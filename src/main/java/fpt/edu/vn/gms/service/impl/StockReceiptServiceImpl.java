@@ -262,7 +262,7 @@ public class StockReceiptServiceImpl implements StockReceiptService {
         if (prItem.getQuantityReceived() >= prItem.getQuantity()) {
             quotationItem.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
 
-            quotationItem.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
+//            quotationItem.setExportStatus(ExportStatus.WAITING_TO_EXECUTE);
 
             quotationItemRepo.save(quotationItem);
             log.info("QuotationItem {} set to AVAILABLE + WAITING_EXPORT", quotationItem.getPriceQuotationItemId());

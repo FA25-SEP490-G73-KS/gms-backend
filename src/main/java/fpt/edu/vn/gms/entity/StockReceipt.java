@@ -32,11 +32,18 @@ public class StockReceipt {
     private PurchaseRequest purchaseRequest;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee createdBy;
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
+
+    private String createdBy;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    private String receivedBy;
+
+    @Column(name = "received_at")
+    private LocalDateTime receivedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

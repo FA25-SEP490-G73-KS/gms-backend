@@ -29,9 +29,6 @@ public class PriceQuotationItem {
     @JoinColumn(name = "quotation_id", referencedColumnName = "price_quotation_id")
     private PriceQuotation priceQuotation;
 
-    @OneToMany(mappedBy = "quotationItem")
-    private List<StockExportItem> stockExportItems;
-
     @ManyToOne
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")
     private Part part;
@@ -70,9 +67,6 @@ public class PriceQuotationItem {
 
     @Column(name = "warehouse_note", length = 255)
     private String warehouseNote;
-
-    @Enumerated(EnumType.STRING)
-    private ExportStatus exportStatus = ExportStatus.NONE;
 
     @Column(name = "created_by")
     private Long createdBy;

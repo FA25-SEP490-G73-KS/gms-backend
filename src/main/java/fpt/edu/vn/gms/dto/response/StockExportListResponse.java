@@ -1,19 +1,15 @@
 package fpt.edu.vn.gms.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class StockExportResponseDto {
+public class StockExportListResponse {
 
-    private Long exportId;
+    private Long id;
     private String code;
     private String reason;
     private String customerName;
@@ -22,3 +18,4 @@ public class StockExportResponseDto {
     private LocalDateTime createdAt;
     private String status;
 }
+

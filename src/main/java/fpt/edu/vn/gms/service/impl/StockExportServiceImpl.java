@@ -1,240 +1,307 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.enums.DeductionType;
+import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
-import fpt.edu.vn.gms.dto.request.PartItemDto;
-import fpt.edu.vn.gms.dto.request.StockExportCreateDto;
-import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
-import fpt.edu.vn.gms.dto.response.StockExportResponse;
-import fpt.edu.vn.gms.dto.response.StockExportResponseDto;
+import fpt.edu.vn.gms.dto.request.ExportItemRequest;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
-import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
-import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
+import fpt.edu.vn.gms.mapper.StockExportMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.StockExportService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class StockExportServiceImpl implements StockExportService {
 
-    private final PriceQuotationRepository quotationRepository;
-    private final PriceQuotationItemRepository itemRepository;
-    private final PartRepository partRepository;
-    private final StockExportRepository exportRepository;
-    private final EmployeeRepository employeeRepository;
-    private final StockExportItemRepository stockExportItemRepository;
-    private final DeductionRepository deductionRepository;
-    private final CodeSequenceService codeSequenceService;
-    private final PriceQuotationMapper priceQuotationMapper;
-    private final PriceQuotationItemMapper itemMapper;
-    private final PriceQuotationItemRepository priceQuotationItemRepository;
+    StockExportRepository stockExportRepository;
+    StockExportItemRepository stockExportItemRepository;
+    StockExportItemHistoryRepository stockExportItemHistoryRepository;
+    PriceQuotationRepository priceQuotationRepository;
+    PartRepository partRepository;
+    EmployeeRepository employeeRepository;
+    CodeSequenceService codeSequenceService;
+    StockExportMapper stockExportMapper;
 
+    @Transactional
     @Override
-    public Page<StockExportResponse> getExportingQuotations(int page, int size) {
+    public StockExportDetailResponse createExportFromQuotation(Long quotationId, String reason, Employee creator) {
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+        stockExportRepository.findByQuotationId(quotationId).ifPresent(se -> {
+            throw new RuntimeException("Đã tồn tại phiếu xuất kho cho báo giá này");
+        });
 
-        // Lấy tất cả báo giá có exportStatus = WAITING_TO_EXPORT
-        Page<PriceQuotation> quotations = quotationRepository.findByExportStatus(
-                ExportStatus.WAITING_TO_EXPORT,
-                pageable
-        );
+        StockExport export = StockExport.builder()
+                .code(codeSequenceService.generateCode("XK"))
+                .quotation(quotation)
+                .reason(reason)
+                .status(ExportStatus.WAITING_TO_CONFIRM)
+                .createdBy(creator != null ? creator.getFullName() : null)
+                .build();
 
-        return quotations.map(priceQuotationMapper::toStockExportResponse);
+        List<StockExportItem> items = quotation.getItems().stream()
+                .filter(i -> i.getItemType() == PriceQuotationItemType.PART)
+                .filter(i -> i.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE)
+                .map(item -> StockExportItem.builder()
+                        .stockExport(export)
+                        .quotationItem(item)
+                        .part(item.getPart())
+                        .quantity(item.getQuantity())
+                        .quantityExported(0.0)
+                        .status(ExportItemStatus.EXPORTING)
+                        .build())
+                .collect(Collectors.toList());
+
+        export.setExportItems(items);
+
+        StockExport saved = stockExportRepository.save(export);
+
+        StockExportDetailResponse detail = stockExportMapper.toDetailDto(saved);
+        List<StockExportItemResponse> itemDtos = saved.getExportItems().stream()
+                .map(stockExportMapper::toItemDto)
+                .toList();
+        detail.setItems(itemDtos);
+        return detail;
     }
 
     @Override
-    public List<StockExportItemResponse> getExportingQuotationById(Long quotationId) {
+    public Page<StockExportListResponse> getExports(String keyword, String status, String fromDate, String toDate, Pageable pageable) {
+        Page<StockExport> page = stockExportRepository.findAll(pageable);
 
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
-
-        return quotation.getItems().stream()
-                .filter(item -> item.getItemType() == PriceQuotationItemType.PART)
-                .map(itemMapper::toStockExportItemResponse)
+        List<StockExport> filtered = page.getContent().stream()
+                .filter(se -> {
+                    if (keyword == null || keyword.isBlank()) return true;
+                    String lower = keyword.toLowerCase();
+                    return (se.getCode() != null && se.getCode().toLowerCase().contains(lower))
+                            || (se.getQuotation() != null && se.getQuotation().getCode() != null
+                            && se.getQuotation().getCode().toLowerCase().contains(lower));
+                })
+                .filter(se -> {
+                    if (status == null || status.isBlank()) return true;
+                    return se.getStatus().name().equalsIgnoreCase(status);
+                })
+                .filter(se -> filterByDateRange(se, fromDate, toDate))
                 .toList();
+
+        List<StockExportListResponse> dtos = filtered.stream()
+                .map(stockExportMapper::toListDto)
+                .toList();
+
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
+    private boolean filterByDateRange(StockExport export, String fromDate, String toDate) {
+        if ((fromDate == null || fromDate.isBlank()) && (toDate == null || toDate.isBlank())) {
+            return true;
+        }
+        LocalDate createdDate = Optional.ofNullable(export.getCreatedAt())
+                .map(LocalDateTime::toLocalDate)
+                .orElse(null);
+        if (createdDate == null) return false;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        if (fromDate != null && !fromDate.isBlank()) {
+            LocalDate from = LocalDate.parse(fromDate, formatter);
+            if (createdDate.isBefore(from)) return false;
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            LocalDate to = LocalDate.parse(toDate, formatter);
+            if (createdDate.isAfter(to)) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public StockExportDetailResponse getExportDetail(Long id) {
+        StockExport export = stockExportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
+
+        StockExportDetailResponse detail = stockExportMapper.toDetailDto(export);
+        List<StockExportItemResponse> itemDtos = export.getExportItems().stream()
+                .map(stockExportMapper::toItemDto)
+                .toList();
+        detail.setItems(itemDtos);
+        return detail;
+    }
+
+    @Override
+    public Page<StockExportItemResponse> getExportItems(Long exportId, Pageable pageable) {
+        StockExport export = stockExportRepository.findById(exportId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
+
+        List<StockExportItemResponse> items = export.getExportItems().stream()
+                .map(stockExportMapper::toItemDto)
+                .toList();
+
+        return new PageImpl<>(items, pageable, items.size());
+    }
+
+    @Override
+    public ExportItemDetailResponse getExportItemDetail(Long itemId) {
+        StockExportItem item = stockExportItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng xuất kho"));
+
+        List<StockExportItemHistory> histories = stockExportItemHistoryRepository.findByStockExportItem_Id(itemId);
+        return stockExportMapper.toItemDetailDto(item, histories);
     }
 
     @Transactional
     @Override
-    public StockExportItemResponse exportItem(Long quotationItemId, Double exportQty, Long receiverId) {
+    public StockExportItemResponse exportItem(Long itemId, ExportItemRequest request, Employee exportedBy) {
+        StockExportItem item = stockExportItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng xuất kho"));
 
-        // Lấy item báo giá
-        PriceQuotationItem item = itemRepository.findById(quotationItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy item báo giá"));
-
-
-        if (item.getItemType() != PriceQuotationItemType.PART) {
-            throw new RuntimeException("Chỉ xuất kho cho PART item");
+        if (item.getStatus() == ExportItemStatus.FINISHED) {
+            throw new RuntimeException("Dòng xuất kho đã hoàn thành");
         }
 
-        if (item.getExportStatus() != ExportStatus.WAITING_TO_EXPORT) {
-            throw new RuntimeException("Linh kiện chưa được nhập về! Vui lòng đợi.");
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Số lượng xuất phải > 0");
+        }
+
+        double alreadyExported = Optional.ofNullable(item.getQuantityExported()).orElse(0.0);
+        double remaining = item.getQuantity() - alreadyExported;
+
+        if (request.getQuantity() > remaining) {
+            throw new IllegalArgumentException("Số lượng xuất vượt quá số lượng còn lại");
         }
 
         Part part = item.getPart();
-        if (part == null) {
-            throw new RuntimeException("Item không có Part để xuất");
+        double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+        double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+
+        if (inStock < request.getQuantity()) {
+            throw new IllegalArgumentException("Không đủ tồn kho để xuất");
         }
 
-        // Tính toán exported mới
-        double exported = Optional.ofNullable(item.getExportedQuantity()).orElse(0.0);
-        double newExported = exported + exportQty;
-
-        // Không cho xuất quá số lượng item
-        if (newExported > item.getQuantity()) {
-            throw new RuntimeException("Số lượng xuất vượt quá số lượng cần xuất của item");
-        }
-
-        // Trừ tồn kho
-        part.setQuantityInStock(
-                Optional.ofNullable(part.getQuantityInStock()).orElse(0.0) - exportQty
-        );
-
-        // Trừ reserved
-        part.setReservedQuantity(
-                Optional.ofNullable(part.getReservedQuantity()).orElse(0.0) - exportQty
-        );
-
+        // Cập nhật tồn kho
+        part.setQuantityInStock(inStock - request.getQuantity());
+        part.setReservedQuantity(Math.max(0.0, reserved - request.getQuantity()));
         partRepository.save(part);
 
-        // Cập nhật exported của item
-        item.setExportedQuantity(newExported);
+        // Lấy nhân viên nhận linh kiện
+        Employee employee = employeeRepository.findById(request.getReceiverId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên nhận linh kiện"));
+
+        // Cập nhật dòng xuất
+        double newExported = alreadyExported + request.getQuantity();
+        item.setQuantityExported(newExported);
+        item.setReceiver(employee); // hoặc tìm theo request.getReceiverId()
+        item.setExportedAt(LocalDateTime.now());
+        item.setNote(request.getNote());
 
         if (newExported >= item.getQuantity()) {
-            item.setExportStatus(ExportStatus.EXPORTED);
+            item.setStatus(ExportItemStatus.FINISHED);
         } else {
-            item.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
+            item.setStatus(ExportItemStatus.EXPORTING);
         }
 
-        itemRepository.save(item);
+        stockExportItemRepository.save(item);
 
-        StockExport export = exportRepository.findByQuotationId(
-                item.getPriceQuotation().getPriceQuotationId()
-        ).orElseGet(() -> {
-            StockExport ex = StockExport.builder()
-                    .quotation(item.getPriceQuotation())
-                    .code(codeSequenceService.generateCode("XK"))
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            return exportRepository.save(ex);
-        });
-
-
-        Employee employee = employeeRepository.findById(receiverId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên ID: " + receiverId));
-
-        // Tạo dòng xuất kho (StockExportItem)
-        StockExportItem exportItem = StockExportItem.builder()
-                .stockExport(export)
-                .quotationItem(item)
-                .quantity(exportQty)
-                .unit(item.getUnit())
-                .receiver(employee)
+        // Lưu history
+        StockExportItemHistory history = StockExportItemHistory.builder()
+                .stockExportItem(item)
+                .quantity(request.getQuantity())
+                .exportedBy(exportedBy)
                 .build();
+        stockExportItemHistoryRepository.save(history);
 
-        stockExportItemRepository.save(exportItem);
+        // Auto update status phiếu xuất
+        updateExportStatus(item.getStockExport());
 
-        return itemMapper.toStockExportItemResponse(item);
+        return stockExportMapper.toItemDto(item);
+    }
+
+    @Override
+    public ExportItemDetailResponse getExportItemHistory(Long itemId) {
+        StockExportItem item = stockExportItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng xuất kho"));
+        List<StockExportItemHistory> histories = stockExportItemHistoryRepository.findByStockExportItem_Id(itemId);
+        return stockExportMapper.toItemDetailDto(item, histories);
     }
 
     @Transactional
     @Override
-    public StockExportResponseDto createExport(StockExportCreateDto dto) {
+    public StockExportDetailResponse approveExport(Long id, Employee approver) {
+        StockExport export = stockExportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
 
-        Employee creator = employeeRepository.findById(dto.getCreatedById())
-                .orElseThrow(() -> new RuntimeException("Người tạo không tồn tại"));
-
-        Employee receiver = employeeRepository.findById(dto.getReceiverId())
-                .orElseThrow(() -> new RuntimeException("Người nhận không tồn tại"));
-
-        Employee damagedBy = null;
-
-        boolean isEmployeeDamage = "Hỏng do nhân viên".equals(dto.getReason());
-
-        if (isEmployeeDamage) {
-            damagedBy = employeeRepository.findById(dto.getDamagedById())
-                    .orElseThrow(() -> new RuntimeException("Người gây hỏng không tồn tại"));
+        if (export.getStatus() != ExportStatus.WAITING_TO_CONFIRM) {
+            throw new RuntimeException("Chỉ có thể duyệt phiếu ở trạng thái chờ xác nhận");
         }
 
-        StockExport export = StockExport.builder()
-                .code(codeSequenceService.generateCode("XH"))
-                .createdAt(LocalDateTime.now())
-                .build();
+        export.setStatus(ExportStatus.WAITING_TO_EXECUTE);
+        export.setApprovedBy(approver.getFullName());
+        export.setApprovedAt(LocalDateTime.now());
+        stockExportRepository.save(export);
 
-        exportRepository.save(export);
-
-        BigDecimal totalDamageCost = BigDecimal.ZERO;
-
-        for (PartItemDto itemDto : dto.getItems()) {
-
-            Part part = partRepository.findById(itemDto.getPartId())
-                    .orElseThrow(() -> new RuntimeException("Part không tồn tại"));
-
-            if (part.getQuantityInStock() < itemDto.getQuantity()) {
-                throw new RuntimeException("Không đủ hàng trong kho: " + part.getName());
-            }
-
-            part.setQuantityInStock(part.getQuantityInStock() - itemDto.getQuantity());
-            partRepository.save(part);
-
-            StockExportItem exportItem = StockExportItem.builder()
-                    .stockExport(export)
-                    .quotationItem(null)
-                    .quantity(itemDto.getQuantity())
-                    .unit(part.getUnit().getName())
-                    .receiver(receiver)
-                    .build();
-
-            stockExportItemRepository.save(exportItem);
-
-            if (isEmployeeDamage) {
-                BigDecimal damageCost = part.getSellingPrice()
-                        .multiply(BigDecimal.valueOf(itemDto.getQuantity()));
-
-                totalDamageCost = totalDamageCost.add(damageCost);
-            }
-        }
-
-        if (isEmployeeDamage) {
-            Deduction deduction = Deduction.builder()
-                    .employee(damagedBy)
-                    .type(DeductionType.DAMAGE)
-                    .reason(dto.getNote())
-                    .amount(totalDamageCost)
-                    .date(LocalDate.now())
-                    .createdBy(creator.getFullName())
-                    .build();
-
-            deductionRepository.save(deduction);
-        }
-
-        return new StockExportResponseDto(export.getId(), export.getCode(), export.getCreatedAt());
+        return getExportDetail(id);
     }
 
+    @Transactional
     @Override
-    public StockExportItemResponse getExportItemById(Long exportItemId) {
+    public StockExportDetailResponse cancelExport(Long id, Employee canceller) {
+        StockExport export = stockExportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
 
-        PriceQuotationItem priceQuotationItem = priceQuotationItemRepository.findById(exportItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy item báo giá ID: " + exportItemId));
+        if (export.getStatus() == ExportStatus.COMPLETED) {
+            throw new RuntimeException("Không thể hủy phiếu đã hoàn thành");
+        }
 
-        return itemMapper.toStockExportItemResponse(priceQuotationItem);
+        export.setStatus(ExportStatus.WAITING_TO_CONFIRM);
+        stockExportRepository.save(export);
+
+        return getExportDetail(id);
     }
 
+    @Transactional
+    @Override
+    public StockExportDetailResponse markCompleted(Long id, Employee employee) {
+        StockExport export = stockExportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
+
+        updateExportStatus(export);
+
+        return getExportDetail(id);
+    }
+
+    private void updateExportStatus(StockExport export) {
+        List<StockExportItem> items = export.getExportItems();
+
+        boolean allFinished = items.stream()
+                .allMatch(i -> i.getStatus() == ExportItemStatus.FINISHED);
+
+        if (allFinished) {
+            export.setStatus(ExportStatus.COMPLETED);
+            export.setExportedAt(LocalDateTime.now());
+        } else {
+            export.setStatus(ExportStatus.WAITING_TO_EXECUTE);
+        }
+
+        stockExportRepository.save(export);
+    }
 }
+

@@ -180,15 +180,12 @@ public class PayrollServiceImpl implements PayrollService {
         Employee emp = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
-        // ============ 1. Attendance ============
-
         Integer workingDays = attendanceRepository.countPresentDays(employeeId, month, year);
         Integer leaveDays = attendanceRepository.countAbsentDays(employeeId, month, year);
 
         BigDecimal baseSalary = emp.getDailySalary()
                 .multiply(BigDecimal.valueOf(workingDays));
 
-        // ============ 2. Allowance ============
 
         BigDecimal totalAllowance = allowanceRepository.sumForMonth(employeeId, month, year);
         List<Allowance> allowanceList =
@@ -198,7 +195,6 @@ public class PayrollServiceImpl implements PayrollService {
                 .map(a -> new AllowanceDto(a.getType().getVietnamese(), a.getAmount(), a.getCreatedAt(), a.getCreatedBy()))
                 .toList();
 
-        // ============ 3. Deduction ============
 
         BigDecimal totalDeduction = deductionRepository.sumForMonth(employeeId, month, year);
         List<Deduction> deductionList = deductionRepository.findByEmployeeEmployeeIdAndDateBetween(
