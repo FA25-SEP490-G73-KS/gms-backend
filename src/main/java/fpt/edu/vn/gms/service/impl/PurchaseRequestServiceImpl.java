@@ -76,7 +76,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .orElseThrow(() -> new RuntimeException("Người tạo không tồn tại"));
 
         PurchaseRequest request = PurchaseRequest.builder()
-                .code(codeSequenceService.generateCode("PR"))
+                .code(codeSequenceService.generateCode("MH"))
                 .reason(dto.getReason())
                 .createdBy(creator.getEmployeeId())
                 .reason(dto.getNote())

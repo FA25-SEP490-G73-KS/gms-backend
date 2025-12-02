@@ -8,6 +8,7 @@ import fpt.edu.vn.gms.dto.request.DeductionDto;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.PayrollService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class PayrollServiceImpl implements PayrollService {
     DeductionRepository deductionRepository;
     ManualVoucherRepository voucherRepository;
     PayrollRepository payrollRepository;
+    private final CodeSequenceService codeSequenceService;
 
     @Override
     public PayrollMonthlySummaryDto getPayrollPreview(Integer month, Integer year) {
@@ -125,6 +127,7 @@ public class PayrollServiceImpl implements PayrollService {
         }
 
         LedgerVoucher voucher = LedgerVoucher.builder()
+                .code(codeSequenceService.generateCode("CHI"))
                 .type(ManualVoucherType.PAYMENT)
                 .category(LedgerVoucherCategory.SALARY_PAYMENT)
                 .relatedEmployeeId(payroll.getEmployee().getEmployeeId())
@@ -256,4 +259,36 @@ public class PayrollServiceImpl implements PayrollService {
                 .canPaySalary(canPaySalary)
                 .build();
     }
+
+    @Override
+    public PayrollSummaryDto getPayrollSummaryByMonthYear(Integer month, Integer year) {
+
+        var payrolls = payrollRepository.findByMonthAndYear(month, year);
+
+        BigDecimal totalPayroll = java.math.BigDecimal.ZERO;
+        BigDecimal totalApproved = java.math.BigDecimal.ZERO;
+        BigDecimal totalPending = java.math.BigDecimal.ZERO;
+        BigDecimal totalAllowance = java.math.BigDecimal.ZERO;
+        BigDecimal totalDeduction = java.math.BigDecimal.ZERO;
+
+        for (var p : payrolls) {
+            if (p.getNetSalary() != null) totalPayroll = totalPayroll.add(p.getNetSalary());
+            if (p.getTotalAllowance() != null) totalAllowance = totalAllowance.add(p.getTotalAllowance());
+            if (p.getTotalDeduction() != null) totalDeduction = totalDeduction.add(p.getTotalDeduction());
+            if (p.getStatus() == fpt.edu.vn.gms.common.enums.PayrollStatus.APPROVED && p.getNetSalary() != null) {
+                totalApproved = totalApproved.add(p.getNetSalary());
+            }
+            if (p.getStatus() == fpt.edu.vn.gms.common.enums.PayrollStatus.PENDING_MANAGER_APPROVAL && p.getNetSalary() != null) {
+                totalPending = totalPending.add(p.getNetSalary());
+            }
+        }
+        return PayrollSummaryDto.builder()
+                .totalPayroll(totalPayroll)
+                .totalApproved(totalApproved)
+                .totalPending(totalPending)
+                .totalAllowance(totalAllowance)
+                .totalDeduction(totalDeduction)
+                .build();
+    }
+
 }

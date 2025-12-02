@@ -70,7 +70,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Tạo price quotation
         PriceQuotation quotation = PriceQuotation.builder()
-                .code(codeSequenceService.generateCode("QT"))
+                .code(codeSequenceService.generateCode("BG"))
                 .status(PriceQuotationStatus.DRAFT)
                 .estimateAmount(BigDecimal.ZERO)
                 .build();

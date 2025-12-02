@@ -53,6 +53,7 @@ public class OtpController {
         }
     }
 
+    @Public
     @PostMapping("/verify")
     @Operation(summary = "Xác thực OTP", description = "Xác thực mã OTP do khách hàng nhập")
     @ApiResponses(value = {

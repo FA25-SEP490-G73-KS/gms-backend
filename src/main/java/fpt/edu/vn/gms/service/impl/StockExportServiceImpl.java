@@ -43,6 +43,7 @@ public class StockExportServiceImpl implements StockExportService {
     private final CodeSequenceService codeSequenceService;
     private final PriceQuotationMapper priceQuotationMapper;
     private final PriceQuotationItemMapper itemMapper;
+    private final PriceQuotationItemRepository priceQuotationItemRepository;
 
     @Override
     public Page<StockExportResponse> getExportingQuotations(int page, int size) {
@@ -173,7 +174,7 @@ public class StockExportServiceImpl implements StockExportService {
         }
 
         StockExport export = StockExport.builder()
-                .code(codeSequenceService.generateCode("EXP"))
+                .code(codeSequenceService.generateCode("XH"))
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -225,6 +226,15 @@ public class StockExportServiceImpl implements StockExportService {
         }
 
         return new StockExportResponseDto(export.getId(), export.getCode(), export.getCreatedAt());
+    }
+
+    @Override
+    public StockExportItemResponse getExportItemById(Long exportItemId) {
+
+        PriceQuotationItem priceQuotationItem = priceQuotationItemRepository.findById(exportItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy item báo giá ID: " + exportItemId));
+
+        return itemMapper.toStockExportItemResponse(priceQuotationItem);
     }
 
 }

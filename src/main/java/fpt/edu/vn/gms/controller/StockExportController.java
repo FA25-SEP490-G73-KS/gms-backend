@@ -128,4 +128,11 @@ public class StockExportController {
                                 .body(ApiResponse.success("Xuất kho thành công", response));
         }
 
+        @GetMapping("/item/{exportItemId}")
+        @Operation(summary = "Lấy chi tiết dòng xuất kho", description = "Lấy chi tiết một dòng xuất kho theo exportItemId.")
+        public ResponseEntity<ApiResponse<StockExportItemResponse>> getExportItemById(@PathVariable Long exportItemId) {
+                StockExportItemResponse response = stockExportService.getExportItemById(exportItemId);
+                return ResponseEntity.ok(ApiResponse.success("Chi tiết dòng xuất kho", response));
+        }
+
 }

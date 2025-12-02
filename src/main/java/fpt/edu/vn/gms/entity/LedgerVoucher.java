@@ -24,25 +24,24 @@ public class LedgerVoucher {
     private Long id;
 
     @Column(name = "code", length = 50, nullable = false, unique = true)
-    private String code;  // THU-2025-00001 / CHI-2025-00001
+    private String code;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
     private ManualVoucherType type;
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
-    private BigDecimal amount; // tổng tiền chi
+    private BigDecimal amount;
 
-    private Long relatedEmployeeId; // nếu chi lương
+    private Long relatedEmployeeId;
 
-    private Long relatedSupplierId; // nếu chi NCC
+    private Long relatedSupplierId;
 
     @Column(name = "description", length = 255)
-    private String description; // "Thanh toán vật tư: Dầu máy 5W-30"
+    private String description;
 
     @Enumerated(EnumType.STRING)
     private LedgerVoucherCategory category;
-    // ví dụ: SALARY, ELECTRICITY, SUPPLIER_PAYMENT, OTHER
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

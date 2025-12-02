@@ -93,13 +93,26 @@ public class StockReceiptServiceImpl implements StockReceiptService {
     }
 
     @Override
-    public List<StockReceiptItemResponseDto> getReceiptItems(Long receiptId) {
-        log.info("[ACCOUNTING][STK] list items receiptId={}", receiptId);
+    public Page<StockReceiptItemResponseDto> getReceiptItems(Long receiptId, int page, int size) {
+        log.info("[ACCOUNTING][STK] list items receiptId={} page={} size={}", receiptId, page, size);
 
         StockReceipt receipt = stockReceiptRepo.findById(receiptId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
 
-        return stockReceiptItemMapper.toDtos(stockReceiptItemRepo.findByStockReceipt(receipt));
+        Pageable pageable = PageRequest.of(page, size);
+
+        return stockReceiptItemRepo.findByStockReceipt(receipt, pageable)
+                .map(stockReceiptItemMapper::toDto);
+    }
+
+    @Override
+    public StockReceiptItemResponseDto getReceiptItemDetail(Long itemId) {
+        log.info("[ACCOUNTING][STK] get item detail itemId={}", itemId);
+
+        StockReceiptItem item = stockReceiptItemRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng nhập kho"));
+
+        return stockReceiptItemMapper.toDto(item);
     }
 
     // =======================================================================

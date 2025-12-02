@@ -16,5 +16,9 @@ public interface StockReceiptService {
     // Kế toán
     Page<StockReceiptResponseDto> getReceiptsForAccounting(int page, int size, String search);
 
-    List<StockReceiptItemResponseDto> getReceiptItems(Long receiptId);
+    // Danh sách dòng nhập kho theo phiếu - phân trang
+    Page<StockReceiptItemResponseDto> getReceiptItems(Long receiptId, int page, int size);
+
+    // Lấy chi tiết 1 dòng nhập kho trong 1 phiếu (đảm bảo thuộc đúng receipt)
+    StockReceiptItemResponseDto getReceiptItemDetail(Long itemId);
 }

@@ -18,4 +18,6 @@ public interface StockExportService {
     StockExportResponseDto createExport(StockExportCreateDto dto);
 
     StockExportItemResponse exportItem(Long quotationId, Double exportQty, Long receiverId);
+
+    StockExportItemResponse getExportItemById(Long exportItemId);
 }

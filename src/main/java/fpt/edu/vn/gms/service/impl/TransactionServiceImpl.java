@@ -13,6 +13,7 @@ import fpt.edu.vn.gms.common.enums.TransactionMethod;
 import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.request.TransactionCallbackDto;
+import fpt.edu.vn.gms.dto.request.TransactionManualCallbackRequestDto;
 import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.Invoice;
 import fpt.edu.vn.gms.entity.Transaction;
@@ -44,55 +45,11 @@ public class TransactionServiceImpl implements TransactionService {
   private final CustomerRepository customerRepository;
   private final CustomerService customerService;
 
-  @Override
-  public TransactionResponseDto createTransaction(CreateTransactionRequestDto request)
-      throws Exception {
-    Invoice invoice = request.getInvoice();
-    Debt debt = request.getDebt();
-
-    String customerFullName = request.getCustomerFullName();
-    String customerPhone = request.getCustomerPhone();
-    Long price = request.getPrice();
-    PaymentTransactionType type = request.getType();
-
-    Transaction transaction = Transaction.builder().debt(debt)
-        .invoice(invoice)
-        .customerFullName(customerFullName)
-        .customerPhone(customerPhone)
-        .amount(price)
-        .method(request.getMethod())
-        .type(type)
-        .isActive(request.getMethod() == TransactionMethod.CASH)
-        .build();
-
-    if (request.getMethod() == TransactionMethod.BANK_TRANSFER) {
-      String description = getDescriptionOfTransaction(type, invoice);
-      long orderCode = System.currentTimeMillis() / 1000;
-
-      CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
-          .orderCode(orderCode)
-          .description(description)
-          .amount(price)
-          .buyerName(customerFullName)
-          .buyerPhone(customerPhone)
-          .returnUrl(returnUrl)
-          .cancelUrl(returnUrl)
-          .build();
-
-      var payOSResponse = payOS.paymentRequests().create(paymentData);
-      transaction.setPaymentLinkId(payOSResponse.getPaymentLinkId());
-      TransactionResponseDto responseDto = transactionMapper.toResponseDto(transactionRepository.save(transaction));
-      responseDto.setPaymentUrl(payOSResponse.getCheckoutUrl());
-      return responseDto;
-    }
-
-    return transactionMapper.toResponseDto(transactionRepository.save(transaction));
-  }
-
-  @Override
-  public void handleCallback(TransactionCallbackDto callbackDto) {
-    String paymentLinkId = callbackDto.getPaymentLinkId();
-
+  /**
+   * Dùng chung core logic xử lý thanh toán thành công/failed dựa trên paymentLinkId.
+   * Trả về Transaction đã cập nhật để tái sử dụng.
+   */
+  private Transaction processPaymentByPaymentLinkId(String paymentLinkId) {
     var paymentInfo = payOS.paymentRequests().get(paymentLinkId);
     Transaction transaction = transactionRepository.findByPaymentLinkId(paymentLinkId)
         .orElseThrow(TransactionNotFoundException::new);
@@ -142,14 +99,72 @@ public class TransactionServiceImpl implements TransactionService {
         debtRepository.save(debt);
       }
 
-      return;
+      return transaction;
     }
 
     if (List.of(PaymentLinkStatus.CANCELLED, PaymentLinkStatus.EXPIRED, PaymentLinkStatus.FAILED)
         .contains(paymentInfo.getStatus())) {
       transactionRepository.delete(transaction);
-      return;
     }
+
+    return transaction;
+  }
+
+  @Override
+  public TransactionResponseDto createTransaction(CreateTransactionRequestDto request)
+      throws Exception {
+    Invoice invoice = request.getInvoice();
+    Debt debt = request.getDebt();
+
+    String customerFullName = request.getCustomerFullName();
+    String customerPhone = request.getCustomerPhone();
+    Long price = request.getPrice();
+    PaymentTransactionType type = request.getType();
+
+    Transaction transaction = Transaction.builder().debt(debt)
+        .invoice(invoice)
+        .customerFullName(customerFullName)
+        .customerPhone(customerPhone)
+        .amount(price)
+        .method(request.getMethod())
+        .type(type)
+        .isActive(request.getMethod() == TransactionMethod.CASH)
+        .build();
+
+    if (request.getMethod() == TransactionMethod.BANK_TRANSFER) {
+      String description = getDescriptionOfTransaction(type, invoice);
+      long orderCode = System.currentTimeMillis() / 1000;
+
+      CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
+          .orderCode(orderCode)
+          .description(description)
+          .amount(price)
+          .buyerName(customerFullName)
+          .buyerPhone(customerPhone)
+          .returnUrl(returnUrl)
+          .cancelUrl(returnUrl)
+          .build();
+
+      var payOSResponse = payOS.paymentRequests().create(paymentData);
+      transaction.setPaymentLinkId(payOSResponse.getPaymentLinkId());
+      TransactionResponseDto responseDto = transactionMapper.toResponseDto(transactionRepository.save(transaction));
+      responseDto.setPaymentUrl(payOSResponse.getCheckoutUrl());
+      return responseDto;
+    }
+
+    return transactionMapper.toResponseDto(transactionRepository.save(transaction));
+  }
+
+  @Override
+  public void handleCallback(TransactionCallbackDto callbackDto) {
+    String paymentLinkId = callbackDto.getPaymentLinkId();
+    processPaymentByPaymentLinkId(paymentLinkId);
+  }
+
+  @Override
+  public TransactionResponseDto manualCallback(TransactionManualCallbackRequestDto request) {
+    Transaction tx = processPaymentByPaymentLinkId(request.getPaymentLinkId());
+    return transactionMapper.toResponseDto(tx);
   }
 
   private String getDescriptionOfTransaction(PaymentTransactionType type, Invoice invoice) {

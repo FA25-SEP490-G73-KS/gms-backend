@@ -147,7 +147,7 @@ public class ManualVoucherController {
         );
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> approveVoucher(
             @PathVariable Long id,
             @CurrentUser Employee approver
@@ -156,6 +156,20 @@ public class ManualVoucherController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Duyệt phiếu thu/chi thành công", result)
+        );
+    }
+    
+    @PostMapping("/{id}/finish")
+    @Operation(
+            summary = "Chi tiền và hoàn tất phiếu thu-chi",
+            description = "Chỉ cho phép cập nhật trạng thái từ Đã duyệt sang Hoàn tất."
+    )
+    public ResponseEntity<ApiResponse<ManualVoucherResponseDto>> finishVoucher(
+            @PathVariable Long id
+    ) {
+        ManualVoucherResponseDto result = manualVoucherService.finishVoucher(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Hoàn tất chi tiền thành công", result)
         );
     }
 }

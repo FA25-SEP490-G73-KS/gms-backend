@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PayrollDetailDto;
 import fpt.edu.vn.gms.dto.response.PayrollMonthlySummaryDto;
+import fpt.edu.vn.gms.dto.response.PayrollSummaryDto;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.PayrollService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -166,5 +167,15 @@ public class PayrollController {
                 )
         );
     }
-}
 
+    @Operation(
+            summary = "Tổng hợp lương theo tháng/năm",
+            description = "Lấy tổng hợp lương, phụ cấp, khấu trừ của toàn bộ nhân viên theo tháng và năm."
+    )
+    @GetMapping("/summary-by-month")
+    public ResponseEntity<ApiResponse<PayrollSummaryDto>> getPayrollSummaryByMonthYear(@RequestParam Integer month, @RequestParam Integer year) {
+        PayrollSummaryDto summary = payrollService.getPayrollSummaryByMonthYear(month, year);
+        return ResponseEntity.ok(ApiResponse.success("Tổng hợp lương toàn hệ thống theo tháng", summary));
+    }
+
+}

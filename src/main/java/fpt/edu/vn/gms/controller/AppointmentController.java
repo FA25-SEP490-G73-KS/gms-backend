@@ -72,6 +72,7 @@ public class AppointmentController {
                                                 service.getAppointmentsByStatus(status, pageable)));
         }
 
+        @Public
         @GetMapping("/time-slots")
         @Operation(summary = "Lấy các khung giờ trống", description = "Lấy danh sách các khung giờ còn trống trong một ngày cụ thể.")
         @ApiResponses(value = {
@@ -98,6 +99,7 @@ public class AppointmentController {
                 return ResponseEntity.ok(ApiResponse.success("Appointment found", appointment));
         }
 
+        @Public
         @GetMapping("/date")
         @Operation(summary = "Lấy cuộc hẹn theo ngày", description = "Lấy danh sách các cuộc hẹn trong một ngày cụ thể, được nhóm theo khung giờ.")
         @ApiResponses(value = {

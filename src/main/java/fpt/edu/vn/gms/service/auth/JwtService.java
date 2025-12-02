@@ -31,6 +31,10 @@ public class JwtService {
     @Value("${jwt.refresh.expiration}")
     private Long REFRESH_EXPIRATION;
 
+    // Thời gian sống refresh token khi bật remember me (giây)
+    @Value("${jwt.refresh.remember-expiration:${jwt.refresh.expiration}}")
+    private Long REFRESH_REMEMBER_EXPIRATION;
+
     private final RedisService redisService;
 
     // -------------------- GENERATE TOKEN --------------------
@@ -49,14 +53,22 @@ public class JwtService {
     }
 
     public String generateRefreshToken(Employee employee) {
+        // Mặc định không remember me
+        return generateRefreshToken(employee, false);
+    }
+
+    // Sinh refresh token có/không remember me
+    public String generateRefreshToken(Employee employee, boolean rememberMe) {
         Instant currentInstant = Instant.now();
         Date issuedAt = Date.from(currentInstant);
-        Date expiration = Date.from(currentInstant.plusSeconds(REFRESH_EXPIRATION));
+        long expirationSeconds = rememberMe ? REFRESH_REMEMBER_EXPIRATION : REFRESH_EXPIRATION;
+        Date expiration = Date.from(currentInstant.plusSeconds(expirationSeconds));
 
         return Jwts.builder()
                 .setSubject(employee.getEmployeeId().toString())
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
+                .claim("rememberMe", rememberMe)
                 .signWith(getSigningKey(REFRESH_SECRET))
                 .compact();
     }

@@ -7,7 +7,7 @@ import fpt.edu.vn.gms.entity.PriceQuotationItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = { PartMapper.class })
+@Mapper(componentModel = "spring", uses = { PartMapper.class})
 public interface PriceQuotationItemMapper {
 
     @Mapping(target = "priceQuotationItemId", source = "priceQuotationItemId")
@@ -18,11 +18,11 @@ public interface PriceQuotationItemMapper {
     PriceQuotationItemResponseDto toResponseDto(PriceQuotationItem entity);
 
     @Mapping(target = "itemId", source = "priceQuotationItemId")
-    @Mapping(target = "sku", source = "part.sku")
+    @Mapping(target = "part", source = "part")
     @Mapping(target = "quantity", source = "quantity")
-    @Mapping(target = "quantityInStock", source = "part.quantityInStock")
     @Mapping(target = "exportedQuantity", source = "exportedQuantity")
     @Mapping(target = "exportStatus", source = "exportStatus")
+    @Mapping(target = "stockExportItems", source = "stockExportItems")
     StockExportItemResponse toStockExportItemResponse(PriceQuotationItem entity);
 
     @Mapping(target = "name", source = "itemName")

@@ -32,6 +32,9 @@ public class PurchaseRequest {
     @JoinColumn(name = "quotation_id")
     private PriceQuotation relatedQuotation;
 
+    @OneToOne(mappedBy = "purchaseRequest")
+    private StockReceipt stockReceipt;
+
     // Tổng dự kiến chi phí
     @Column(nullable = true)
     private BigDecimal totalEstimatedAmount;

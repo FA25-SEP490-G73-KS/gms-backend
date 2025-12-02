@@ -23,11 +23,11 @@ public class StockExport {
     @Column(name = "export_id")
     private Long id;
 
-    @Column(name = "code", nullable = false, unique = true)
+    @Column(name = "code", unique = true)
     private String code;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quotation_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "quotation_id")
     private PriceQuotation quotation;
 
     @Column(name = "created_at", nullable = false)

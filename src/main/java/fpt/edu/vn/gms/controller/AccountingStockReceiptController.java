@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping(path = AppRoutes.ACCOUNTING_STOCK_RECEIPT_PREFIX,
@@ -71,13 +70,37 @@ public class AccountingStockReceiptController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu nhập kho")
     })
     @GetMapping("/{receiptId}/items")
-    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<List<StockReceiptItemResponseDto>>> listItems(
-            @PathVariable Long receiptId
+    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<Page<StockReceiptItemResponseDto>>> listItems(
+            @PathVariable Long receiptId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
                 fpt.edu.vn.gms.dto.response.ApiResponse.success(
                         "Danh sách dòng nhập kho",
-                        stockReceiptService.getReceiptItems(receiptId)
+                        stockReceiptService.getReceiptItems(receiptId, page, size)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Lấy chi tiết dòng nhập kho theo STK",
+            description = "Lấy chi tiết một dòng nhập kho thuộc một phiếu nhập kho."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lấy chi tiết thành công",
+                    content = @Content(schema =
+                    @Schema(implementation = StockReceiptItemResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu hoặc dòng nhập kho")
+    })
+    @GetMapping("/items/{itemId}")
+    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<StockReceiptItemResponseDto>> getReceiptItemDetail(
+            @PathVariable Long itemId
+    ) {
+        return ResponseEntity.ok(
+                fpt.edu.vn.gms.dto.response.ApiResponse.success(
+                        "Chi tiết dòng nhập kho",
+                        stockReceiptService.getReceiptItemDetail(itemId)
                 )
         );
     }

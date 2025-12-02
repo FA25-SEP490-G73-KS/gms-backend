@@ -24,16 +24,20 @@ public class AccessToken {
     @Column(name = "access_token", length = 1000)
     @SerializedName("access_token")
     private String accessToken;
+
     @Column(name = "refresh_token", length = 1000)
     @SerializedName("refresh_token")
     private String refreshToken;
+
     @Transient
     @SerializedName("expires_in")
     public String expiresIn;
+
     @Column(name = "created_at")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Date createAt;
+
     @Column(name = "updated_at")
     @LastModifiedDate
     @Temporal(TemporalType.TIMESTAMP)

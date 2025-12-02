@@ -18,11 +18,11 @@ public class StockExportItem {
     @Column(name = "export_item_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "export_id", nullable = false)
     private StockExport stockExport;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "quotation_item_id", nullable = false)
     private PriceQuotationItem quotationItem;
 
@@ -32,7 +32,7 @@ public class StockExportItem {
     @Column(name = "unit", length = 20)
     private String unit;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "receiver_id")
     private Employee receiver;
 

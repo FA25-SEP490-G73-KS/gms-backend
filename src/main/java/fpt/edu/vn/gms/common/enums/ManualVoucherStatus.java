@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 public enum ManualVoucherStatus {
     PENDING("Chờ duyệt"),
     APPROVED("Đã duyệt"),
-    REJECTED("Từ chối");
+    REJECTED("Từ chối"),
+    FINISHED("Hoàn tất");
 
     private final String value;
 

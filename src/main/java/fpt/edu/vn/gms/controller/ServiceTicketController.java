@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;

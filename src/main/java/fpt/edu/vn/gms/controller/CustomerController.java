@@ -58,6 +58,7 @@ public class CustomerController {
                 return ResponseEntity.status(200).body(customers);
         }
 
+        @Public
         @GetMapping("/phone")
         @Operation(summary = "Lấy khách hàng theo số điện thoại", description = "Lấy thông tin chi tiết của khách hàng bằng số điện thoại.")
         @ApiResponses(value = {

@@ -60,6 +60,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             customer = customerRepository.findById(dto.getCustomer().getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng!"));
 
+
             customer.setAddress(dto.getCustomer().getAddress());
         } else {
 
@@ -169,7 +170,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // 6. Tạo service ticket
         // ----------------------------
         ServiceTicket ticket = ServiceTicket.builder()
-                .serviceTicketCode(codeSequenceService.generateCode("STK"))
+                .serviceTicketCode(codeSequenceService.generateCode("DV"))
                 .serviceTypes(serviceTypes)
                 .customer(customer)
                 .customerName(customer.getFullName())

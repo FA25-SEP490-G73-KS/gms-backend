@@ -25,15 +25,15 @@ public class StockReceipt {
     private Long receiptId;
 
     @Column(name = "code", unique = true, length = 50, nullable = false)
-    private String code;                       // SR-2025-00001
+    private String code;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "purchase_request_id", nullable = false)
-    private PurchaseRequest purchaseRequest;   // PR liên quan
+    private PurchaseRequest purchaseRequest;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
-    private Employee createdBy;                // Thủ kho nhập
+    private Employee createdBy;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

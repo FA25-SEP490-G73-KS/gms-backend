@@ -52,7 +52,9 @@ public class AuthService {
     }
 
     Employee employee = employeeRepository.findByAccount(account).orElseThrow(InvalidCredentialsException::new);
-    return getTokens(employee);
+
+    boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
+    return getTokens(employee, rememberMe);
   }
 
   public AuthTokenDto refresh(RefreshRequestDto request) {
@@ -66,8 +68,12 @@ public class AuthService {
 
     Employee employee = employeeRepository.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
 
+    // Lấy thông tin rememberMe từ refresh token cũ (nếu có)
+    Boolean rememberMeClaim = decodedRefreshToken.getBody().get("rememberMe", Boolean.class);
+    boolean rememberMe = Boolean.TRUE.equals(rememberMeClaim);
+
     invalidateTokens(employeeId);
-    return getTokens(employee);
+    return getTokens(employee, rememberMe);
   }
 
   @Transactional
@@ -137,8 +143,12 @@ public class AuthService {
   }
 
   private AuthTokenDto getTokens(Employee employee) {
+    return getTokens(employee, false);
+  }
+
+  private AuthTokenDto getTokens(Employee employee, boolean rememberMe) {
     String accessToken = jwtService.generateAccessToken(employee);
-    String refreshToken = jwtService.generateRefreshToken(employee);
+    String refreshToken = jwtService.generateRefreshToken(employee, rememberMe);
 
     return new AuthTokenDto(accessToken, refreshToken);
   }

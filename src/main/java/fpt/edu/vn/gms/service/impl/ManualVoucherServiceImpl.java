@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
 import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
 import fpt.edu.vn.gms.common.enums.ManualVoucherType;
 import fpt.edu.vn.gms.dto.request.ExpenseVoucherCreateRequest;
@@ -78,7 +79,8 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
         LedgerVoucher voucher = LedgerVoucher.builder()
                 .code(codeSequenceService.generateCode("PAY"))
                 .type(ManualVoucherType.PAYMENT)
-                .status(ManualVoucherStatus.APPROVED)
+                .category(LedgerVoucherCategory.SUPPLIER_PAYMENT)
+                .status(ManualVoucherStatus.FINISHED)
                 .amount(amount)
                 .relatedSupplierId(request.getSupplierId())
                 .attachmentUrl(request.getAttachmentUrl())
@@ -214,5 +216,18 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
                 .approvedBy(voucher.getApprovedBy().getFullName())
                 .attachmentUrl(voucher.getAttachmentUrl())
                 .build();
+    }
+
+    @Override
+    public ManualVoucherResponseDto finishVoucher(Long voucherId) {
+        LedgerVoucher voucher = manualRepo.findById(voucherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+        if (voucher.getStatus() != ManualVoucherStatus.APPROVED) {
+            throw new RuntimeException("Chỉ được chi tiền cho phiếu đã duyệt");
+        }
+        voucher.setStatus(ManualVoucherStatus.FINISHED);
+        voucher.setApprovedAt(java.time.LocalDateTime.now());
+        manualRepo.save(voucher);
+        return manualVoucherMapper.toDto(voucher);
     }
 }

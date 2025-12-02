@@ -38,9 +38,6 @@ public class PurchaseRequestItemController {
     PurchaseRequestItemService purchaseRequestItemService;
 
 
-    // -----------------------
-    // MANAGER REVIEW ITEM
-    // -----------------------
     @PatchMapping("/{itemId}/review")
     @Operation(summary = "Xác nhận hoặc từ chối item trong Purchase Request")
     public ResponseEntity<ApiResponse<PurchaseRequestItemResponseDto>> reviewItem(
@@ -84,4 +81,6 @@ public class PurchaseRequestItemController {
 
         return ResponseEntity.ok(ApiResponse.success("Yêu cầu mua hàng chi tiết", items));
     }
+
+
 }

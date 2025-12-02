@@ -21,4 +21,6 @@ public interface ManualVoucherService {
     ManualVoucherResponseDto getDetail(Long id);
 
     ManualVoucherResponseDto approveVoucher(Long voucherId, Employee approver);
+
+    ManualVoucherResponseDto finishVoucher(Long voucherId);
 }
