@@ -214,5 +214,19 @@ public class ServiceTicketController {
                 );
         }
 
-
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Cập nhật trạng thái phiếu dịch vụ", description = "Cập nhật trạng thái của phiếu dịch vụ theo rule nghiệp vụ.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+    })
+    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateStatus(
+            @PathVariable("id") Long id,
+            @RequestParam("status") ServiceTicketStatus newStatus
+    ) {
+        ServiceTicketResponseDto updated = serviceTicketService.updateStatus(id, newStatus);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái phiếu dịch vụ thành công", updated));
+    }
 }

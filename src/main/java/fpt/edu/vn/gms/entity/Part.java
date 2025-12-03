@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -76,6 +77,10 @@ public class Part {
 
     @Column(length = 100, nullable = true)
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StockLevelStatus status;
 
     @OneToMany(mappedBy = "part")
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();

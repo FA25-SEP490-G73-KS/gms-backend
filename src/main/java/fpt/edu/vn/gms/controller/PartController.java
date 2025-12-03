@@ -27,7 +27,6 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PARTS_PREFIX;
 public class PartController {
 
         private final PartService partService;
-        private final PartMapper partMapper;
 
         @GetMapping
         @Operation(summary = "Tìm tất cả linh kiện", description = "Lấy danh sách tất cả các linh kiện với phân trang.")

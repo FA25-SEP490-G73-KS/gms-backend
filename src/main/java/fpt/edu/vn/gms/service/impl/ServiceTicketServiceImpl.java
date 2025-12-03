@@ -360,5 +360,36 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         }).toList();
     }
 
+    @Transactional
+    @Override
+    public ServiceTicketResponseDto updateStatus(Long id, ServiceTicketStatus newStatus) {
+        ServiceTicket ticket = serviceTicketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ với ID: " + id));
 
+        ServiceTicketStatus current = ticket.getStatus();
+
+        // Cho phép chuyển sang CANCELED từ bất kỳ trạng thái nào
+        if (newStatus == ServiceTicketStatus.CANCELED) {
+            ticket.setStatus(ServiceTicketStatus.CANCELED);
+        } else if (newStatus == ServiceTicketStatus.WAITING_FOR_DELIVERY) {
+            // Chỉ từ CHỜ BÁO GIÁ → CHỜ BÀN GIAO XE
+            if (current != ServiceTicketStatus.WAITING_FOR_QUOTATION) {
+                throw new IllegalStateException("Chỉ phiếu ở trạng thái 'Chờ báo giá' mới được chuyển sang 'Chờ bàn giao xe'");
+            }
+            ticket.setStatus(ServiceTicketStatus.WAITING_FOR_DELIVERY);
+        } else if (newStatus == ServiceTicketStatus.COMPLETED) {
+            // Chỉ từ CHỜ BÀN GIAO XE → HOÀN THÀNH
+            if (current != ServiceTicketStatus.WAITING_FOR_DELIVERY) {
+                throw new IllegalStateException("Chỉ phiếu ở trạng thái 'Chờ bàn giao xe' mới được chuyển sang 'Hoàn thành'");
+            }
+            ticket.setStatus(ServiceTicketStatus.COMPLETED);
+        } else {
+            // Không cho phép chuyển trực tiếp về CREATED hoặc trạng thái không được định nghĩa trong rule
+            throw new IllegalArgumentException("Không được phép chuyển sang trạng thái: " + newStatus);
+        }
+
+        ServiceTicket saved = serviceTicketRepository.save(ticket);
+        return serviceTicketMapper.toResponseDto(saved);
+    }
 }
+

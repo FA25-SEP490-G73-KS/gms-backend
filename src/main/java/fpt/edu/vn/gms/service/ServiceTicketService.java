@@ -34,4 +34,12 @@ public interface ServiceTicketService {
     List<Map<String, Object>> getCompletedTicketsByMonth();
 
     List<Map<String, Object>> getTicketCountsByType(int year, int month);
+
+    /**
+     * Cập nhật trạng thái phiếu dịch vụ theo rule:
+     * - Chỉ từ WAITING_FOR_QUOTATION mới được chuyển sang WAITING_FOR_DELIVERY.
+     * - Chỉ từ WAITING_FOR_DELIVERY mới được chuyển sang COMPLETED.
+     * - Bất kỳ trạng thái nào cũng có thể chuyển sang CANCELED.
+     */
+    ServiceTicketResponseDto updateStatus(Long id, ServiceTicketStatus newStatus);
 }
