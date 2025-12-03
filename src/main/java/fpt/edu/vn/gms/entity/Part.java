@@ -75,7 +75,7 @@ public class Part {
     @Column(nullable = false)
     private boolean specialPart = false;
 
-    @Column(length = 100, nullable = true)
+    @Column(length = 100)
     private String note;
 
     @Enumerated(EnumType.STRING)

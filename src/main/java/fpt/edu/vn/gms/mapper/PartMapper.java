@@ -17,6 +17,7 @@ public interface PartMapper {
     @Mapping(target = "reorderLevel", source = "reorderLevel")
     @Mapping(target = "modelName", source = "vehicleModel.name")
     @Mapping(target = "supplierName", source = "supplier.name")
+    @Mapping(target = "status", source = "status")
     PartReqDto toDto(Part part);
 
 }
