@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -24,8 +25,13 @@ public class StockExportDetailResponse {
     private String approvedBy;
     private String exportedBy;
 
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private LocalDateTime approvedAt;
+
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
     private LocalDateTime exportedAt;
 
     private List<StockExportItemResponse> items;

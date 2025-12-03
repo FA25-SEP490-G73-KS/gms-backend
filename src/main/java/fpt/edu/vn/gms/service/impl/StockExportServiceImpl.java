@@ -58,21 +58,27 @@ public class StockExportServiceImpl implements StockExportService {
                 .code(codeSequenceService.generateCode("XK"))
                 .quotation(quotation)
                 .reason(reason)
-                .status(ExportStatus.WAITING_TO_CONFIRM)
+                .status(ExportStatus.WAITING_TO_EXECUTE)
                 .createdBy(creator != null ? creator.getFullName() : null)
                 .build();
 
+        // Lấy tất cả item là PART. Nếu inventoryStatus == AVAILABLE -> EXPORTING, ngược lại -> WAITING_TO_RECEIPT
         List<StockExportItem> items = quotation.getItems().stream()
                 .filter(i -> i.getItemType() == PriceQuotationItemType.PART)
-                .filter(i -> i.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE)
-                .map(item -> StockExportItem.builder()
-                        .stockExport(export)
-                        .quotationItem(item)
-                        .part(item.getPart())
-                        .quantity(item.getQuantity())
-                        .quantityExported(0.0)
-                        .status(ExportItemStatus.EXPORTING)
-                        .build())
+                .map(item -> {
+                    ExportItemStatus status = (item.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE)
+                            ? ExportItemStatus.EXPORTING
+                            : ExportItemStatus.WAITING_TO_RECEIPT;
+
+                    return StockExportItem.builder()
+                            .stockExport(export)
+                            .quotationItem(item)
+                            .part(item.getPart())
+                            .quantity(item.getQuantity())
+                            .quantityExported(0.0)
+                            .status(status)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         export.setExportItems(items);

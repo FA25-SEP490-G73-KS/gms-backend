@@ -91,7 +91,6 @@ public class ManualVoucherServiceImpl implements ManualVoucherService {
         manualRepo.save(voucher);
 
         // ===== Mark paid =====
-        item.setPaid(true);
         stockReceiptItemRepo.save(item);
 
         log.info("[ACCOUNTING][PAY] DONE: itemId={} amount={}", itemId, amount);

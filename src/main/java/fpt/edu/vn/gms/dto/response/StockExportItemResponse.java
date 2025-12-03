@@ -14,4 +14,3 @@ public class StockExportItemResponse {
     private Double quantityExported;
     private String status;
 }
-

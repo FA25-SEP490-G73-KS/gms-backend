@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum ExportStatus {
+    DRAFT("Nháp"),
     WAITING_TO_CONFIRM("Chờ duyệt"),
     WAITING_TO_EXECUTE("Chờ xử lý"),
     COMPLETED("Hoàn thành");

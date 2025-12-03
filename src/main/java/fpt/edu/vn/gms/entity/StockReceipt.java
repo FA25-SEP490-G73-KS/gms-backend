@@ -28,7 +28,7 @@ public class StockReceipt {
     private String code;
 
     @OneToOne
-    @JoinColumn(name = "purchase_request_id", nullable = false)
+    @JoinColumn(name = "purchase_request_id")
     private PurchaseRequest purchaseRequest;
 
     @ManyToOne

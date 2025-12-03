@@ -6,11 +6,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 
-@Mapper(componentModel = "spring", uses = { PartMapper.class, StockReceiptItemMapper.class })
+@Mapper(componentModel = "spring", uses = { PartMapper.class } )
 public interface PurchaseRequestItemMapper {
 
     @Mapping(target = "part", source = "part")
-    @Mapping(target = "status", source = "status")
-    @Mapping(target = "stockReceipt", source = "purchaseRequest.stockReceipt.items")
     PurchaseRequestItemResponseDto toResponseDto(PurchaseRequestItem item);
 }

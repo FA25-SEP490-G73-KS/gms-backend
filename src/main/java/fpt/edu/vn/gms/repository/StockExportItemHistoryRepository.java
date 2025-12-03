@@ -9,4 +9,3 @@ public interface StockExportItemHistoryRepository extends JpaRepository<StockExp
 
     List<StockExportItemHistory> findByStockExportItem_Id(Long exportItemId);
 }
-

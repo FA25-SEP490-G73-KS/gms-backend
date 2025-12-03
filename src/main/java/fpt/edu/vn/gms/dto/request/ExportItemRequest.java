@@ -9,4 +9,3 @@ public class ExportItemRequest {
     private Long receiverId;
     private String note;
 }
-

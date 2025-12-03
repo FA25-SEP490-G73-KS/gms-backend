@@ -1,11 +1,14 @@
 package fpt.edu.vn.gms.common.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @RequiredArgsConstructor
 public enum StockReceiptStatus {
 
+    DRAFT("Nháp"),
     PENDING("Chờ nhập kho"),
     PARTIAL_RECEIVED("Nhập kho một phần"),
     RECEIVED("Đã nhập kho"),
@@ -14,7 +17,7 @@ public enum StockReceiptStatus {
     private final String value;
 
     @JsonValue
-    private String getValue() {
+    public String getValue() {
         return this.value;
     }
 }

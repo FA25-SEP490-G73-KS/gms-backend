@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.dto.response.PurchaseRequestItemDetailDto;
 import fpt.edu.vn.gms.repository.PurchaseRequestItemRepository;
 import fpt.edu.vn.gms.service.PurchaseRequestItemService;
 import lombok.AccessLevel;
@@ -17,9 +16,9 @@ public class PurchaseRequestItemServiceImpl implements PurchaseRequestItemServic
 
     PurchaseRequestItemRepository purchaseRequestItemRepository;
 
-    @Override
-    public List<PurchaseRequestItemDetailDto> getItemsByPurchaseRequestId(Long purchaseRequestId) {
-
-        return purchaseRequestItemRepository.findItemsByPurchaseRequestId(purchaseRequestId);
-    }
+//    @Override
+//    public List<PurchaseRequestItemDetailDto> getItemsByPurchaseRequestId(Long purchaseRequestId) {
+//
+//        return purchaseRequestItemRepository.findItemsByPurchaseRequestId(purchaseRequestId);
+//    }
 }

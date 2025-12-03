@@ -5,20 +5,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockExportResponseDto {
-
-    private Long exportId;
+public class ManualTransactionResponse {
+    private Long id;
     private String code;
-    private String reason;
-    private String customerName;
-    private String quotationCode;
+    private String type;
+    private Boolean isDraft;
+    private String status;
     private String createdBy;
     private LocalDateTime createdAt;
-    private String status;
+    private String note;
+    private BigDecimal totalAmount;
+    private List<ManualTransactionItemResponse> items;
 }
+

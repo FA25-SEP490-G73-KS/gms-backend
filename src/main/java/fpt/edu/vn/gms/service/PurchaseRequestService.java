@@ -1,22 +1,18 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
-import fpt.edu.vn.gms.dto.response.PrDetailInfoReviewDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
-import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
-import fpt.edu.vn.gms.entity.Employee;
+import fpt.edu.vn.gms.entity.PurchaseRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface PurchaseRequestService {
 
-    Page<PurchaseRequestResponseDto> getPurchaseRequests(int page, int size);
+    PurchaseRequest createPurchaseRequestFromQuotation(Long quotationId);
 
-    PrDetailInfoReviewDto getPurchaseRequestItems(Long prId);
+    PurchaseRequest approvePurchaseRequest(Long requestId);
 
-    PurchaseRequestItemResponseDto getItem(Long itemId);
+    Page<PurchaseRequestResponseDto> getPurchaseRequests(String keyword, String status, String fromDate, String toDate, Pageable pageable);
 
-    PurchaseRequestDetailDto createRequest(PurchaseRequestCreateDto dto);
-
-    PurchaseRequestItemResponseDto reviewItem(Long itemId, boolean approve, String note, Employee currentUser);
+    PurchaseRequestDetailDto getPurchaseRequestDetail(Long id);
 }

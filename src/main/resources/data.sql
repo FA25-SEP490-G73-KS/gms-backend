@@ -90,6 +90,14 @@ INSERT INTO suppliers (name, phone, email, address, is_active) VALUES
         ('Euro Auto Supply', '+49-175-233-2211', 'euro@supply.eu', 'Berlin, Germany', TRUE);
 
 
+INSERT INTO unit (
+    name
+) VALUES
+      ('cái'),
+      ('bộ'),
+      ('lít'),
+      ('cặp');
+
 INSERT INTO part (
     part_name,
     category_id,
@@ -104,40 +112,41 @@ INSERT INTO part (
     special_part,
     vehicle_model,
     sku,
-    supplier
+    supplier,
+    unit
 ) VALUES
       ('Lọc nhớt động cơ', 10, 1, false, 80000, 120000, 0.00, 50, 0, 10, false, 1,
-       'LOCNHODONGCO-VIOS-VN', 1),
+       'LOCNHODONGCO-VIOS-VN', 1, 1),
 
       ('Lọc nhớt động cơ', 10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2,
-       'LOCNHODONGCO-COROLLA-JP', 2),
+       'LOCNHODONGCO-COROLLA-JP', 2, 1),
 
       ('Dầu động cơ 10W-40', 10, 1, true, 250000, 320000, 5.00, 100, 5, 20, false, 3,
-       'DAUDONGCO10W40-CIVIC-VN', 3),
+       'DAUDONGCO10W40-CIVIC-VN', 3, 1),
 
       ('Bugi đánh lửa', 1, 2, false, 40000, 80000, 0.00, 80, 2, 15, false, 4,
-       'BUGIDANHLUA-CITY-JP', 4),
+       'BUGIDANHLUA-CITY-JP', 4, 1),
 
       ('Phanh đĩa trước', 4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5,
-       'PHANHDIATRUOC-FOCUS-JP', 5),
+       'PHANHDIATRUOC-FOCUS-JP', 5, 1),
 
       ('Ắc quy GS 12V-45Ah', 7, 2, true, 950000, 1200000, 3.00, 20, 1, 5, false, 1,
-       'ACQUYGS12V45AH-VIOS-JP', 6),
+       'ACQUYGS12V45AH-VIOS-JP', 6, 1),
 
       ('Dây curoa tổng', 1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2,
-       'DAYCUROATONG-COROLLA-JP', 7),
+       'DAYCUROATONG-COROLLA-JP', 7, 1),
 
       ('Lọc gió điều hoà', 6, 3, true, 50000, 90000, 0.00, 60, 0, 15, false, 3,
-       'LOCGIODIEUHOA-CIVIC-US', 8),
+       'LOCGIODIEUHOA-CIVIC-US', 8, 1),
 
       ('Gạt mưa trước', 8, 1, true, 30000, 60000, 0.00, 120, 0, 30, false, 4,
-       'GATMUATRUOC-CITY-VN', 9),
+       'GATMUATRUOC-CITY-VN', 9, 1),
 
       ('Đèn pha LED', 8, 3, false, 700000, 950000, 0.00, 15, 0, 5, false, 5,
-       'DENPHALED-FOCUS-US', 10),
+       'DENPHALED-FOCUS-US', 10, 1),
 
       ('Cảm biến ABS', 7, 4, false, 450000, 600000, 0.00, 10, 0, 3, false, 1,
-       'CAMBIENABS-VIOS-EU',1);
+       'CAMBIENABS-VIOS-EU',1, 1);
 
 
 INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
@@ -162,9 +171,9 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token)
 VALUES (
-           "Su62EZTId2DrYu0oCroO8tQFXJ8nGU8f3lQ1MZnc_3WgiE9m93k5B2Mi-cSZU9yj7whPPLqUp1iVbAfHNZx12KYmg49x0C0aFPNSUNuKf1rTdknGI0g3C4cSvL5tA_0RJx_kU6WsZJPsYUbzGYJo7KEAlrfmBDawJ9cuMmqmeH4Vayvm83VLT0IUhIumEhTEFeFkK2GkWp04zfWlEIBuCpoEbdSJ7-ae5PoAObeDvNrCc90UKWhi1t7Py1X-MvXhETM56Yz--78Gg-8gKmUSCtocuMjYSunwGjxg50qCWd1BjSejNYVGDKV-hr86IjOQ5vckGYmUqYuwpxfI3aRNIWtXdL8VKijF7P_K81qfm7qQZAHd73MbTXwKm00vHBfZ09Rl4aC0fabEhSuIM2wx3MASfb1G4S8RRNVWB2amJvqa",
-           "KgsAUsYi_XvKfuXpRABw7bUZZNDklufA9hsWV5l-ZKWejRzSVkZAMXIys3rBn_a08AR6Cs7Io28BbESWLFV4E0cgzmXlwkS21OgG9qBAl1TplOWD0CwT3cQ8i6rOw95YOBQc3pFTrnzhjz9w1lp-5sNZpn5SlTyN2j3lSa68n1OFy-qfCRYOFtRxaruW_QPkURgIVWRyuavWlCLl9-FsSbI0qNKOmg17Vg2i813QW4nhhBL8MwscNs7oY3uGigaPLlI421sLzGyZyl8H6Qlj0LZqs1Kaiwqh7ygJ9dA2jqOiu9DI5eIMSYdJaKP3lgTGCE24GLUnb2Djr8Ki3elk6pB3wG5FXFfcSTxtQYY6sd14mj1wFvJQJ03Smq52cDncCTdBItATmtmQpEjQUP3lO0JCotbb2J96LM-n_na"
-       );
+           "oacJ4eZMDphCGv4QZDWpEiz7b1gEnJf0XoQQCe3oMMABBQuyhinKHOy7-s-D_XGlY3xKLStG3YlGCDnMpyu4VyHKzIBSaX1RoscoB9Ui2LQDQzOinQOHPTXdpJxnc1nIp07i9j_a6KtcCTy2sjiMGvaErXUmpWLvfHZVFhBD1ssb5iiZW8ad2vDr_NsljqOywIBZVilzEn3mEPbj-F8u0VW4ppJZtpeRrXdhM-w23tNTOSXQ_ufe4CT2p7t3sWyz_ZNpS_xDF5wsCPnrWgn-0iLYW5Q4_5iMcZATIv-gIJ2zGUrHghu1CxrRmtoFpXiCbGZaHuVMHok4DvDAhTvtFRuHWn6-Ys5clnQoIfVMS6Iq6DyL_Va3PVe1tYdwz1zclYda7u3VApI25OrUajek3B06-KIttoCBPN6ibXYFopOz",
+                        "GPn24PahgNr7ba0PdIMjVKIIHHcVEAKGBeiKDVDejLXkd09ltqA-OsAPNdRJ9VzxOinEPB4Tta4Sz69gd4Ja1IUw41hXH-H_M81wGTzhrbz-tsr0-2w3S5NC0qgCSAf1ACK9MwmCeM5q-q08rGNZ05csI0_3OQSxVhmS7g9mgYrmWofS_7E0R2MSR43ZAEnJHPv5TkfmgNbOi1vVyGMnItJ01t6iFgbQBDatOfXjkMigZWfcaN-1N1AKDaMmH8fz38auSeXkb4KJlGD0prUjMMccBc_iLgPrNRu5VUyFgKL-fWXAk6MWL0lO5r2nQPf75w4tUSGSiHr9rG09-1IFOMlvE0luJA08PQCqFlv9fWeXcmTWccUqQIAG14I8Kebe9QSeRPHrl7Wla2TNzNYfMa7FGclhXDbSdZQeUW"
+        );
 
 
 

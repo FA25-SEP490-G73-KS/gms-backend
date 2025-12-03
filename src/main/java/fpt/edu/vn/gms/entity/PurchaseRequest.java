@@ -1,8 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,10 +34,6 @@ public class PurchaseRequest {
 
     @Column(nullable = true)
     private BigDecimal totalEstimatedAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", length = 30)
-    private PurchaseRequestType type;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)

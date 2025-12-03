@@ -1,0 +1,383 @@
+package fpt.edu.vn.gms.service.impl;
+
+import fpt.edu.vn.gms.common.enums.ExportItemStatus;
+import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
+import fpt.edu.vn.gms.dto.request.CreateReceiptItemHistoryRequest;
+import fpt.edu.vn.gms.dto.response.*;
+import fpt.edu.vn.gms.entity.*;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.StockReceiptItemHistoryMapper;
+import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
+import fpt.edu.vn.gms.service.StockReceiptService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+public class StockReceiptServiceImplNew implements StockReceiptService {
+
+    StockReceiptRepository stockReceiptRepository;
+    StockReceiptItemRepository stockReceiptItemRepository;
+    StockReceiptItemHistoryRepository stockReceiptItemHistoryRepository;
+    PurchaseRequestRepository purchaseRequestRepository;
+    CodeSequenceService codeSequenceService;
+    StockReceiptItemHistoryMapper historyMapper;
+    StockExportItemRepository stockExportItemRepository; // thêm repository để cập nhật trạng thái xuất kho
+    PartRepository partRepository; // thêm repository để cập nhật tồn kho linh kiện
+
+    @Override
+    public Page<StockReceiptListResponse> getReceipts(String status, String keyword, String fromDate, String toDate, Long supplierId, Pageable pageable) {
+        Page<StockReceipt> page = stockReceiptRepository.findAll(pageable);
+
+        List<StockReceipt> filtered = page.getContent().stream()
+                .filter(r -> {
+                    if (status == null || status.isBlank()) return true;
+                    return r.getStatus() != null && r.getStatus().name().equalsIgnoreCase(status);
+                })
+                .filter(r -> {
+                    if (keyword == null || keyword.isBlank()) return true;
+                    String lower = keyword.toLowerCase();
+                    boolean matchCode = r.getCode() != null && r.getCode().toLowerCase().contains(lower);
+                    boolean matchPr = r.getPurchaseRequest() != null && r.getPurchaseRequest().getCode() != null
+                            && r.getPurchaseRequest().getCode().toLowerCase().contains(lower);
+                    return matchCode || matchPr;
+                })
+                .filter(r -> supplierFilter(r, supplierId))
+                .filter(r -> filterByDateRange(r, fromDate, toDate))
+                .toList();
+
+        List<StockReceiptListResponse> dtos = filtered.stream()
+                .map(this::toListDto)
+                .toList();
+
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
+    private boolean supplierFilter(StockReceipt r, Long supplierId) {
+        if (supplierId == null) return true;
+        return r.getSupplier() != null && r.getSupplier().getId().equals(supplierId);
+    }
+
+    private boolean filterByDateRange(StockReceipt r, String fromDate, String toDate) {
+        if ((fromDate == null || fromDate.isBlank()) && (toDate == null || toDate.isBlank())) {
+            return true;
+        }
+        LocalDate createdDate = Optional.ofNullable(r.getCreatedAt())
+                .map(LocalDateTime::toLocalDate)
+                .orElse(null);
+        if (createdDate == null) return false;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        if (fromDate != null && !fromDate.isBlank()) {
+            LocalDate from = LocalDate.parse(fromDate, formatter);
+            if (createdDate.isBefore(from)) return false;
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            LocalDate to = LocalDate.parse(toDate, formatter);
+            if (createdDate.isAfter(to)) return false;
+        }
+        return true;
+    }
+
+    private StockReceiptListResponse toListDto(StockReceipt r) {
+        double totalRequested = r.getItems().stream()
+                .mapToDouble(i -> Optional.ofNullable(i.getRequestedQuantity()).orElse(0.0))
+                .sum();
+        double totalReceived = r.getItems().stream()
+                .mapToDouble(i -> Optional.ofNullable(i.getQuantityReceived()).orElse(0.0))
+                .sum();
+
+        return StockReceiptListResponse.builder()
+                .id(r.getReceiptId())
+                .code(r.getCode())
+                .supplierName(r.getSupplier() != null ? r.getSupplier().getName() : null)
+                .purchaseRequestCode(r.getPurchaseRequest() != null ? r.getPurchaseRequest().getCode() : null)
+                .lineCount((long) r.getItems().size())
+                .receivedQty(totalReceived)
+                .totalQty(totalRequested)
+                .createdAt(r.getCreatedAt())
+                .status(r.getStatus() != null ? r.getStatus().name() : null)
+                .build();
+    }
+
+    @Override
+    public StockReceiptDetailResponse getReceiptDetail(Long id) {
+        StockReceipt r = stockReceiptRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
+
+        List<StockReceiptItemResponse> items = r.getItems().stream()
+                .map(this::toItemDto)
+                .toList();
+
+        return StockReceiptDetailResponse.builder()
+                .id(r.getReceiptId())
+                .code(r.getCode())
+                .supplierName(r.getSupplier() != null ? r.getSupplier().getName() : null)
+                .purchaseRequestCode(r.getPurchaseRequest() != null ? r.getPurchaseRequest().getCode() : null)
+                .createdBy(r.getCreatedBy())
+                .createdAt(r.getCreatedAt())
+                .receivedBy(r.getReceivedBy())
+                .receivedAt(r.getReceivedAt())
+                .status(r.getStatus() != null ? r.getStatus().name() : null)
+                .totalAmount(r.getTotalAmount())
+                .note(r.getNote())
+                .items(items)
+                .build();
+    }
+
+    @Override
+    public Page<StockReceiptItemResponse> getReceiptItems(Long receiptId, Pageable pageable) {
+        StockReceipt r = stockReceiptRepository.findById(receiptId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
+
+        List<StockReceiptItemResponse> items = r.getItems().stream()
+                .map(this::toItemDto)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(items, pageable, items.size());
+    }
+
+    private StockReceiptItemResponse toItemDto(StockReceiptItem item) {
+        Part part = item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPart() : null;
+        return StockReceiptItemResponse.builder()
+                .id(item.getId())
+                .partCode(part != null ? part.getSku() : null)
+                .partName(item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPartName() : null)
+                .requestedQty(item.getRequestedQuantity())
+                .receivedQty(item.getQuantityReceived())
+                .unitPrice(item.getActualUnitPrice())
+                .totalPrice(item.getActualTotalPrice())
+                .status(item.getStatus() != null ? item.getStatus().name() : null)
+                .build();
+    }
+
+    @Override
+    public StockReceiptItemDetailResponse getReceiptItemDetail(Long itemId) {
+        StockReceiptItem item = stockReceiptItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng nhập kho"));
+        List<StockReceiptItemHistory> histories = stockReceiptItemHistoryRepository.findByStockReceiptItem_Id(itemId);
+        return historyMapper.toDetailDto(item, histories);
+    }
+
+    @Override
+    public StockReceiptItemDetailResponse getReceiptItemHistory(Long itemId) {
+        return getReceiptItemDetail(itemId);
+    }
+
+    @Transactional
+    @Override
+    public StockReceiptItemDetailResponse createReceiptItemHistory(Long itemId, CreateReceiptItemHistoryRequest request) {
+        StockReceiptItem item = stockReceiptItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng nhập kho"));
+
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Số lượng nhận phải > 0");
+        }
+        if (request.getUnitPrice() == null || request.getUnitPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Đơn giá phải >= 0");
+        }
+
+        double alreadyReceived = Optional.ofNullable(item.getQuantityReceived()).orElse(0.0);
+        double remaining = Optional.ofNullable(item.getRequestedQuantity()).orElse(0.0) - alreadyReceived;
+
+        if (request.getQuantity() > remaining) {
+            throw new IllegalArgumentException("Số lượng nhận vượt quá số lượng yêu cầu");
+        }
+
+        // Tạo history
+        StockReceiptItemHistory history = StockReceiptItemHistory.builder()
+                .stockReceiptItem(item)
+                .quantity(request.getQuantity())
+                .unitPrice(request.getUnitPrice())
+                .attachmentUrl(request.getAttachmentUrl())
+                .note(request.getNote())
+                .receivedBy(request.getReceivedBy())
+                .build();
+        stockReceiptItemHistoryRepository.save(history);
+
+        // Cập nhật item
+        double newReceived = alreadyReceived + request.getQuantity();
+        item.setQuantityReceived(newReceived);
+        item.setActualUnitPrice(request.getUnitPrice());
+        item.setActualTotalPrice(request.getUnitPrice().multiply(BigDecimal.valueOf(newReceived)));
+        item.setReceivedAt(LocalDateTime.now());
+        item.setReceivedBy(request.getReceivedBy());
+
+        // Cập nhật tồn kho linh kiện (Part.quantityInStock += quantity nhận lần này)
+        PurchaseRequestItem prItem = item.getPurchaseRequestItem();
+        if (prItem != null && prItem.getPart() != null) {
+            Part part = prItem.getPart();
+            Double currentStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+            part.setQuantityInStock(currentStock + request.getQuantity());
+            partRepository.save(part);
+        }
+
+        // Update status item
+        if (newReceived == 0) {
+            item.setStatus(StockReceiptStatus.PENDING);
+        } else if (newReceived < Optional.ofNullable(item.getRequestedQuantity()).orElse(0.0)) {
+            item.setStatus(StockReceiptStatus.PARTIAL_RECEIVED);
+        } else {
+            item.setStatus(StockReceiptStatus.RECEIVED);
+        }
+
+        stockReceiptItemRepository.save(item);
+
+        // Auto update receipt
+        updateReceiptStatusAndTotal(item.getStockReceipt());
+
+        List<StockReceiptItemHistory> histories = stockReceiptItemHistoryRepository.findByStockReceiptItem_Id(itemId);
+        return historyMapper.toDetailDto(item, histories);
+    }
+
+    @Transactional
+    @Override
+    public StockReceiptDetailResponse cancelReceipt(Long id) {
+        StockReceipt r = stockReceiptRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
+        r.setStatus(StockReceiptStatus.PENDING);
+        stockReceiptRepository.save(r);
+        return getReceiptDetail(id);
+    }
+
+    @Transactional
+    @Override
+    public StockReceiptDetailResponse completeReceipt(Long id) {
+        StockReceipt r = stockReceiptRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập kho"));
+        updateReceiptStatusAndTotal(r);
+        return getReceiptDetail(id);
+    }
+
+    @Transactional
+    @Override
+    public StockReceiptDetailResponse createReceiptFromPurchaseRequest(Long purchaseRequestId) {
+        PurchaseRequest pr = purchaseRequestRepository.findById(purchaseRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu mua hàng"));
+
+        if (pr.getItems() == null || pr.getItems().isEmpty()) {
+            throw new RuntimeException("Phiếu yêu cầu mua hàng không có item");
+        }
+
+        Supplier supplier = null;
+        for (PurchaseRequestItem item : pr.getItems()) {
+            if (item.getPart() != null && item.getPart().getSupplier() != null) {
+                supplier = item.getPart().getSupplier();
+                break;
+            }
+        }
+
+        StockReceipt receipt = StockReceipt.builder()
+                .code(codeSequenceService.generateCode("NK"))
+                .purchaseRequest(pr)
+                .supplier(supplier)
+                .createdBy(pr.getCreatedBy() != null ? pr.getCreatedBy().toString() : null)
+                .createdAt(LocalDateTime.now())
+                .status(StockReceiptStatus.PENDING)
+                .totalAmount(BigDecimal.ZERO)
+                .note(pr.getReason())
+                .build();
+
+        stockReceiptRepository.save(receipt);
+
+        for (PurchaseRequestItem prItem : pr.getItems()) {
+            StockReceiptItem item = StockReceiptItem.builder()
+                    .stockReceipt(receipt)
+                    .purchaseRequestItem(prItem)
+                    .requestedQuantity(prItem.getQuantity())
+                    .quantityReceived(0.0)
+                    .actualUnitPrice(prItem.getEstimatedPurchasePrice())
+                    .actualTotalPrice(prItem.getEstimatedPurchasePrice().multiply(BigDecimal.valueOf(prItem.getQuantity())))
+                    .status(StockReceiptStatus.PENDING)
+                    .build();
+            stockReceiptItemRepository.save(item);
+            receipt.getItems().add(item);
+        }
+
+        updateReceiptStatusAndTotal(receipt);
+
+        return getReceiptDetail(receipt.getReceiptId());
+    }
+
+    private void updateReceiptStatusAndTotal(StockReceipt receipt) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (StockReceiptItem item : receipt.getItems()) {
+            if (item.getActualTotalPrice() != null) {
+                totalAmount = totalAmount.add(item.getActualTotalPrice());
+            }
+        }
+
+        receipt.setTotalAmount(totalAmount);
+
+        boolean allReceived = receipt.getItems().stream()
+                .allMatch(i -> i.getStatus() == StockReceiptStatus.RECEIVED);
+        boolean anyPartial = receipt.getItems().stream()
+                .anyMatch(i -> i.getStatus() == StockReceiptStatus.PARTIAL_RECEIVED);
+
+        if (allReceived) {
+            receipt.setStatus(StockReceiptStatus.RECEIVED);
+        } else if (anyPartial) {
+            receipt.setStatus(StockReceiptStatus.PARTIAL_RECEIVED);
+        } else {
+            receipt.setStatus(StockReceiptStatus.PENDING);
+        }
+
+        stockReceiptRepository.save(receipt);
+
+        // Sau khi cập nhật phiếu nhập, nếu đã nhận đủ một số linh kiện
+        // thì chuyển các StockExportItem tương ứng từ WAITING_TO_RECEIPT sang EXPORTING
+        try {
+            receipt.getItems().forEach(item -> {
+                PurchaseRequestItem prItem = item.getPurchaseRequestItem();
+                if (prItem == null || prItem.getPart() == null) {
+                    return; // không có link tới Part thì bỏ qua
+                }
+
+                Part part = prItem.getPart();
+
+                // Điều kiện "nhập kho đủ" bạn có thể tùy chỉnh.
+                // Ở đây giả sử: nếu quantityReceived >= requestedQuantity thì coi là đủ.
+                Double requested = Optional.ofNullable(item.getRequestedQuantity()).orElse(0.0);
+                Double received = Optional.ofNullable(item.getQuantityReceived()).orElse(0.0);
+                if (requested <= 0 || received < requested) {
+                    return; // chưa nhận đủ thì chưa kích hoạt xuất
+                }
+
+                // Tìm các dòng xuất kho đang chờ nhập kho cho linh kiện này
+                List<StockExportItem> waitingExportItems = stockExportItemRepository
+                        .findByPartAndStatus(part, ExportItemStatus.WAITING_TO_RECEIPT);
+
+                if (waitingExportItems.isEmpty()) {
+                    return;
+                }
+
+                waitingExportItems.forEach(exportItem -> {
+                    exportItem.setStatus(ExportItemStatus.EXPORTING);
+                });
+
+                stockExportItemRepository.saveAll(waitingExportItems);
+            });
+        } catch (Exception ex) {
+            log.error("Lỗi khi cập nhật trạng thái StockExportItem sau khi nhập kho: {}", ex.getMessage(), ex);
+        }
+    }
+}

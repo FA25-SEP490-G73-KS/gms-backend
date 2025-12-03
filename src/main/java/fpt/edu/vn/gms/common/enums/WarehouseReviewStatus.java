@@ -1,7 +1,20 @@
 package fpt.edu.vn.gms.common.enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum WarehouseReviewStatus {
-    PENDING,    // Chưa được kho xem xét
-    CONFIRMED,  // Kho đã duyệt
-    REJECTED    // Kho từ chối (ví dụ sai part, không có sẵn, v.v.)
+    PENDING("Chờ duyệt"),
+    CONFIRMED("Đã duyệt"),
+    REJECTED("Từ chối");
+
+    private final String value;
+
+    @JsonValue
+    public String getValue() {
+        return this.value;
+    }
 }

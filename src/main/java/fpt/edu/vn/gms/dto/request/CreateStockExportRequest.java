@@ -11,4 +11,3 @@ public class CreateStockExportRequest {
     private String reason;
     private List<Long> quotationItemIds;
 }
-

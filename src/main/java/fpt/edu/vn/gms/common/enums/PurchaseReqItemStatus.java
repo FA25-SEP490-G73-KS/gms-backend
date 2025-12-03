@@ -1,8 +1,10 @@
 package fpt.edu.vn.gms.common.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @RequiredArgsConstructor
 public enum PurchaseReqItemStatus {
     PENDING("Chờ nhập hàng"),
@@ -11,7 +13,7 @@ public enum PurchaseReqItemStatus {
     private final String value;
 
     @JsonValue
-    private String getValue() {
+    public String getValue() {
         return this.value;
     }
 }

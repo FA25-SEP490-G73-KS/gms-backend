@@ -1,24 +1,30 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
-import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
-import fpt.edu.vn.gms.dto.response.StockReceiptResponseDto;
-import fpt.edu.vn.gms.entity.Employee;
+import fpt.edu.vn.gms.dto.request.CreateReceiptItemHistoryRequest;
+import fpt.edu.vn.gms.dto.response.StockReceiptDetailResponse;
+import fpt.edu.vn.gms.dto.response.StockReceiptItemDetailResponse;
+import fpt.edu.vn.gms.dto.response.StockReceiptItemResponse;
+import fpt.edu.vn.gms.dto.response.StockReceiptListResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface StockReceiptService {
 
-    StockReceiptItemResponseDto receiveItem(Long prItemId, StockReceiveRequest req, MultipartFile file, Employee employee);
+    Page<StockReceiptListResponse> getReceipts(String status, String keyword, String fromDate, String toDate, Long supplierId, Pageable pageable);
 
-    // Kế toán
-    Page<StockReceiptResponseDto> getReceiptsForAccounting(int page, int size, String search);
+    StockReceiptDetailResponse getReceiptDetail(Long id);
 
-    // Danh sách dòng nhập kho theo phiếu - phân trang
-    Page<StockReceiptItemResponseDto> getReceiptItems(Long receiptId, int page, int size);
+    Page<StockReceiptItemResponse> getReceiptItems(Long receiptId, Pageable pageable);
 
-    // Lấy chi tiết 1 dòng nhập kho trong 1 phiếu (đảm bảo thuộc đúng receipt)
-    StockReceiptItemResponseDto getReceiptItemDetail(Long itemId);
+    StockReceiptItemDetailResponse getReceiptItemDetail(Long itemId);
+
+    StockReceiptItemDetailResponse getReceiptItemHistory(Long itemId);
+
+    StockReceiptItemDetailResponse createReceiptItemHistory(Long itemId, CreateReceiptItemHistoryRequest request);
+
+    StockReceiptDetailResponse cancelReceipt(Long id);
+
+    StockReceiptDetailResponse completeReceipt(Long id);
+
+    StockReceiptDetailResponse createReceiptFromPurchaseRequest(Long purchaseRequestId);
 }
