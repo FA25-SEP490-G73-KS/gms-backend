@@ -118,7 +118,6 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
             Employee employee = employeeRepository.findById(request.getReceiverId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên nhận hàng"));
 
-            // Tính số tiền khấu trừ: ví dụ dùng tổng giá vốn của lần xuất đầu tiên (có thể tùy chỉnh)
             StockExportItem firstItem = items.get(0);
             Part firstPart = firstItem.getPart();
             BigDecimal unitCost = firstPart.getPurchasePrice() != null ? firstPart.getPurchasePrice() : BigDecimal.ZERO;
@@ -212,9 +211,8 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
                     .build();
             purchaseRequest.getItems().add(prItem);
 
-            // Map ra response item cho FE
             ManualTransactionItemResponse res = new ManualTransactionItemResponse();
-            res.setId(null); // chưa cần id riêng của PurchaseRequestItem
+            res.setId(null);
             res.setPartId(part.getPartId());
             res.setPartSku(part.getSku());
             res.setPartName(part.getName());

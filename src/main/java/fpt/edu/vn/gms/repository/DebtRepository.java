@@ -39,21 +39,21 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
         Optional<Debt> findByIdAndCustomerCustomerId(Long debtId, Long customerId);
 
         @Query(value = """
-                    SELECT new fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto(
+                    SELECT 
                         d.customer.customerId,
                         d.customer.fullName,
                         d.customer.phone,
-                        COALESCE(SUM(d.amount), CAST(0 AS bigdecimal)),
-                        COALESCE(SUM(d.paidAmount), CAST(0 AS bigdecimal)),
-                        COALESCE(SUM(d.amount - d.paidAmount), CAST(0 AS bigdecimal)),
+                        SUM(d.amount),
+                        SUM(d.paidAmount),
+                        SUM(d.amount - d.paidAmount),
+                        d.dueDate,
                         CASE WHEN SUM(d.amount) = SUM(d.paidAmount)
                              THEN 'PAID_IN_FULL'
                              ELSE 'OUTSTANDING'
                         END
-                    )
                     FROM Debt d
-                    GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone
+                    GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone, d.dueDate
                 """,
                 countQuery = "SELECT COUNT(DISTINCT d.customer.customerId) FROM Debt d")
-        Page<CustomerDebtSummaryDto> findTotalDebtGroupedByCustomer(Pageable pageable);
+        Page<Object[]> findTotalDebtGroupedByCustomer(Pageable pageable);
 }
