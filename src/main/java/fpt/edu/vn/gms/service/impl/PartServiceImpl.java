@@ -49,6 +49,28 @@ public class PartServiceImpl implements PartService {
     }
 
     @Override
+    public Page<PartReqDto> getAllPart(int page, int size, Long categoryId, StockLevelStatus status) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Part> parts;
+
+        // Determine which repository method to use based on provided filters
+        if (categoryId != null && status != null) {
+            parts = partRepository.findByCategory_IdAndStatus(categoryId, status, pageable);
+        } else if (categoryId != null) {
+            parts = partRepository.findByCategory_Id(categoryId, pageable);
+        } else if (status != null) {
+            parts = partRepository.findByStatus(status, pageable);
+        } else {
+            parts = partRepository.findAll(pageable);
+        }
+
+        parts.forEach(this::updateStockLevelStatusIfNeeded);
+
+        return parts.map(partMapper::toDto);
+    }
+
+    @Override
     public PartReqDto getPartById(Long id) {
 
         Part part = partRepository.findById(id).orElse(null);
@@ -202,11 +224,11 @@ public class PartServiceImpl implements PartService {
 
 
     @Override
-    public Page<PartReqDto> getPartByCategory(String categoryName, int page, int size) {
+    public Page<PartReqDto> getPartByCategory(Long categoryId, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Part> parts = partRepository.findByCategory(categoryName, pageable);
+        Page<Part> parts = partRepository.findByCategory_Id(categoryId, pageable);
 
         // Dùng Page.map để giữ thông tin phân trang
         return parts.map(partMapper::toDto);
