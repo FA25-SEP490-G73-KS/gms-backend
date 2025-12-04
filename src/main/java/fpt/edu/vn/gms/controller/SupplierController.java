@@ -60,7 +60,7 @@ public class SupplierController {
         return ResponseEntity.ok(supplierService.createSupplier(supplierRequestDto));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(summary = "Cập nhật nhà cung cấp", description = "Cập nhật thông tin của một nhà cung cấp đã có.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật nhà cung cấp thành công",

@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
-import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "expense_voucher")
+@Table(name = "ledger_voucher")
 @Getter
 @Setter
 @Builder
@@ -28,7 +28,7 @@ public class LedgerVoucher {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
-    private ManualVoucherType type;
+    private LedgerVoucherType type;
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
     private BigDecimal amount;
@@ -39,9 +39,6 @@ public class LedgerVoucher {
 
     @Column(name = "description", length = 255)
     private String description;
-
-    @Enumerated(EnumType.STRING)
-    private LedgerVoucherCategory category;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -62,7 +59,11 @@ public class LedgerVoucher {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ManualVoucherStatus status;
+    private LedgerVoucherStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "receipt_history_id")
+    private StockReceiptItemHistory receiptHistory;
 
     @PrePersist
     protected void onCreate() {

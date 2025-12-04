@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "stock_receipt_item")
@@ -55,4 +56,7 @@ public class StockReceiptItem {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StockReceiptStatus status;
+
+    @OneToMany(mappedBy = "stockReceiptItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StockReceiptItemHistory> histories;
 }

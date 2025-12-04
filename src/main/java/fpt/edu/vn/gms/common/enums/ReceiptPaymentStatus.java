@@ -1,16 +1,14 @@
 package fpt.edu.vn.gms.common.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
 @RequiredArgsConstructor
-public enum ManualVoucherType {
+public enum ReceiptPaymentStatus {
 
-    RECEIPT("Phiếu thu"),
-    PAYMENT("Phiếu chi"),
-    ADVANCE_SALARY("Ứng lương");
+    UNPAID("Chưa thanh toán"), // Chưa thanh toán
+    PARTIAL_PAID("Thanh toán 1 phần"),   // Thanh toán 1 phần
+    PAID("Đã thanh toán đủ");       // Đã thanh toán đủ
 
     private final String value;
 
@@ -19,3 +17,4 @@ public enum ManualVoucherType {
         return this.value;
     }
 }
+

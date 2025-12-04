@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.ReceiptPaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -23,32 +24,35 @@ public class StockReceiptItemHistory {
     @JoinColumn(name = "stock_receipt_item_id", nullable = false)
     private StockReceiptItem stockReceiptItem;
 
-    // Số lượng nhập trong đợt này
     @Column(nullable = false)
     private Double quantity;
 
-    // Đơn giá nhập thực tế tại thời điểm nhập
     @Column(name = "unit_price", precision = 18, scale = 2)
     private BigDecimal unitPrice;
 
-    // Tổng tiền = quantity * unitPrice
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
-    // File chứng từ mỗi lần nhập (phiếu giao hàng, hóa đơn…)
     @Column(name = "attachment_url", length = 255)
     private String attachmentUrl;
 
-    // Thời điểm nhập hàng
     @Column(name = "received_at", nullable = false)
     private LocalDateTime receivedAt;
 
-    // Người nhập hàng
     private String receivedBy;
 
-    // Ghi chú cho từng đợt nhập
     @Column(length = 255)
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    private ReceiptPaymentStatus paymentStatus = ReceiptPaymentStatus.UNPAID;
+
+    @Column(name = "amount_paid", precision = 18, scale = 2)
+    private BigDecimal amountPaid = BigDecimal.ZERO;
+
+    @Column(name = "payment_attachment")
+    private String paymentAttachmentUrl;
 
     @PrePersist
     protected void onCreate() {

@@ -21,6 +21,7 @@ public class ManualTransactionRequest {
     private Boolean isDraft;
 
     private String reason;
+
     private String createdBy;
     private Long receiverId;
     private Long supplierId;

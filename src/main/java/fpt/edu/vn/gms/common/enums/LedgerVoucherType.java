@@ -6,11 +6,12 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum ManualVoucherStatus {
-    PENDING("Chờ duyệt"),
-    APPROVED("Đã duyệt"),
-    REJECTED("Từ chối"),
-    FINISHED("Hoàn tất");
+public enum LedgerVoucherType {
+
+    STOCK_RECEIPT_PAYMENT("Thanh toán phiếu nhập kho"),
+    SALARY("Tiền lương"),
+    SERVICE_FEE("Phí dịch vụ"),
+    OTHER("Khác");
 
     private final String value;
 

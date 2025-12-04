@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "stock_receipt")
 @Getter
@@ -58,4 +57,11 @@ public class StockReceipt {
     @OneToMany(mappedBy = "stockReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<StockReceiptItem> items = new ArrayList<>();
+
+    public BigDecimal getTotalPaid() {
+        return items.stream()
+                .flatMap(item -> item.getHistories().stream())
+                .map(StockReceiptItemHistory::getAmountPaid)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

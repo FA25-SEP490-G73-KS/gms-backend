@@ -93,7 +93,7 @@ public class PartServiceImpl implements PartService {
 
         // --- Supplier ---
         Supplier supplier = supplierRepo.findById(dto.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " +  + dto.getSupplierId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " + dto.getSupplierId()));
 
         // --- Tính giá bán ---
         BigDecimal purchase = dto.getPurchasePrice();

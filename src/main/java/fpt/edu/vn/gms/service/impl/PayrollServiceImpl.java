@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
-import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import fpt.edu.vn.gms.common.enums.PayrollStatus;
 import fpt.edu.vn.gms.dto.request.DeductionDto;
 import fpt.edu.vn.gms.dto.response.*;
@@ -33,7 +33,8 @@ public class PayrollServiceImpl implements PayrollService {
     AttendanceRepository attendanceRepository;
     AllowanceRepository allowanceRepository;
     DeductionRepository deductionRepository;
-    ManualVoucherRepository voucherRepository;
+//    ManualVoucherRepository voucherRepository;
+    LedgerVoucherRepository ledgerVoucherRepository;
     PayrollRepository payrollRepository;
     private final CodeSequenceService codeSequenceService;
 
@@ -61,13 +62,13 @@ public class PayrollServiceImpl implements PayrollService {
             BigDecimal deduction = deductionRepository.sumForMonth(
                     emp.getEmployeeId(), month, year);
 
-            BigDecimal advanceSalary = voucherRepository.sumAdvanceSalary(
-                    emp.getEmployeeId(), month, year);
+//            BigDecimal advanceSalary = voucherRepository.sumAdvanceSalary(
+//                    emp.getEmployeeId(), month, year);
 
             BigDecimal netSalary = baseSalary
                     .add(allowance)
-                    .subtract(deduction)
-                    .subtract(advanceSalary);
+                    .subtract(deduction);
+//                    .subtract(advanceSalary);
 
             // Check payroll exists?
             Payroll payroll = payrollRepository
@@ -87,7 +88,7 @@ public class PayrollServiceImpl implements PayrollService {
                     .baseSalary(baseSalary)
                     .allowance(allowance)
                     .deduction(deduction)
-                    .advanceSalary(advanceSalary)
+//                    .advanceSalary(advanceSalary)
                     .netSalary(netSalary)
                     .status(status)
                     .build();
@@ -128,17 +129,16 @@ public class PayrollServiceImpl implements PayrollService {
 
         LedgerVoucher voucher = LedgerVoucher.builder()
                 .code(codeSequenceService.generateCode("CHI"))
-                .type(ManualVoucherType.PAYMENT)
-                .category(LedgerVoucherCategory.SALARY_PAYMENT)
+                .type(LedgerVoucherType.SALARY)
                 .relatedEmployeeId(payroll.getEmployee().getEmployeeId())
                 .amount(payroll.getNetSalary())
                 .description("Chi lương tháng " + payroll.getMonth() + "/" + payroll.getYear()
                         + " cho " + payroll.getEmployee().getFullName())
-                .status(ManualVoucherStatus.PENDING)
+                .status(LedgerVoucherStatus.PENDING)
                 .createdBy(employeeRepository.getReferenceById(accountantId))
                 .build();
 
-        voucherRepository.save(voucher);
+        ledgerVoucherRepository.save(voucher);
 
         payroll.setStatus(PayrollStatus.PAID);
         payroll.setPaidBy(employeeRepository.getReferenceById(accountantId));
@@ -208,13 +208,13 @@ public class PayrollServiceImpl implements PayrollService {
                 .toList();
 
 
-        BigDecimal totalAdvance =
-                voucherRepository.sumAdvanceSalary(employeeId, month, year);
+//        BigDecimal totalAdvance =
+//                voucherRepository.sumAdvanceSalary(employeeId, month, year);
 
         BigDecimal netSalary = baseSalary
                 .add(totalAllowance)
-                .subtract(totalDeduction)
-                .subtract(totalAdvance);
+                .subtract(totalDeduction);
+//                .subtract(totalAdvance);
 
 
         Payroll payroll = payrollRepository

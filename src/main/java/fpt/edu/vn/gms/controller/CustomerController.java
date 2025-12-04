@@ -103,7 +103,7 @@ public class CustomerController {
                                 .body(ApiResponse.success("Tạo thông tin khách hàng thành công!!", response));
         }
 
-        @PutMapping("/{id}")
+        @PatchMapping("/{id}")
         @Operation(summary = "Cập nhật thông tin khách hàng", description = "Cập nhật thông tin của một khách hàng đã có.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật thông tin khách hàng thành công"),

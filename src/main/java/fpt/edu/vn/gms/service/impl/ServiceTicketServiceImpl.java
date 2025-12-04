@@ -392,4 +392,3 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         return serviceTicketMapper.toResponseDto(saved);
     }
 }
-

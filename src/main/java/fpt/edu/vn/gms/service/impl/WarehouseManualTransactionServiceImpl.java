@@ -2,7 +2,8 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
-import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
+import fpt.edu.vn.gms.common.enums.DeductionType;
 import fpt.edu.vn.gms.dto.request.ManualTransactionItemRequest;
 import fpt.edu.vn.gms.dto.request.ManualTransactionRequest;
 import fpt.edu.vn.gms.dto.response.ManualTransactionItemResponse;
@@ -31,12 +32,14 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
 
     PartRepository partRepository;
     StockExportRepository stockExportRepository;
-    StockReceiptRepository stockReceiptRepository;
     SupplierRepository supplierRepository;
+    PurchaseRequestRepository purchaseRequestRepository;
+    DeductionRepository deductionRepository;
+    EmployeeRepository employeeRepository;
     CodeSequenceService codeSequenceService;
     WarehouseManualTransactionMapper mapper;
 
-    private static final BigDecimal TOTAL_PRICE_TOLERANCE = new BigDecimal("1"); // cho phép lệch 1 VND
+    private static final BigDecimal TOTAL_PRICE_TOLERANCE = new BigDecimal("1");
 
     @Transactional
     @Override
@@ -107,6 +110,33 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
         export.setExportItems(items);
         StockExport saved = stockExportRepository.save(export);
 
+        if (request.getReason() != null
+                && request.getReason().toLowerCase().contains("do nhân viên")
+                && request.getReceiverId() != null
+                && !items.isEmpty()) {
+
+            Employee employee = employeeRepository.findById(request.getReceiverId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên nhận hàng"));
+
+            // Tính số tiền khấu trừ: ví dụ dùng tổng giá vốn của lần xuất đầu tiên (có thể tùy chỉnh)
+            StockExportItem firstItem = items.get(0);
+            Part firstPart = firstItem.getPart();
+            BigDecimal unitCost = firstPart.getPurchasePrice() != null ? firstPart.getPurchasePrice() : BigDecimal.ZERO;
+            BigDecimal deductionAmount = unitCost.multiply(BigDecimal.valueOf(firstItem.getQuantity()));
+
+            if (deductionAmount.compareTo(BigDecimal.ZERO) > 0) {
+                Deduction deduction = Deduction.builder()
+                        .employee(employee)
+                        .type(DeductionType.DAMAGE)
+                        .amount(deductionAmount)
+                        .reason(saved.getReason())
+                        .date(java.time.LocalDate.now())
+                        .createdBy(saved.getCreatedBy())
+                        .build();
+                deductionRepository.save(deduction);
+            }
+        }
+
         List<ManualTransactionItemResponse> itemDtos = saved.getExportItems().stream()
                 .map(mapper::toResponseFromExportItem)
                 .toList();
@@ -126,24 +156,20 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
     }
 
     private ManualTransactionResponse handleReceipt(ManualTransactionRequest request, boolean isDraft) {
-        Supplier supplier = null;
-        if (request.getSupplierId() != null) {
-            supplier = supplierRepository.findById(request.getSupplierId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp ID=" + request.getSupplierId()));
-        }
-
-        StockReceipt receipt = StockReceipt.builder()
-                .code(codeSequenceService.generateCode("XK"))
-                .supplier(supplier)
-                .createdBy(request.getCreatedBy())
-                .createdAt(LocalDateTime.now())
-                .status(isDraft ? StockReceiptStatus.DRAFT : StockReceiptStatus.RECEIVED)
-                .totalAmount(BigDecimal.ZERO)
-                .note(request.getNote())
+        // Tạo PurchaseRequest với trạng thái reviewStatus = PENDING
+        PurchaseRequest purchaseRequest = PurchaseRequest.builder()
+                .code(codeSequenceService.generateCode("PR"))
+                .relatedQuotation(null)
+                .stockReceipt(null)
+                .totalEstimatedAmount(BigDecimal.ZERO)
+                .reviewStatus(ManagerReviewStatus.PENDING)
+                .reason(request.getReason())
+                .items(new ArrayList<>())
+                .createdBy(null)
                 .build();
 
-        List<StockReceiptItem> items = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal totalEstimated = BigDecimal.ZERO;
+        List<ManualTransactionItemResponse> itemDtos = new ArrayList<>();
 
         for (ManualTransactionItemRequest ir : request.getItems()) {
             Part part = partRepository.findById(ir.getPartId())
@@ -168,49 +194,54 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
                 lineTotal = expectedTotal;
             }
 
-            total = total.add(lineTotal);
+            totalEstimated = totalEstimated.add(lineTotal);
 
-            StockReceiptItem item = StockReceiptItem.builder()
-                    .stockReceipt(receipt)
-                    .purchaseRequestItem(null)
-                    .requestedQuantity(qty)
-                    .quantityReceived(isDraft ? 0.0 : qty)
-                    .actualUnitPrice(unitPrice)
-                    .actualTotalPrice(lineTotal)
+            // Tạo PurchaseRequestItem tương ứng
+            PurchaseRequestItem prItem = PurchaseRequestItem.builder()
+                    .purchaseRequest(purchaseRequest)
+                    .quotationItem(null)
+                    .part(part)
+                    .partName(part.getName())
+                    .quantity(qty)
+                    .unit(part.getUnit() != null ? part.getUnit().getName() : null)
+                    .estimatedPurchasePrice(unitPrice)
+                    .quantityReceived(0.0)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
                     .note(ir.getNote())
-                    .status(isDraft ? StockReceiptStatus.DRAFT : StockReceiptStatus.RECEIVED)
+                    .createdBy(null)
                     .build();
-            items.add(item);
+            purchaseRequest.getItems().add(prItem);
 
-            if (!isDraft) {
-                applyReceiptToStock(part, qty);
-            }
+            // Map ra response item cho FE
+            ManualTransactionItemResponse res = new ManualTransactionItemResponse();
+            res.setId(null); // chưa cần id riêng của PurchaseRequestItem
+            res.setPartId(part.getPartId());
+            res.setPartSku(part.getSku());
+            res.setPartName(part.getName());
+            res.setQuantity(qty);
+            res.setUnit(part.getUnit() != null ? part.getUnit().getName() : null);
+            res.setUnitPrice(unitPrice);
+            res.setTotalPrice(lineTotal);
+            res.setQuantityInStock(part.getQuantityInStock());
+            res.setReservedQuantity(part.getReservedQuantity());
+            res.setNote(ir.getNote());
+            itemDtos.add(res);
         }
 
-        receipt.setItems(items);
-        receipt.setTotalAmount(total);
-        StockReceipt saved = stockReceiptRepository.save(receipt);
-
-        List<ManualTransactionItemResponse> itemDtos = new ArrayList<>();
-        for (int i = 0; i < saved.getItems().size(); i++) {
-            StockReceiptItem item = saved.getItems().get(i);
-            ManualTransactionItemRequest reqItem = request.getItems().get(i);
-            Part part = partRepository.findById(reqItem.getPartId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID=" + reqItem.getPartId()));
-            itemDtos.add(mapper.toResponseFromReceiptItem(item, part));
-        }
+        purchaseRequest.setTotalEstimatedAmount(totalEstimated);
+        PurchaseRequest savedPr = purchaseRequestRepository.save(purchaseRequest);
 
         return ManualTransactionResponse.builder()
-                .id(saved.getReceiptId())
-                .code(saved.getCode())
+                .id(savedPr.getId())
+                .code(savedPr.getCode())
                 .type("RECEIPT")
                 .isDraft(isDraft)
-                .status(saved.getStatus().name())
-                .createdBy(saved.getCreatedBy())
-                .createdAt(saved.getCreatedAt())
-                .note(saved.getNote())
+                .status(savedPr.getReviewStatus().name())
+                .createdBy(request.getCreatedBy())
+                .createdAt(savedPr.getCreatedAt())
+                .note(savedPr.getReason())
                 .items(itemDtos)
-                .totalAmount(saved.getTotalAmount())
+                .totalAmount(totalEstimated)
                 .build();
     }
 

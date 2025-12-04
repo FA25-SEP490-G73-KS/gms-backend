@@ -45,6 +45,9 @@ public class JwtService {
 
         return Jwts.builder()
                 .setSubject(employee.getEmployeeId().toString())
+                // Lưu fullName, phone và role vào access token để FE dùng hiển thị nhanh
+                .claim("fullName", employee.getFullName())
+                .claim("phone", employee.getPhone())
                 .claim("role", employee.getAccount().getRole())
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
@@ -91,6 +94,14 @@ public class JwtService {
     // -------------------- EXTRACT DATA --------------------
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractFullName(String token) {
+        return extractAllClaims(token).get("fullName", String.class);
+    }
+
+    public String extractPhone(String token) {
+        return extractAllClaims(token).get("phone", String.class);
     }
 
     public List<String> extractRoles(String token) {

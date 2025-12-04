@@ -21,7 +21,6 @@ public class Employee {
     @Column(name = "employee_id")
     private Long employeeId;
 
-    // --- Thông tin cá nhân ---
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
@@ -40,14 +39,15 @@ public class Employee {
     @Column(name = "hire_date")
     private LocalDateTime hireDate;
 
+    @Column(name = "termination_date")
+    private LocalDateTime terminationDate;
+    
     @Column(name = "daily_salary", precision = 18, scale = 2)
     private BigDecimal dailySalary;
 
-    // Active, Nghỉ việc, Tạm ngưng
     @Column(name = "status", length = 50)
     private String status;
 
-    // nullable với TECHNICIANS
     @OneToOne
     @JoinColumn(name = "account_id")
     private Account account;
