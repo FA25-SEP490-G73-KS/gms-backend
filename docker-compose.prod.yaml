@@ -1,30 +1,50 @@
-version: "3.9"
-
 services:
+  app:
+    image: taehuyn/gms-backend:latest
+    container_name: gms_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - app-net
+
   mysql:
     image: mysql:8.0.41
-    container_name: mysql
+    container_name: gms_mysql
     environment:
-      MYSQL_DATABASE: gms
-      MYSQL_USER: demo
-      MYSQL_PASSWORD: 123456
-      MYSQL_ROOT_PASSWORD: root
-      TZ: Asia/Ho_Chi_Minh
+      - MYSQL_DATABASE=${DB_DATABASE_NAME:-gms}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?}
+      - TZ=Asia/Ho_Chi_Minh
     command: --default-time-zone=+07:00
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
+    restart: unless-stopped
     networks:
       - app-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-uroot",
+          "-p${DB_PASSWORD:?}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
-    container_name: redis
+    container_name: gms_redis
     image: redis:7.0-alpine
     command:
       - sh
@@ -35,8 +55,6 @@ services:
         else
           redis-server --appendonly yes
         fi
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -57,20 +75,15 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
-    env_file:
-      - .env
-    container_name: app
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gms
-      SPRING_DATASOURCE_USERNAME: demo
-      SPRING_DATASOURCE_PASSWORD: 123456
+  nginx:
+    container_name: nginx
+    image: nginx:alpine3.22
     ports:
-      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./cert:/etc/nginx/cert:ro
     networks:
       - app-net
 

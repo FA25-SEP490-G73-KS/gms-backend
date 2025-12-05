@@ -1,35 +1,63 @@
-# syntax=docker/dockerfile:1
-
-# ===== Build stage =====
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# ==============================
+# Stage 1: Build the application
+# ==============================
+FROM eclipse-temurin:22-jdk-alpine AS builder
 WORKDIR /app
 
-# Cache dependencies
-COPY pom.xml .
-RUN mvn -q -e -B -DskipTests dependency:go-offline
+# 1. Copy Maven wrapper and configuration files first
+# This allows Docker to cache the dependencies layer if pom.xml hasn't changed
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN chmod +x ./mvnw
 
-# Copy source and build
+# Download all dependencies offline (improves caching compared to simple 'resolve')
+RUN ./mvnw dependency:go-offline
+
+# 2. Copy source code and build the application
 COPY src ./src
-RUN mvn -q -e -B -DskipTests package
+RUN ./mvnw clean package -DskipTests \
+    -Dmaven.compiler.debug=false \
+    -Dmaven.compiler.debuglevel=none
 
-# ===== Runtime stage =====
-FROM eclipse-temurin:21-jre
+# 3. Extract Layers (Spring Boot Layered Jar feature)
+# This separates dependencies from application code for optimized Docker caching
+RUN java -Djarmode=layertools -jar target/*.jar extract
+
+# ==============================
+# Stage 2: Runtime Environment
+# ==============================
+FROM eclipse-temurin:22-jre-alpine
+
+# Create a non-root user for security purposes
+RUN addgroup -S spring && adduser -S spring -G spring
 WORKDIR /app
 
-# Add a non-root user for security
-RUN useradd -ms /bin/bash spring
+# 4. Copy extracted layers from the builder stage
+# The order matters: dependencies are copied first because they change less frequently
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/application/ ./
+
+# Create logs directory and set permissions
+RUN mkdir -p /app/logs && chown -R spring:spring /app
+
+# Switch to the non-root user
 USER spring
 
-# Copy the fat jar from build stage
-COPY --from=build /app/target/*.jar app.jar
-
-# Expose default Spring Boot port
+# Expose the application port
 EXPOSE 8080
+ENV SERVER_PORT=8080
 
-# JVM and Spring Boot default opts can be overridden at runtime
-ENV JAVA_OPTS="" \
-    SPRING_PROFILES_ACTIVE=default
+# JVM Configuration
+# -XX:MaxRAMPercentage=75.0: Adapts heap size to 75% of the container's available memory
+# -XX:+UseContainerSupport: Ensures JVM recognizes container resource limits
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dspring.profiles.active=prod"
 
-# Health-friendly start command
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Application Health Check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:${SERVER_PORT}/actuator/health || exit 1
 
+# Start the application using JarLauncher
+# JarLauncher is optimized for handling layered jars (starts faster than standard java -jar)
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

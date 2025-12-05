@@ -4,10 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -47,14 +44,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    JwtService jwtService;
-    ObjectMapper objectMapper;
-    RequestMappingHandlerMapping handlerMapping;
-    EmployeeRepository employeeRepository;
+    private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
+    private final RequestMappingHandlerMapping handlerMapping;
+    private final EmployeeRepository employeeRepository;
+
+    public JwtAuthFilter(JwtService jwtService, ObjectMapper objectMapper,
+            @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlerMapping,
+            EmployeeRepository employeeRepository) {
+        this.jwtService = jwtService;
+        this.objectMapper = objectMapper;
+        this.handlerMapping = handlerMapping;
+        this.employeeRepository = employeeRepository;
+    }
 
     @Override
     protected void doFilterInternal(
