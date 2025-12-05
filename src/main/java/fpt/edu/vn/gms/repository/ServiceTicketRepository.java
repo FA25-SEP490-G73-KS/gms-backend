@@ -72,4 +72,24 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
        WHERE st.serviceTicketId = :id
        """)
     Optional<ServiceTicket> findDetail(@Param("id") Long id);
+
+    // Dashboard: tổng số phiếu dịch vụ trong tháng hiện tại
+    @Query("""
+        SELECT COUNT(st)
+        FROM ServiceTicket st
+        WHERE YEAR(st.createdAt) = :year AND MONTH(st.createdAt) = :month
+    """)
+    long countServiceTicketsInMonth(@Param("year") int year, @Param("month") int month);
+
+    // Dashboard: số xe đang sửa (IN_PROGRESS)
+    long countByStatus(ServiceTicketStatus status);
+
+    // Dashboard: thống kê số ServiceTicket group by YEAR, MONTH
+    @Query("""
+        SELECT YEAR(st.createdAt) as year, MONTH(st.createdAt) as month, COUNT(st) as total
+        FROM ServiceTicket st
+        GROUP BY YEAR(st.createdAt), MONTH(st.createdAt)
+        ORDER BY YEAR(st.createdAt), MONTH(st.createdAt)
+    """)
+    List<Object[]> getTicketsByMonth();
 }

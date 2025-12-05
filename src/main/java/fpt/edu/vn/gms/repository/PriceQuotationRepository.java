@@ -11,4 +11,6 @@ public interface PriceQuotationRepository extends JpaRepository<PriceQuotation, 
     Page<PriceQuotation> findByStatus(PriceQuotationStatus status, Pageable pageable);
 
     long countByStatus(PriceQuotationStatus status);
+
+    long countByStatusIn(Iterable<PriceQuotationStatus> statuses);
 }

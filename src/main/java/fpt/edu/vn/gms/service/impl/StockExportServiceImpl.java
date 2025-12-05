@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import fpt.edu.vn.gms.dto.request.ExportItemRequest;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.*;
@@ -206,6 +207,7 @@ public class StockExportServiceImpl implements StockExportService {
         // Cập nhật tồn kho
         part.setQuantityInStock(inStock - request.getQuantity());
         part.setReservedQuantity(Math.max(0.0, reserved - request.getQuantity()));
+        updateStockLevelStatus(part);
         partRepository.save(part);
 
         // Lấy nhân viên nhận linh kiện
@@ -309,5 +311,34 @@ public class StockExportServiceImpl implements StockExportService {
 
         stockExportRepository.save(export);
     }
-}
 
+    /**
+     * Cập nhật trạng thái tồn kho linh kiện dựa trên tồn khả dụng.
+     * available = quantityInStock - reservedQuantity
+     * - available <= 0                 => OUT_OF_STOCK
+     * - 0 < available <= reorderLevel  => LOW_STOCK
+     * - available > reorderLevel       => IN_STOCK
+     */
+    private void updateStockLevelStatus(Part part) {
+        if (part == null) return;
+
+        double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+        double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+        double threshold = Optional.ofNullable(part.getReorderLevel()).orElse(0.0);
+
+        double available = inStock - reserved;
+
+        StockLevelStatus newStatus;
+        if (available <= 0) {
+            newStatus = StockLevelStatus.OUT_OF_STOCK;
+        } else if (available <= threshold) {
+            newStatus = StockLevelStatus.LOW_STOCK;
+        } else {
+            newStatus = StockLevelStatus.IN_STOCK;
+        }
+
+        if (part.getStatus() != newStatus) {
+            part.setStatus(newStatus);
+        }
+    }
+}

@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.DeductionType;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import fpt.edu.vn.gms.dto.request.ManualTransactionItemRequest;
 import fpt.edu.vn.gms.dto.request.ManualTransactionRequest;
 import fpt.edu.vn.gms.dto.response.ManualTransactionItemResponse;
@@ -66,13 +67,45 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
         double reserved = part.getReservedQuantity() == null ? 0.0 : part.getReservedQuantity();
         part.setQuantityInStock(inStock - qty);
         part.setReservedQuantity(Math.max(0.0, reserved - qty));
+        updateStockLevelStatus(part);
         partRepository.save(part);
     }
 
     private void applyReceiptToStock(Part part, double qty) {
         double inStock = part.getQuantityInStock() == null ? 0.0 : part.getQuantityInStock();
         part.setQuantityInStock(inStock + qty);
+        updateStockLevelStatus(part);
         partRepository.save(part);
+    }
+
+    /**
+     * Cập nhật trạng thái tồn kho linh kiện dựa trên tồn khả dụng.
+     * available = quantityInStock - reservedQuantity
+     * - available <= 0                 => OUT_OF_STOCK
+     * - 0 < available <= reorderLevel  => LOW_STOCK
+     * - available > reorderLevel       => IN_STOCK
+     */
+    private void updateStockLevelStatus(Part part) {
+        if (part == null) return;
+
+        double inStock = part.getQuantityInStock() == null ? 0.0 : part.getQuantityInStock();
+        double reserved = part.getReservedQuantity() == null ? 0.0 : part.getReservedQuantity();
+        double threshold = part.getReorderLevel() == null ? 0.0 : part.getReorderLevel();
+
+        double available = inStock - reserved;
+
+        StockLevelStatus newStatus;
+        if (available <= 0) {
+            newStatus = StockLevelStatus.OUT_OF_STOCK;
+        } else if (available <= threshold) {
+            newStatus = StockLevelStatus.LOW_STOCK;
+        } else {
+            newStatus = StockLevelStatus.IN_STOCK;
+        }
+
+        if (part.getStatus() != newStatus) {
+            part.setStatus(newStatus);
+        }
     }
 
     private ManualTransactionResponse handleExport(ManualTransactionRequest request, boolean isDraft) {
