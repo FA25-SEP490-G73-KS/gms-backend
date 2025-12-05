@@ -1,8 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,22 +25,15 @@ public class PurchaseRequest {
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    // Liên kết đến báo giá
     @OneToOne
     @JoinColumn(name = "quotation_id")
     private PriceQuotation relatedQuotation;
 
-    // Tổng dự kiến chi phí
+    @OneToOne(mappedBy = "purchaseRequest")
+    private StockReceipt stockReceipt;
+
     @Column(nullable = true)
     private BigDecimal totalEstimatedAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", length = 30)
-    private PurchaseRequestType type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)

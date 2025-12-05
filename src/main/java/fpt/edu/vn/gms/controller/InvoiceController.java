@@ -1,12 +1,10 @@
 package fpt.edu.vn.gms.controller;
 
-import fpt.edu.vn.gms.dto.PayInvoiceRequestDto;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.request.PayInvoiceRequestDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateDebtFromPaymentReq;
-import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.service.InvoiceService;
-import fpt.edu.vn.gms.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -14,7 +12,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

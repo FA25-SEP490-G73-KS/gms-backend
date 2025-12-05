@@ -1,10 +1,12 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "stock_receipt_item")
@@ -20,19 +22,19 @@ public class StockReceiptItem {
     @Column(name = "stock_receipt_item_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "stock_receipt_id", nullable = false)
     private StockReceipt stockReceipt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_request_item_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "purchase_request_item_id")
     private PurchaseRequestItem purchaseRequestItem;
 
     @Column(name = "requested_quantity")
-    private Double requestedQuantity;      // Số lượng yêu cầu (snapshot)
+    private Double requestedQuantity;
 
     @Column(name = "quantity_received")
-    private Double quantityReceived;       // Số lượng thực nhận đợt này
+    private Double quantityReceived;
 
     @Column(name = "actual_unit_price", precision = 18, scale = 2)
     private BigDecimal actualUnitPrice;
@@ -41,18 +43,20 @@ public class StockReceiptItem {
     private BigDecimal actualTotalPrice;
 
     @Column(name = "attachment_url", length = 255)
-    private String attachmentUrl;          // File đính kèm (hóa đơn / phiếu giao hàng)
+    private String attachmentUrl;
 
     @Column(name = "note", length = 255)
-    private String note;                   // Ghi chú/Lý do
+    private String note;
 
-    @Column(name = "received_at", nullable = false)
+    @Column(name = "received_at")
     private LocalDateTime receivedAt;
 
-    private String receivedByName;
+    private String receivedBy;
 
-    private Long receivedById;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StockReceiptStatus status;
 
-    @Column(name = "is_paid")
-    private Boolean paid = false;
+    @OneToMany(mappedBy = "stockReceiptItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StockReceiptItemHistory> histories;
 }

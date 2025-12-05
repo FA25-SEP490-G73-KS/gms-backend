@@ -11,10 +11,12 @@ import java.math.BigDecimal;
 @Builder
 public class ManualVoucherCreateRequest {
 
-    private ManualVoucherType type;
+    private LedgerVoucherType type;
     private LedgerVoucherCategory category;
+
     private Long relatedEmployeeId;
     private Long relatedSupplierId;
+
     private String description;
     private BigDecimal amount;
 }

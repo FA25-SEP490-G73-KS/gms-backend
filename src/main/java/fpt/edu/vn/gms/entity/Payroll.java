@@ -35,7 +35,6 @@ public class Payroll {
 
     @Column(name = "base_salary", precision = 18, scale = 2)
     private BigDecimal baseSalary;
-    // dailySalary * workingDays
 
     @Column(name = "total_allowance", precision = 18, scale = 2)
     private BigDecimal totalAllowance;
@@ -52,7 +51,6 @@ public class Payroll {
     @Column(name = "net_salary", precision = 18, scale = 2)
     private BigDecimal netSalary;  // base + allowance - deduction - advance
 
-    // --- APPROVAL WORKFLOW ---
     @Enumerated(EnumType.STRING)
     private PayrollStatus status;
 

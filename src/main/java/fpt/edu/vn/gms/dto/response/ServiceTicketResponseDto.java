@@ -23,6 +23,5 @@ public class ServiceTicketResponseDto {
     private LocalDateTime updatedAt;
     private LocalDate deliveryAt;
     private String status;
-
     private PriceQuotationResponseDto priceQuotation;
 }

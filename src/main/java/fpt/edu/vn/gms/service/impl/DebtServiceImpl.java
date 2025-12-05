@@ -2,11 +2,11 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.DebtStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
-import fpt.edu.vn.gms.dto.CreateDebtDto;
-import fpt.edu.vn.gms.dto.CustomerDebtSummaryDto;
-import fpt.edu.vn.gms.dto.PayDebtRequestDto;
+import fpt.edu.vn.gms.dto.request.CreateDebtDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
+import fpt.edu.vn.gms.dto.request.PayDebtRequestDto;
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
@@ -39,6 +39,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -66,9 +67,39 @@ public class DebtServiceImpl implements DebtService {
 
         @Override
         public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size) {
-                Pageable pageable = buildPageable(page, size, null);
-                Page<CustomerDebtSummaryDto> debts = debtRepository.findTotalDebtGroupedByCustomer(pageable);
-                return debts;
+                // For summary aggregation query, do NOT sort by createdAt (not in GROUP BY) to avoid ONLY_FULL_GROUP_BY error
+                Pageable pageable = PageRequest.of(page, size);
+                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(pageable);
+
+                List<CustomerDebtSummaryDto> content = rawPage.getContent().stream()
+                                .map(this::mapToCustomerDebtSummaryDto)
+                                .toList();
+
+                return new PageImpl<>(content, pageable, rawPage.getTotalElements());
+        }
+
+        private CustomerDebtSummaryDto mapToCustomerDebtSummaryDto(Object[] row) {
+                Long customerId = row[0] != null ? ((Number) row[0]).longValue() : null;
+                String fullName = (String) row[1];
+                String phone = (String) row[2];
+
+                BigDecimal totalAmount = row[3] != null ? (BigDecimal) row[3] : BigDecimal.ZERO;
+                BigDecimal totalPaidAmount = row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO;
+                BigDecimal totalRemaining = row[5] != null ? (BigDecimal) row[5] : BigDecimal.ZERO;
+
+                LocalDate dueDate = (LocalDate) row[6];
+                String status = (String) row[7];
+
+                return new CustomerDebtSummaryDto(
+                                customerId,
+                                fullName,
+                                phone,
+                                totalAmount,
+                                totalPaidAmount,
+                                totalRemaining,
+                                dueDate,
+                                status
+                );
         }
 
         @Override

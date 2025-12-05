@@ -1,35 +1,49 @@
 package fpt.edu.vn.gms.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
-import fpt.edu.vn.gms.common.enums.PurchaseRequestType;
-import lombok.AllArgsConstructor;
+import fpt.edu.vn.gms.entity.PurchaseRequest;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class PurchaseRequestResponseDto {
 
+    @Schema(example = "1")
     private Long id;
+
+    @Schema(example = "PR-2025-00001")
     private String code;
+
+    private Long quotationId;
+
+    @Schema(example = "BG-2025-00001")
     private String quotationCode;
-    private String customerName;
-    private String customerPhone;
-    private String createdBy;
-    private PurchaseRequestType type;
-    private PurchaseRequestStatus status;
-    private ManagerReviewStatus reviewStatus;
+
+    @Schema(example = "15000000")
     private BigDecimal totalEstimatedAmount;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDateTime createdAt;
+    @Schema(example = "Chờ duyệt")
+    private String reviewStatus;
+
+    private String reason;
+
+    @Schema(example = "11/12/2025 15:05")
+    private String createdAt;
+
+    public static PurchaseRequestResponseDto fromEntity(PurchaseRequest pr) {
+        if (pr == null) return null;
+        return PurchaseRequestResponseDto.builder()
+                .id(pr.getId())
+                .code(pr.getCode())
+                .quotationId(pr.getRelatedQuotation() != null ? pr.getRelatedQuotation().getPriceQuotationId() : null)
+                .quotationCode(pr.getRelatedQuotation() != null ? pr.getRelatedQuotation().getCode() : null)
+                .totalEstimatedAmount(pr.getTotalEstimatedAmount())
+                .reviewStatus(pr.getReviewStatus() != null ? pr.getReviewStatus().name() : null)
+                .reason(pr.getReason())
+                .createdAt(pr.getCreatedAt() != null ? pr.getCreatedAt().toString() : null)
+                .build();
+    }
 }

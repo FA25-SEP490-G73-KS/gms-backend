@@ -90,6 +90,14 @@ INSERT INTO suppliers (name, phone, email, address, is_active) VALUES
         ('Euro Auto Supply', '+49-175-233-2211', 'euro@supply.eu', 'Berlin, Germany', TRUE);
 
 
+INSERT INTO unit (
+    name
+) VALUES
+      ('cái'),
+      ('bộ'),
+      ('lít'),
+      ('cặp');
+
 INSERT INTO part (
     part_name,
     category_id,
@@ -104,40 +112,41 @@ INSERT INTO part (
     special_part,
     vehicle_model,
     sku,
-    supplier
+    supplier,
+    unit
 ) VALUES
       ('Lọc nhớt động cơ', 10, 1, false, 80000, 120000, 0.00, 50, 0, 10, false, 1,
-       'LOCNHODONGCO-VIOS-VN', 1),
+       'LOCNHODONGCO-VIOS-VN', 1, 1),
 
       ('Lọc nhớt động cơ', 10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2,
-       'LOCNHODONGCO-COROLLA-JP', 2),
+       'LOCNHODONGCO-COROLLA-JP', 2, 1),
 
       ('Dầu động cơ 10W-40', 10, 1, true, 250000, 320000, 5.00, 100, 5, 20, false, 3,
-       'DAUDONGCO10W40-CIVIC-VN', 3),
+       'DAUDONGCO10W40-CIVIC-VN', 3, 1),
 
       ('Bugi đánh lửa', 1, 2, false, 40000, 80000, 0.00, 80, 2, 15, false, 4,
-       'BUGIDANHLUA-CITY-JP', 4),
+       'BUGIDANHLUA-CITY-JP', 4, 1),
 
       ('Phanh đĩa trước', 4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5,
-       'PHANHDIATRUOC-FOCUS-JP', 5),
+       'PHANHDIATRUOC-FOCUS-JP', 5, 1),
 
       ('Ắc quy GS 12V-45Ah', 7, 2, true, 950000, 1200000, 3.00, 20, 1, 5, false, 1,
-       'ACQUYGS12V45AH-VIOS-JP', 6),
+       'ACQUYGS12V45AH-VIOS-JP', 6, 1),
 
       ('Dây curoa tổng', 1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2,
-       'DAYCUROATONG-COROLLA-JP', 7),
+       'DAYCUROATONG-COROLLA-JP', 7, 1),
 
       ('Lọc gió điều hoà', 6, 3, true, 50000, 90000, 0.00, 60, 0, 15, false, 3,
-       'LOCGIODIEUHOA-CIVIC-US', 8),
+       'LOCGIODIEUHOA-CIVIC-US', 8, 1),
 
       ('Gạt mưa trước', 8, 1, true, 30000, 60000, 0.00, 120, 0, 30, false, 4,
-       'GATMUATRUOC-CITY-VN', 9),
+       'GATMUATRUOC-CITY-VN', 9, 1),
 
       ('Đèn pha LED', 8, 3, false, 700000, 950000, 0.00, 15, 0, 5, false, 5,
-       'DENPHALED-FOCUS-US', 10),
+       'DENPHALED-FOCUS-US', 10, 1),
 
       ('Cảm biến ABS', 7, 4, false, 450000, 600000, 0.00, 10, 0, 3, false, 1,
-       'CAMBIENABS-VIOS-EU',1);
+       'CAMBIENABS-VIOS-EU',1, 1);
 
 
 INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
@@ -162,8 +171,8 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token)
 VALUES (
-           "JBN5E2WaidnAlySmB2gsV4cxmZ0kDyy1JlxQ1c0z_XzQriiIEHoz20sEl0q-7PTFMEhgQMO7x7Hx_-1mNMdFKsUgy5r2HUHXMAAGT6jmkZ9pXCa-5Kky73RTlGmgFfvEIVQYULKyeqfbzhLAIZ2lULdmsbzh2zj0SftA1cuAva5FuCnXVYlTJ6JAgt5XN8jDPOkVU4XCbLfMtUTDMKx5O4M8-aTQOVXhG9MCSNDHv4vpffD-5KAPSYQfdqv1QhGFNOM47ZeHy2q_nk5l9WV1A0d2nILhKUadJ8hl47rRt3rWp-WZUm_8PqVRl7PRByXmNVZrPsytmcHtoiruR0h7LMdjvaDsFCbx6CV4Uda6r6fQYTeeJdZgAtljv2L1FkqVVjV1CaT5tHnzgweXU3chU5Mih6DNTzzGLw95T2yviti",
-           "1De-78C8yMm2q3mKXmRrR07KEHI56_K60vTI3uSvzYjTacyDjaBLVq_pO5AYLVvtS_mqK8zac6PGiZ9jWI2iNtsLENUgFF1-BBLF3VjcwYejq2GurMQF3I2t40hb5ua28wuH4CW9k20NfNHJbJtHUq25ObwHEybqTAjE0eWRwN88hsDQp0N8RXI2SHlCE_XsDxvCUSiQucWrgNaVrN_X1HZrUYpzGSqrFVX_6-9iyWaLopOVot3vD4syO0ND6SScD"
+            "OCJ4EoC-_YfcpiOp9p3wAcNAmpCbBVjp3Tst70XrnqymzvyD44YWT0Ju-ZWELBrfHzkD6sCYqGnXt-zaV2A92KIAprnHSv8JMTIk01WixL4TlDKcL2oDPaAei3K2Fjvm8f-46JCbpaaMc8eO8HB1JIITXZnj6Bn4SBo6Bc8Yx7iZgQ5fDZJX9WktkquyIlSRDlJBLZT-aIvprDCyRcwfLatkc2voHj5yB-kCRnHIiHGiykrdP6AdAoN9uK0mK8KE5EwzPHuMyt13YxvXGWI03GATqKf6C8bI3wEuFqWmo6y0afW97G_PTnwCcYOTSgfB6Ft00bn5Z7neohDfRtdK1cdfh4LUKkamSSspO75swGrDvPDuKntICclWbN5tOVbbLyMISLvBgJbPzkqjI5o7UatanH58IQ04D739224a8_yj",
+                        "bciMAAfMpG6GOHGWhbZ90PDb4I2iHQXCbJ8j3TX6fIQ-9YH9zqUUESfwGnQYBCXdp7WC1hOUrqxUKbSpYnRfRST7OJQxACbyXWjsARzsns3UDrOuuLIASwSU1Z3wIhT8W0Ky0yr-d62KNJqQw62jEjC29dM-VFSLrJfgEhbyt5B4GKyVhpRrRf9fIKVFIiitjIDrGkaVtXcDF6qtvN7rOAuFToZaSjaSkZLoJk1J_Y6aQs5tw3t3CQrqGMFuFj8Zf0CMNCyqoJ2Z2MqUvMxfM9WJTGVVNjbve197KlLUsW6V0K1Upr-PBvO986pBRgXObpaO4TLbndtj1XaNYd2lJ-WhDM-LVPqdyXaSJx14aXxxBmz1dt2Y2A8K6s3aTQWeqpSYLfHkXItw0nPym6cs5uqICtvr3mxf6QrBp0O"
        );
 
 

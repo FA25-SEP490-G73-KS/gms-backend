@@ -55,7 +55,7 @@ public class VehicleController {
 
         // TH2: Xe có chủ nhưng khác với customer hiện tại → Cảnh báo
         Customer owner = vehicle.getCustomer();
-        if (owner != null && (customerId == null || !owner.getCustomerId().equals(customerId))) {
+        if (owner != null && (!owner.getCustomerId().equals(customerId))) {
             return ResponseEntity.ok(ApiResponse.success("OWNED_BY_OTHER",
                     PlateCheckResponse.ownerConflict(owner)));
         }

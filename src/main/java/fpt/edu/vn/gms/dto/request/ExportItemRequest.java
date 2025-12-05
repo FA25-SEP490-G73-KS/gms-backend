@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class ExportItemRequest {
+
     private Double quantity;
     private Long receiverId;
+    private String note;
 }

@@ -1,12 +1,14 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
-import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import fpt.edu.vn.gms.common.enums.PayrollStatus;
+import fpt.edu.vn.gms.dto.request.DeductionDto;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.repository.*;
+import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.PayrollService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +33,10 @@ public class PayrollServiceImpl implements PayrollService {
     AttendanceRepository attendanceRepository;
     AllowanceRepository allowanceRepository;
     DeductionRepository deductionRepository;
-    ManualVoucherRepository voucherRepository;
+//    ManualVoucherRepository voucherRepository;
+    LedgerVoucherRepository ledgerVoucherRepository;
     PayrollRepository payrollRepository;
+    private final CodeSequenceService codeSequenceService;
 
     @Override
     public PayrollMonthlySummaryDto getPayrollPreview(Integer month, Integer year) {
@@ -58,13 +62,13 @@ public class PayrollServiceImpl implements PayrollService {
             BigDecimal deduction = deductionRepository.sumForMonth(
                     emp.getEmployeeId(), month, year);
 
-            BigDecimal advanceSalary = voucherRepository.sumAdvanceSalary(
-                    emp.getEmployeeId(), month, year);
+//            BigDecimal advanceSalary = voucherRepository.sumAdvanceSalary(
+//                    emp.getEmployeeId(), month, year);
 
             BigDecimal netSalary = baseSalary
                     .add(allowance)
-                    .subtract(deduction)
-                    .subtract(advanceSalary);
+                    .subtract(deduction);
+//                    .subtract(advanceSalary);
 
             // Check payroll exists?
             Payroll payroll = payrollRepository
@@ -84,7 +88,7 @@ public class PayrollServiceImpl implements PayrollService {
                     .baseSalary(baseSalary)
                     .allowance(allowance)
                     .deduction(deduction)
-                    .advanceSalary(advanceSalary)
+//                    .advanceSalary(advanceSalary)
                     .netSalary(netSalary)
                     .status(status)
                     .build();
@@ -124,17 +128,17 @@ public class PayrollServiceImpl implements PayrollService {
         }
 
         LedgerVoucher voucher = LedgerVoucher.builder()
-                .type(ManualVoucherType.PAYMENT)
-                .category(LedgerVoucherCategory.SALARY_PAYMENT)
+                .code(codeSequenceService.generateCode("CHI"))
+                .type(LedgerVoucherType.SALARY)
                 .relatedEmployeeId(payroll.getEmployee().getEmployeeId())
                 .amount(payroll.getNetSalary())
                 .description("Chi lương tháng " + payroll.getMonth() + "/" + payroll.getYear()
                         + " cho " + payroll.getEmployee().getFullName())
-                .status(ManualVoucherStatus.PENDING)
+                .status(LedgerVoucherStatus.PENDING)
                 .createdBy(employeeRepository.getReferenceById(accountantId))
                 .build();
 
-        voucherRepository.save(voucher);
+        ledgerVoucherRepository.save(voucher);
 
         payroll.setStatus(PayrollStatus.PAID);
         payroll.setPaidBy(employeeRepository.getReferenceById(accountantId));
@@ -176,15 +180,12 @@ public class PayrollServiceImpl implements PayrollService {
         Employee emp = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
-        // ============ 1. Attendance ============
-
         Integer workingDays = attendanceRepository.countPresentDays(employeeId, month, year);
         Integer leaveDays = attendanceRepository.countAbsentDays(employeeId, month, year);
 
         BigDecimal baseSalary = emp.getDailySalary()
                 .multiply(BigDecimal.valueOf(workingDays));
 
-        // ============ 2. Allowance ============
 
         BigDecimal totalAllowance = allowanceRepository.sumForMonth(employeeId, month, year);
         List<Allowance> allowanceList =
@@ -194,7 +195,6 @@ public class PayrollServiceImpl implements PayrollService {
                 .map(a -> new AllowanceDto(a.getType().getVietnamese(), a.getAmount(), a.getCreatedAt(), a.getCreatedBy()))
                 .toList();
 
-        // ============ 3. Deduction ============
 
         BigDecimal totalDeduction = deductionRepository.sumForMonth(employeeId, month, year);
         List<Deduction> deductionList = deductionRepository.findByEmployeeEmployeeIdAndDateBetween(
@@ -208,13 +208,13 @@ public class PayrollServiceImpl implements PayrollService {
                 .toList();
 
 
-        BigDecimal totalAdvance =
-                voucherRepository.sumAdvanceSalary(employeeId, month, year);
+//        BigDecimal totalAdvance =
+//                voucherRepository.sumAdvanceSalary(employeeId, month, year);
 
         BigDecimal netSalary = baseSalary
                 .add(totalAllowance)
-                .subtract(totalDeduction)
-                .subtract(totalAdvance);
+                .subtract(totalDeduction);
+//                .subtract(totalAdvance);
 
 
         Payroll payroll = payrollRepository
@@ -255,4 +255,36 @@ public class PayrollServiceImpl implements PayrollService {
                 .canPaySalary(canPaySalary)
                 .build();
     }
+
+    @Override
+    public PayrollSummaryDto getPayrollSummaryByMonthYear(Integer month, Integer year) {
+
+        var payrolls = payrollRepository.findByMonthAndYear(month, year);
+
+        BigDecimal totalPayroll = java.math.BigDecimal.ZERO;
+        BigDecimal totalApproved = java.math.BigDecimal.ZERO;
+        BigDecimal totalPending = java.math.BigDecimal.ZERO;
+        BigDecimal totalAllowance = java.math.BigDecimal.ZERO;
+        BigDecimal totalDeduction = java.math.BigDecimal.ZERO;
+
+        for (var p : payrolls) {
+            if (p.getNetSalary() != null) totalPayroll = totalPayroll.add(p.getNetSalary());
+            if (p.getTotalAllowance() != null) totalAllowance = totalAllowance.add(p.getTotalAllowance());
+            if (p.getTotalDeduction() != null) totalDeduction = totalDeduction.add(p.getTotalDeduction());
+            if (p.getStatus() == fpt.edu.vn.gms.common.enums.PayrollStatus.APPROVED && p.getNetSalary() != null) {
+                totalApproved = totalApproved.add(p.getNetSalary());
+            }
+            if (p.getStatus() == fpt.edu.vn.gms.common.enums.PayrollStatus.PENDING_MANAGER_APPROVAL && p.getNetSalary() != null) {
+                totalPending = totalPending.add(p.getNetSalary());
+            }
+        }
+        return PayrollSummaryDto.builder()
+                .totalPayroll(totalPayroll)
+                .totalApproved(totalApproved)
+                .totalPending(totalPending)
+                .totalAllowance(totalAllowance)
+                .totalDeduction(totalDeduction)
+                .build();
+    }
+
 }

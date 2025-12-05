@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.PartReqDto;
 import fpt.edu.vn.gms.entity.*;
@@ -41,7 +42,31 @@ public class PartServiceImpl implements PartService {
 
         Page<Part> parts = partRepository.findAll(pageable);
 
+        parts.forEach(this::updateStockLevelStatusIfNeeded);
+
         // map entity -> dto
+        return parts.map(partMapper::toDto);
+    }
+
+    @Override
+    public Page<PartReqDto> getAllPart(int page, int size, Long categoryId, StockLevelStatus status) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Part> parts;
+
+        // Determine which repository method to use based on provided filters
+        if (categoryId != null && status != null) {
+            parts = partRepository.findByCategory_IdAndStatus(categoryId, status, pageable);
+        } else if (categoryId != null) {
+            parts = partRepository.findByCategory_Id(categoryId, pageable);
+        } else if (status != null) {
+            parts = partRepository.findByStatus(status, pageable);
+        } else {
+            parts = partRepository.findAll(pageable);
+        }
+
+        parts.forEach(this::updateStockLevelStatusIfNeeded);
+
         return parts.map(partMapper::toDto);
     }
 
@@ -49,6 +74,10 @@ public class PartServiceImpl implements PartService {
     public PartReqDto getPartById(Long id) {
 
         Part part = partRepository.findById(id).orElse(null);
+
+        if (part != null) {
+            updateStockLevelStatusIfNeeded(part);
+        }
 
         return partMapper.toDto(part);
     }
@@ -86,7 +115,7 @@ public class PartServiceImpl implements PartService {
 
         // --- Supplier ---
         Supplier supplier = supplierRepo.findById(dto.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " +  + dto.getSupplierId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " + dto.getSupplierId()));
 
         // --- Tính giá bán ---
         BigDecimal purchase = dto.getPurchasePrice();
@@ -195,13 +224,44 @@ public class PartServiceImpl implements PartService {
 
 
     @Override
-    public Page<PartReqDto> getPartByCategory(String categoryName, int page, int size) {
+    public Page<PartReqDto> getPartByCategory(Long categoryId, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Part> parts = partRepository.findByCategory(categoryName, pageable);
+        Page<Part> parts = partRepository.findByCategory_Id(categoryId, pageable);
 
         // Dùng Page.map để giữ thông tin phân trang
         return parts.map(partMapper::toDto);
+    }
+
+    /**
+     * Cập nhật trường status (StockLevelStatus) của linh kiện dựa trên quantityInStock và reorderLevel.
+     * Quy tắc:
+     * - quantityInStock <= 0          -> OUT_OF_STOCK
+     * - 0 < quantityInStock <= reorderLevel -> LOW_STOCK
+     * - quantityInStock > reorderLevel -> IN_STOCK
+     */
+    private void updateStockLevelStatusIfNeeded(Part part) {
+        if (part == null) {
+            return;
+        }
+
+        Double qty = part.getQuantityInStock() != null ? part.getQuantityInStock() : 0.0;
+        Double threshold = part.getReorderLevel() != null ? part.getReorderLevel() : 0.0;
+
+        StockLevelStatus newStatus;
+        if (qty <= 0) {
+            newStatus = StockLevelStatus.OUT_OF_STOCK;
+        } else if (qty <= threshold) {
+            newStatus = StockLevelStatus.LOW_STOCK;
+        } else {
+            newStatus = StockLevelStatus.IN_STOCK;
+        }
+
+        // Chỉ save khi trạng thái thay đổi để tránh ghi DB không cần thiết
+        if (part.getStatus() != newStatus) {
+            part.setStatus(newStatus);
+            partRepository.save(part);
+        }
     }
 }

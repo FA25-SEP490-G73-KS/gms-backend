@@ -10,4 +10,8 @@ public class LoginRequestDto {
 
     @Schema(description = "Mật khẩu", example = "123456", required = true)
     private String password;
+
+    // Thêm cờ rememberMe để quyết định thời gian sống của refresh token
+    @Schema(description = "Ghi nhớ đăng nhập trên thiết bị này", example = "true", required = false)
+    private Boolean rememberMe;
 }

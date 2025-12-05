@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -60,4 +61,7 @@ public class PartReqDto {
 
     @Schema(description = "Ghi chú")
     private String note;
+
+    @Schema(description = "Trạng thái tồn kho (Đủ hàng/Sắp hết/Hết hàng)")
+    private StockLevelStatus status;
 }

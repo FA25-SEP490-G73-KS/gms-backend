@@ -3,11 +3,8 @@ package fpt.edu.vn.gms.service.auth;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.UUID;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import fpt.edu.vn.gms.dto.request.ChangePasswordRequest;
 import fpt.edu.vn.gms.dto.request.LoginRequestDto;
 import fpt.edu.vn.gms.dto.request.RefreshRequestDto;
@@ -29,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +52,9 @@ public class AuthService {
     }
 
     Employee employee = employeeRepository.findByAccount(account).orElseThrow(InvalidCredentialsException::new);
-    return getTokens(employee);
+
+    boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
+    return getTokens(employee, rememberMe);
   }
 
   public AuthTokenDto refresh(RefreshRequestDto request) {
@@ -68,57 +68,89 @@ public class AuthService {
 
     Employee employee = employeeRepository.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
 
+    // Lấy thông tin rememberMe từ refresh token cũ (nếu có)
+    Boolean rememberMeClaim = decodedRefreshToken.getBody().get("rememberMe", Boolean.class);
+    boolean rememberMe = Boolean.TRUE.equals(rememberMeClaim);
+
     invalidateTokens(employeeId);
-    return getTokens(employee);
+    return getTokens(employee, rememberMe);
   }
 
+  @Transactional
   public AccountResponseDto changePassword(String phoneNumber, ChangePasswordRequest req) {
 
     Account acc = accountRepository.findByPhone(phoneNumber)
-        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
-    System.out.println(req.getNewPassword());
-    System.out.println(acc.getPassword());
+
     if (!passwordEncoder.matches(req.getCurrentPassword(), acc.getPassword())) {
       throw new RuntimeException("Mật khẩu hiện tại không đúng!");
     }
 
+    if (req.getNewPassword() == null || req.getNewPassword().length() < 8) {
+      throw new RuntimeException("Mật khẩu mới phải có ít nhất 8 ký tự!");
+    }
+
+    if (passwordEncoder.matches(req.getNewPassword(), acc.getPassword())) {
+      throw new RuntimeException("Mật khẩu mới phải khác mật khẩu hiện tại!");
+    }
+
+    if (!req.getNewPassword().equals(req.getConfirmPassword())) {
+      throw new RuntimeException("Xác nhận mật khẩu không khớp!");
+    }
+
     acc.setPassword(passwordEncoder.encode(req.getNewPassword()));
     accountRepository.save(acc);
+
+    invalidateTokens(acc.getEmployee().getEmployeeId());
+
+    log.info("User {} đã đổi mật khẩu thành công!", acc.getPhone());
+
     return accountMapper.toDTO(acc);
   }
 
-  public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto resetPasswordRequestDTO) {
 
-    Account account = accountRepository.findByPhone(resetPasswordRequestDTO.getPhone())
-        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+  @Transactional
+  public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto dto) {
 
-    String newPassword = generateRandomPassword();
+    Account account = accountRepository.findByPhone(dto.getPhone())
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-    account.setPassword(passwordEncoder.encode(newPassword));
+    if (dto.getNewPassword() == null || dto.getNewPassword().length() < 8) {
+      throw new RuntimeException("Mật khẩu phải có ít nhất 8 ký tự");
+    }
+
+    if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+      throw new RuntimeException("Mật khẩu xác nhận không khớp");
+    }
+
+    account.setPassword(passwordEncoder.encode(dto.getNewPassword()));
     accountRepository.save(account);
 
-    log.info("Gửi SMS đến " + account.getPhone() + " Mật khẩu mới là: " + newPassword);
+    invalidateTokens(account.getEmployee().getEmployeeId());
+
+    log.info("User {} đã đổi mật khẩu thành công", account.getPhone());
 
     return ResetPasswordResponseDto.builder()
-        .phone(account.getPhone())
-        .message("Mật khẩu mới đã được gửi qua SMS")
-        .build();
+            .phone(account.getPhone())
+            .message("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")
+            .build();
   }
+
 
   public void logout(Employee employee) {
     invalidateTokens(employee.getEmployeeId());
   }
 
   private AuthTokenDto getTokens(Employee employee) {
-    String accessToken = jwtService.generateAccessToken(employee);
-    String refreshToken = jwtService.generateRefreshToken(employee);
-
-    return new AuthTokenDto(accessToken, refreshToken);
+    return getTokens(employee, false);
   }
 
-  private String generateRandomPassword() {
-    return UUID.randomUUID().toString().substring(0, 8); // random 8 ký tự
+  private AuthTokenDto getTokens(Employee employee, boolean rememberMe) {
+    String accessToken = jwtService.generateAccessToken(employee);
+    String refreshToken = jwtService.generateRefreshToken(employee, rememberMe);
+
+    return new AuthTokenDto(accessToken, refreshToken);
   }
 
   private void invalidateTokens(Long employeeId) {

@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.DeductionRequestDto;
-import fpt.edu.vn.gms.dto.response.DeductionDto;
+import fpt.edu.vn.gms.dto.request.DeductionDto;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.DeductionService;
 import io.swagger.v3.oas.annotations.Operation;

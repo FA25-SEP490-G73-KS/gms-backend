@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.dto.response;
 
 import fpt.edu.vn.gms.common.enums.PayrollStatus;
+import fpt.edu.vn.gms.dto.request.DeductionDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

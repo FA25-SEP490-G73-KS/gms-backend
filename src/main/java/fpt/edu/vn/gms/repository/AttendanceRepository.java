@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,4 +62,12 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
   Integer countAbsentDays(@Param("employeeId") Long employeeId,
                           @Param("month") Integer month,
                           @Param("year") Integer year);
+
+  @Query("""
+      SELECT a
+      FROM Attendance a
+      WHERE a.date = :today AND a.employee.employeeId IN :employeeIds
+      """)
+  List<Attendance> findTodayAttendance(@Param("today") LocalDate today,
+                                       @Param("employeeIds") Collection<Long> employeeIds);
 }

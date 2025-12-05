@@ -21,16 +21,15 @@ public class PurchaseRequestItem {
     @Column(name = "purchase_request_item_id")
     private Long itemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "purchase_request_id")
     private PurchaseRequest purchaseRequest;
 
-    // Liên kết đến báo giá
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "quotation_item_id", referencedColumnName = "price_quotation_item_id")
     private PriceQuotationItem quotationItem;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "part_id")
     private Part part;
 
@@ -48,10 +47,6 @@ public class PurchaseRequestItem {
 
     @Column(name = "quantity_received")
     private Double quantityReceived = 0.0;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private PurchaseReqItemStatus status = PurchaseReqItemStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "review_status", length = 30)

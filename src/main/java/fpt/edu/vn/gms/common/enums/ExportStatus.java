@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum ExportStatus {
-    WAITING_PURCHASE("Chờ mua hàng"),
-    WAITING_TO_EXPORT("Chờ xuất hàng"),
-    EXPORTED("Đã xuất hàng"),
-    NONE("Không rõ");
+    DRAFT("Nháp"),
+    WAITING_TO_CONFIRM("Chờ duyệt"),
+    WAITING_TO_EXECUTE("Chờ xử lý"),
+    COMPLETED("Hoàn thành");
 
     private final String value;
 

@@ -34,4 +34,6 @@ public interface ServiceTicketService {
     List<Map<String, Object>> getCompletedTicketsByMonth();
 
     List<Map<String, Object>> getTicketCountsByType(int year, int month);
+
+    ServiceTicketResponseDto updateStatus(Long id, ServiceTicketStatus newStatus);
 }

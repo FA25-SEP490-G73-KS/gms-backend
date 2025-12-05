@@ -3,10 +3,7 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
-import fpt.edu.vn.gms.dto.response.AppointmentBySlotResponse;
-import fpt.edu.vn.gms.dto.response.AppointmentResponseDto;
-import fpt.edu.vn.gms.dto.response.ApiResponse;
-import fpt.edu.vn.gms.dto.response.TimeSlotDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
@@ -75,6 +72,7 @@ public class AppointmentController {
                                                 service.getAppointmentsByStatus(status, pageable)));
         }
 
+        @Public
         @GetMapping("/time-slots")
         @Operation(summary = "Lấy các khung giờ trống", description = "Lấy danh sách các khung giờ còn trống trong một ngày cụ thể.")
         @ApiResponses(value = {
@@ -101,6 +99,7 @@ public class AppointmentController {
                 return ResponseEntity.ok(ApiResponse.success("Appointment found", appointment));
         }
 
+        @Public
         @GetMapping("/date")
         @Operation(summary = "Lấy cuộc hẹn theo ngày", description = "Lấy danh sách các cuộc hẹn trong một ngày cụ thể, được nhóm theo khung giờ.")
         @ApiResponses(value = {

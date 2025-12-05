@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.enums.ExportStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,11 +7,10 @@ import lombok.Data;
 @Builder
 public class StockExportItemResponse {
 
-    private Long itemId;
+    private Long id;
     private String sku;
-    private double quantity;
-    private double quantityInStock;
-    private double exportedQuantity;
-    private ExportStatus exportStatus;
+    private String name;
+    private Double quantityRequired;
+    private Double quantityExported;
+    private String status;
 }
-

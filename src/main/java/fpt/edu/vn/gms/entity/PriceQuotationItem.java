@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
@@ -24,7 +25,7 @@ public class PriceQuotationItem {
     @Column(name = "price_quotation_item_id")
     private Long priceQuotationItemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "quotation_id", referencedColumnName = "price_quotation_id")
     private PriceQuotation priceQuotation;
 
@@ -66,9 +67,6 @@ public class PriceQuotationItem {
 
     @Column(name = "warehouse_note", length = 255)
     private String warehouseNote;
-
-    @Enumerated(EnumType.STRING)
-    private ExportStatus exportStatus = ExportStatus.NONE;
 
     @Column(name = "created_by")
     private Long createdBy;

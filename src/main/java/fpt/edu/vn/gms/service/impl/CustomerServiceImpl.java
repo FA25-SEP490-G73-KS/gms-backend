@@ -5,8 +5,6 @@ import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.DiscountPolicy;
-import fpt.edu.vn.gms.entity.Employee;
-import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerMapper;
 import fpt.edu.vn.gms.repository.CustomerRepository;
@@ -23,9 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -125,43 +123,19 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerServiceHistoryResponseDto getCustomerServiceHistoryByPhone(String phone) {
+    public CustomerDetailDto getCustomerServiceHistoryByPhone(String phone) {
+
         Customer customer = customerRepository.findByPhone(phone)
                 .orElseThrow(() -> new ResourceNotFoundException("Không có khách hàng!!!"));
 
-        // Lấy tất cả service ticket hoàn thành của customer
-        List<ServiceTicket> completedTickets = serviceTicketRepository.findAll().stream()
-                .filter(st -> st.getCustomer() != null
-                        && st.getCustomer().getCustomerId().equals(customer.getCustomerId()))
-                .filter(st -> st.getStatus() != null && st.getStatus().name().equalsIgnoreCase("COMPLETED"))
-                .toList();
-        // Map biển số xe -> ticket gần nhất
-        var vehicleMap = completedTickets.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                        st -> st.getVehicle().getLicensePlate(),
-                        java.util.stream.Collectors.maxBy((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))));
+        Long customerId = customer.getCustomerId();
 
-        List<CustomerServiceHistoryResponseDto.VehicleServiceInfo> vehicles = vehicleMap.values().stream()
-                .filter(java.util.Optional::isPresent)
-                .map(opt -> {
-                    ServiceTicket st = opt.get();
-                    return CustomerServiceHistoryResponseDto.VehicleServiceInfo.builder()
-                            .id(st.getVehicle().getVehicleId())
-                            .licensePlate(st.getVehicle().getLicensePlate())
-                            .modelName(st.getVehicle().getVehicleModel().getName())
-                            .brandName(st.getVehicle().getVehicleModel().getBrand().getName())
-                            .lastServiceDate(st.getCreatedAt() != null
-                                    ? st.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                                    : null)
-                            .build();
-                })
-                .toList();
+        CustomerDetailDto dto = customerRepository.getCustomerDetail(customerId);
 
-        return CustomerServiceHistoryResponseDto.builder()
-                .fullName(customer.getFullName())
-                .phone(customer.getPhone())
-                .vehicles(vehicles)
-                .build();
+        dto.setVehicles(vehicleRepository.getCustomerVehicles(customerId));
+        dto.setHistory(serviceTicketRepository.getCustomerServiceHistory(customerId));
+
+        return dto;
     }
 
     @Override
@@ -184,7 +158,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Page<CustomerListResponseDto> getCustomers(int page, int size) {
+    public Page<CustomerDetailDto> getCustomers(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -210,5 +184,27 @@ public class CustomerServiceImpl implements CustomerService {
         dto.setVehicles(null);
 
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public CustomerResponseDto handleNotMe(String phone) {
+
+        Customer old = customerRepository.findByPhone(phone)
+                .orElse(null);
+
+        if (old != null) {
+            old.setIsActive(false);
+            customerRepository.save(old);
+
+            customerRepository.flush();
+        }
+
+        Customer newCus = new Customer();
+        newCus.setPhone(phone);
+        newCus.setIsActive(true);
+        customerRepository.save(newCus);
+
+        return customerMapper.toDto(newCus);
     }
 }

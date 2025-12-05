@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,29 +19,33 @@ public class StockExportItem {
     @Column(name = "export_item_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "export_id", nullable = false)
     private StockExport stockExport;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quotation_item_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "quotation_item_id")
     private PriceQuotationItem quotationItem;
 
-    @Column(name = "quantity", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "part_id", nullable = false)
+    private Part part;
+
+    @Column(nullable = false)
     private Double quantity;
 
-    @Column(name = "unit", length = 20)
-    private String unit;
+    private Double quantityExported;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "receiver_id")
     private Employee receiver;
 
-    @Column(name = "exported_at", nullable = false)
+    @Column(name = "exported_at")
     private LocalDateTime exportedAt;
 
-    @PrePersist
-    protected void onExport() {
-        this.exportedAt = LocalDateTime.now();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ExportItemStatus status;
+
+    private String note;
 }

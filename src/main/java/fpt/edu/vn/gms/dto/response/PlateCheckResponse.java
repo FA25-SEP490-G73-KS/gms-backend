@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PlateCheckResponse {
 
-    private String status;     // OK, NOT_FOUND, OWNED_BY_OTHER
+    private String status;
     private VehicleInfoDto vehicle;
     private CustomerResponseDto owner;
 

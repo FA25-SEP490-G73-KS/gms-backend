@@ -15,6 +15,7 @@ import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.PriceQuotationService;
+import fpt.edu.vn.gms.service.StockExportService;
 import fpt.edu.vn.gms.service.pdf.HtmlTemplateService;
 import fpt.edu.vn.gms.service.pdf.PdfGeneratorService;
 import fpt.edu.vn.gms.utils.NumberToVietnameseWordsUtils;
@@ -50,6 +51,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     PdfGeneratorService pdfGeneratorService;
     PriceQuotationMapper priceQuotationMapper;
     ServiceTicketMapper serviceTicketMapper;
+    StockExportService stockExportService;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -69,7 +71,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Tạo price quotation
         PriceQuotation quotation = PriceQuotation.builder()
-                .code(codeSequenceService.generateCode("QT"))
+                .code(codeSequenceService.generateCode("BG"))
                 .status(PriceQuotationStatus.DRAFT)
                 .estimateAmount(BigDecimal.ZERO)
                 .build();
@@ -263,7 +265,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             }
         }
 
-        // 1. Tạo PartReservation cho các linh kiện AVAILABLE
         for (PriceQuotationItem item : availableParts) {
             Part part = item.getPart();
             if (part == null)
@@ -273,62 +274,61 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
             part.setReservedQuantity(currentReserved + item.getQuantity());
             partRepository.save(part);
-
-            item.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
         }
 
-        // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
-        BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
-
-        if (!partsToBuy.isEmpty()) {
-
-            PurchaseRequest purchaseRequest = PurchaseRequest.builder()
-                    .code(codeSequenceService.generateCode("PR"))
-                    .relatedQuotation(quotation)
-                    .status(PurchaseRequestStatus.PENDING)
-                    .type(PurchaseRequestType.QUOTATION)
-                    .reviewStatus(ManagerReviewStatus.PENDING)
-                    .createdAt(LocalDateTime.now())
-                    .totalEstimatedAmount(totalEstimatedAmount)
-                    .createdBy(null) // Hệ thống tự tạo
-                    .items(new ArrayList<>())
-                    .build();
-
-            for (PriceQuotationItem item : partsToBuy) {
-
-                item.setExportStatus(ExportStatus.WAITING_PURCHASE);
-
-                double quantityToPurchase = getQuantityToPurchase(item);
-
-                PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
-                        .part(item.getPart())
-                        .partName(item.getItemName())
-                        .quantity(quantityToPurchase)
-                        .unit(item.getUnit())
-                        .estimatedPurchasePrice(
-                                item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
-                        .status(PurchaseReqItemStatus.PENDING)
-                        .reviewStatus(ManagerReviewStatus.PENDING)
-                        .purchaseRequest(purchaseRequest)
-                        .quotationItem(item)
-                        .build();
-
-                purchaseRequest.getItems().add(requestItem);
-
-                // Cộng dồn vào tổng
-                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
-
-                totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
-            }
-
-            purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
-            purchaseRequestRepository.save(purchaseRequest);
-        }
-
-        quotation.setExportStatus(ExportStatus.WAITING_TO_EXPORT);
+//        // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
+//        BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
+//
+//        if (!partsToBuy.isEmpty()) {
+//
+//            PurchaseRequest purchaseRequest = PurchaseRequest.builder()
+//                    .code(codeSequenceService.generateCode("PR"))
+//                    .relatedQuotation(quotation)
+//                    .reviewStatus(ManagerReviewStatus.PENDING)
+//                    .createdAt(LocalDateTime.now())
+//                    .totalEstimatedAmount(totalEstimatedAmount)
+//                    .createdBy(null) // Hệ thống tự tạo
+//                    .items(new ArrayList<>())
+//                    .build();
+//
+//            for (PriceQuotationItem item : partsToBuy) {
+//
+//                double quantityToPurchase = getQuantityToPurchase(item);
+//
+//                PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
+//                        .part(item.getPart())
+//                        .partName(item.getItemName())
+//                        .quantity(quantityToPurchase)
+//                        .unit(item.getUnit())
+//                        .estimatedPurchasePrice(
+//                                item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
+//                        .reviewStatus(ManagerReviewStatus.PENDING)
+//                        .purchaseRequest(purchaseRequest)
+//                        .quotationItem(item)
+//                        .build();
+//
+//                purchaseRequest.getItems().add(requestItem);
+//
+//                // Cộng dồn vào tổng
+//                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
+//
+//                totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
+//            }
+//
+//            purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
+//            purchaseRequestRepository.save(purchaseRequest);
+//        }
 
         // Lưu lại báo giá
         priceQuotationRepository.save(quotation);
+
+        try {
+            stockExportService.createExportFromQuotation(quotation.getPriceQuotationId(),
+                    "Xuất kho theo báo giá đã được khách hàng xác nhận",
+                    quotation.getServiceTicket().getCreatedBy());
+        } catch (Exception e) {
+            log.error("Không thể tạo phiếu xuất kho từ báo giá {}: {}", quotationId, e.getMessage());
+        }
 
         NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 

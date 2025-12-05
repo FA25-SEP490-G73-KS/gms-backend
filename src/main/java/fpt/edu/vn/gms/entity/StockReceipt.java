@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "stock_receipt")
 @Getter
@@ -25,18 +24,25 @@ public class StockReceipt {
     private Long receiptId;
 
     @Column(name = "code", unique = true, length = 50, nullable = false)
-    private String code;                       // SR-2025-00001
+    private String code;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchase_request_id", nullable = false)
-    private PurchaseRequest purchaseRequest;   // PR liên quan
+    @OneToOne
+    @JoinColumn(name = "purchase_request_id")
+    private PurchaseRequest purchaseRequest;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee createdBy;                // Thủ kho nhập
+    @ManyToOne
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
+
+    private String createdBy;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    private String receivedBy;
+
+    @Column(name = "received_at")
+    private LocalDateTime receivedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -51,4 +57,11 @@ public class StockReceipt {
     @OneToMany(mappedBy = "stockReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<StockReceiptItem> items = new ArrayList<>();
+
+    public BigDecimal getTotalPaid() {
+        return items.stream()
+                .flatMap(item -> item.getHistories().stream())
+                .map(StockReceiptItemHistory::getAmountPaid)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

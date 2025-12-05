@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.entity.ServiceType;
 import fpt.edu.vn.gms.service.ServiceTypeService;
@@ -29,6 +30,7 @@ public class ServiceTypeController {
 
     ServiceTypeService serviceTypeService;
 
+    @Public
     @GetMapping
     @Operation(
             summary = "Lấy tất cả loại dịch vụ",

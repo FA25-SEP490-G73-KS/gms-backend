@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.entity;
 
 import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
-import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "expense_voucher")
+@Table(name = "ledger_voucher")
 @Getter
 @Setter
 @Builder
@@ -24,25 +24,21 @@ public class LedgerVoucher {
     private Long id;
 
     @Column(name = "code", length = 50, nullable = false, unique = true)
-    private String code;  // THU-2025-00001 / CHI-2025-00001
+    private String code;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
-    private ManualVoucherType type;
+    private LedgerVoucherType type;
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
-    private BigDecimal amount; // tổng tiền chi
+    private BigDecimal amount;
 
-    private Long relatedEmployeeId; // nếu chi lương
+    private Long relatedEmployeeId;
 
-    private Long relatedSupplierId; // nếu chi NCC
+    private Long relatedSupplierId;
 
     @Column(name = "description", length = 255)
-    private String description; // "Thanh toán vật tư: Dầu máy 5W-30"
-
-    @Enumerated(EnumType.STRING)
-    private LedgerVoucherCategory category;
-    // ví dụ: SALARY, ELECTRICITY, SUPPLIER_PAYMENT, OTHER
+    private String description;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -63,7 +59,11 @@ public class LedgerVoucher {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private ManualVoucherStatus status;
+    private LedgerVoucherStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "receipt_history_id")
+    private StockReceiptItemHistory receiptHistory;
 
     @PrePersist
     protected void onCreate() {

@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.dto.request;
 
-import fpt.edu.vn.gms.dto.PartItemDto;
 import lombok.Data;
 
 import java.util.List;
