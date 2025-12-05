@@ -79,8 +79,7 @@ services:
     container_name: gms_nginx
     image: nginx:alpine3.22
     depends_on:
-      app:
-        condition: service_healthy
+      - app:
     ports:
       - "80:80"
       - "443:443"
