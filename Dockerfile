@@ -21,7 +21,7 @@ RUN ./mvnw clean package -DskipTests \
 
 # 3. Extract Layers (Spring Boot Layered Jar feature)
 # This separates dependencies from application code for optimized Docker caching
-RUN java -Djarmode=layertools -jar target/*.jar extract
+RUN java -Djarmode=tools extract --layers --launcher
 
 # ==============================
 # Stage 2: Runtime Environment

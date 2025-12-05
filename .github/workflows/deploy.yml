@@ -37,7 +37,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yaml,docker-compose.prod.yaml,nginx/default.conf,cert/fullchain.pem,cert/privkey.pem"
+          source: "docker-compose.prod.yaml,nginx/default.conf,cert/fullchain.pem,cert/privkey.pem"
           target: "~/gms-backend"
 
       - name: Deploy to Server via SSH

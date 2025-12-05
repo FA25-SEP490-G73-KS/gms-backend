@@ -76,7 +76,7 @@ services:
       retries: 5
 
   nginx:
-    container_name: nginx
+    container_name: gms_nginx
     image: nginx:alpine3.22
     depends_on:
       app:
@@ -87,6 +87,7 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - ./cert:/etc/nginx/cert:ro
+    restart: unless-stopped
     networks:
       - app-net
 
