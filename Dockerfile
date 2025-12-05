@@ -54,10 +54,6 @@ ENV SERVER_PORT=8080
 # -XX:+UseContainerSupport: Ensures JVM recognizes container resource limits
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dspring.profiles.active=prod"
 
-# Application Health Check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:${SERVER_PORT}/actuator/health || exit 1
-
 # Start the application using JarLauncher
 # JarLauncher is optimized for handling layered jars (starts faster than standard java -jar)
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
