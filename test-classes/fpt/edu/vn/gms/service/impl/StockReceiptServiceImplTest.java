@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.dto.request.StockReceiveRequest;
-import fpt.edu.vn.gms.dto.response.StockReceiptItemResponseDto;
+import fpt.edu.vn.gms.dto.response.StockReceiptItemResponse;
 import fpt.edu.vn.gms.dto.response.StockReceiptResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
@@ -165,10 +165,10 @@ class StockReceiptServiceImplTest {
                 .build();
         when(stockReceiptItemRepo.save(any(StockReceiptItem.class))).thenReturn(receiptItem);
 
-        StockReceiptItemResponseDto dto = StockReceiptItemResponseDto.builder().build();
+        StockReceiptItemResponse dto = StockReceiptItemResponse.builder().build();
         when(stockReceiptItemMapper.toDto(receiptItem)).thenReturn(dto);
 
-        StockReceiptItemResponseDto result =
+        StockReceiptItemResponse result =
                 service.receiveItem(5L, request, multipartFile, employee);
 
         assertSame(dto, result);
@@ -259,10 +259,10 @@ class StockReceiptServiceImplTest {
         List<StockReceiptItem> items = List.of(StockReceiptItem.builder().build());
         when(stockReceiptItemRepo.findByStockReceipt(receipt)).thenReturn(items);
 
-        StockReceiptItemResponseDto dto = StockReceiptItemResponseDto.builder().build();
+        StockReceiptItemResponse dto = StockReceiptItemResponse.builder().build();
         when(stockReceiptItemMapper.toDtos(items)).thenReturn(List.of(dto));
 
-        List<StockReceiptItemResponseDto> result = service.getReceiptItems(1L);
+        List<StockReceiptItemResponse> result = service.getReceiptItems(1L);
 
         assertEquals(1, result.size());
         assertSame(dto, result.get(0));
