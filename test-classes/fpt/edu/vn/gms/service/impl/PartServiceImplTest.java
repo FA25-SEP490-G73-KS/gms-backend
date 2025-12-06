@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -820,6 +821,441 @@ class PartServiceImplTest {
 
         assertNull(result);
         verify(partRepository, never()).save(any(Part.class));
+    }
+
+    // ========== Additional test cases for getAllPart ==========
+
+    @Test
+    void getAllPart_ShouldReturnEmptyPage_WhenNoParts() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Part> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(partRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Page<PartReqDto> result = service.getAllPart(0, 5);
+
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.getContent().isEmpty());
+        verify(partRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAllPart_ShouldHandleLargePageSize() {
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<Part> page = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(partRepository.findAll(pageable)).thenReturn(page);
+
+        Page<PartReqDto> result = service.getAllPart(0, 100);
+
+        assertEquals(0, result.getTotalElements());
+        verify(partRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAllPart_ShouldHandleSecondPage() {
+        Pageable pageable = PageRequest.of(1, 5);
+        Part part2 = Part.builder().partId(2L).name("Part 2").build();
+        Page<Part> page = new PageImpl<>(List.of(part2), pageable, 10);
+        when(partRepository.findAll(pageable)).thenReturn(page);
+
+        PartReqDto dto = PartReqDto.builder().partId(2L).name("Part 2").build();
+        when(partMapper.toDto(part2)).thenReturn(dto);
+
+        Page<PartReqDto> result = service.getAllPart(1, 5);
+
+        assertEquals(10, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        verify(partRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAllPart_ShouldMapMultipleParts() {
+        Pageable pageable = PageRequest.of(0, 5);
+        Part part1 = Part.builder().partId(1L).name("Part 1").build();
+        Part part2 = Part.builder().partId(2L).name("Part 2").build();
+        Part part3 = Part.builder().partId(3L).name("Part 3").build();
+        Page<Part> page = new PageImpl<>(List.of(part1, part2, part3), pageable, 3);
+        when(partRepository.findAll(pageable)).thenReturn(page);
+
+        PartReqDto dto1 = PartReqDto.builder().partId(1L).name("Part 1").build();
+        PartReqDto dto2 = PartReqDto.builder().partId(2L).name("Part 2").build();
+        PartReqDto dto3 = PartReqDto.builder().partId(3L).name("Part 3").build();
+        when(partMapper.toDto(part1)).thenReturn(dto1);
+        when(partMapper.toDto(part2)).thenReturn(dto2);
+        when(partMapper.toDto(part3)).thenReturn(dto3);
+
+        Page<PartReqDto> result = service.getAllPart(0, 5);
+
+        assertEquals(3, result.getTotalElements());
+        assertEquals(3, result.getContent().size());
+        verify(partMapper, times(3)).toDto(any(Part.class));
+    }
+
+    @Test
+    void getAllPart_ShouldUpdateStockStatusForAllParts() {
+        Part part1 = Part.builder()
+                .partId(1L)
+                .quantityInStock(0.0)
+                .reorderLevel(10.0)
+                .status(StockLevelStatus.IN_STOCK)
+                .build();
+        Part part2 = Part.builder()
+                .partId(2L)
+                .quantityInStock(5.0)
+                .reorderLevel(10.0)
+                .status(StockLevelStatus.IN_STOCK)
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Part> page = new PageImpl<>(List.of(part1, part2), pageable, 2);
+        when(partRepository.findAll(pageable)).thenReturn(page);
+        when(partRepository.save(any(Part.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PartReqDto dto1 = PartReqDto.builder().partId(1L).build();
+        PartReqDto dto2 = PartReqDto.builder().partId(2L).build();
+        when(partMapper.toDto(part1)).thenReturn(dto1);
+        when(partMapper.toDto(part2)).thenReturn(dto2);
+
+        service.getAllPart(0, 5);
+
+        assertEquals(StockLevelStatus.OUT_OF_STOCK, part1.getStatus());
+        assertEquals(StockLevelStatus.LOW_STOCK, part2.getStatus());
+        verify(partRepository, times(2)).save(any(Part.class));
+    }
+
+    // ========== Additional test cases for getPartByCategory ==========
+
+    @Test
+    void getPartByCategory_ShouldReturnEmptyPage_WhenNoPartsInCategory() {
+        Long categoryId = 1L;
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Part> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(partRepository.findByCategory_Id(categoryId, pageable)).thenReturn(emptyPage);
+
+        Page<PartReqDto> result = service.getPartByCategory(categoryId, 0, 5);
+
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.getContent().isEmpty());
+        verify(partRepository).findByCategory_Id(categoryId, pageable);
+    }
+
+    @Test
+    void getPartByCategory_ShouldHandleSecondPage() {
+        Long categoryId = 1L;
+        Pageable pageable = PageRequest.of(1, 5);
+        Part part2 = Part.builder().partId(2L).name("Part 2").build();
+        Page<Part> page = new PageImpl<>(List.of(part2), pageable, 10);
+        when(partRepository.findByCategory_Id(categoryId, pageable)).thenReturn(page);
+
+        PartReqDto dto = PartReqDto.builder().partId(2L).name("Part 2").build();
+        when(partMapper.toDto(part2)).thenReturn(dto);
+
+        Page<PartReqDto> result = service.getPartByCategory(categoryId, 1, 5);
+
+        assertEquals(10, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void getPartByCategory_ShouldMapMultipleParts() {
+        Long categoryId = 1L;
+        Pageable pageable = PageRequest.of(0, 5);
+        Part part1 = Part.builder().partId(1L).name("Part 1").build();
+        Part part2 = Part.builder().partId(2L).name("Part 2").build();
+        Page<Part> page = new PageImpl<>(List.of(part1, part2), pageable, 2);
+        when(partRepository.findByCategory_Id(categoryId, pageable)).thenReturn(page);
+
+        PartReqDto dto1 = PartReqDto.builder().partId(1L).name("Part 1").build();
+        PartReqDto dto2 = PartReqDto.builder().partId(2L).name("Part 2").build();
+        when(partMapper.toDto(part1)).thenReturn(dto1);
+        when(partMapper.toDto(part2)).thenReturn(dto2);
+
+        Page<PartReqDto> result = service.getPartByCategory(categoryId, 0, 5);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        verify(partMapper, times(2)).toDto(any(Part.class));
+    }
+
+    @Test
+    void getPartByCategory_ShouldHandleLargePageSize() {
+        Long categoryId = 1L;
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<Part> page = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(partRepository.findByCategory_Id(categoryId, pageable)).thenReturn(page);
+
+        Page<PartReqDto> result = service.getPartByCategory(categoryId, 0, 100);
+
+        assertEquals(0, result.getTotalElements());
+        verify(partRepository).findByCategory_Id(categoryId, pageable);
+    }
+
+    @Test
+    void getPartByCategory_ShouldPreservePaginationInfo() {
+        Long categoryId = 1L;
+        Pageable pageable = PageRequest.of(2, 10);
+        Page<Part> page = new PageImpl<>(List.of(part), pageable, 25);
+        when(partRepository.findByCategory_Id(categoryId, pageable)).thenReturn(page);
+
+        PartReqDto dto = PartReqDto.builder().partId(1L).build();
+        when(partMapper.toDto(part)).thenReturn(dto);
+
+        Page<PartReqDto> result = service.getPartByCategory(categoryId, 2, 10);
+
+        assertEquals(25, result.getTotalElements());
+        assertEquals(2, result.getNumber());
+        assertEquals(10, result.getSize());
+    }
+
+    // ========== Additional test cases for createPart ==========
+
+    @Test
+    void createPart_ShouldCalculateSellingPriceAutomatically() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("100000"))
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        Part saved = Part.builder()
+                .partId(10L)
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000")) // 100000 * 1.10
+                .build();
+        when(partRepository.save(any(Part.class))).thenAnswer(invocation -> {
+            Part part = invocation.getArgument(0);
+            assertEquals(new BigDecimal("110000"), part.getSellingPrice());
+            return saved;
+        });
+        when(partMapper.toDto(saved)).thenReturn(PartReqDto.builder().partId(10L).build());
+
+        service.createPart(dto);
+
+        verify(partRepository).save(any(Part.class));
+    }
+
+    @Test
+    void createPart_ShouldSetDiscountRateToTen() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("100000"))
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        when(partRepository.save(any(Part.class))).thenAnswer(invocation -> {
+            Part part = invocation.getArgument(0);
+            assertEquals(new BigDecimal("10.0"), part.getDiscountRate());
+            return part;
+        });
+        when(partMapper.toDto(any(Part.class))).thenReturn(PartReqDto.builder().build());
+
+        service.createPart(dto);
+
+        verify(partRepository).save(any(Part.class));
+    }
+
+    @Test
+    void createPart_ShouldGenerateSku() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("100000"))
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("GENERATED-SKU-001");
+
+        when(partRepository.save(any(Part.class))).thenAnswer(invocation -> {
+            Part part = invocation.getArgument(0);
+            assertEquals("GENERATED-SKU-001", part.getSku());
+            return part;
+        });
+        when(partMapper.toDto(any(Part.class))).thenReturn(PartReqDto.builder().build());
+
+        service.createPart(dto);
+
+        verify(skuGenerator).generateSku(any(Part.class));
+        verify(partRepository).save(any(Part.class));
+    }
+
+    // ========== Additional test cases for updatePart ==========
+
+    @Test
+    void updatePart_ShouldHandlePartialUpdate_OnlyName() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .name("Old Name")
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000"))
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("New Name")
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("SKU123");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertEquals("New Name", existing.getName());
+        assertEquals(new BigDecimal("100000"), existing.getPurchasePrice()); // Unchanged
+        verify(partRepository).save(existing);
+    }
+
+    @Test
+    void updatePart_ShouldHandleNullFields_NoUpdate() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .name("Original")
+                .note("Original note")
+                .purchasePrice(new BigDecimal("100000"))
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name(null)
+                .note(null)
+                .purchasePrice(null)
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("SKU123");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertEquals("Original", existing.getName()); // Unchanged
+        assertEquals("Original note", existing.getNote()); // Unchanged
+        assertEquals(new BigDecimal("100000"), existing.getPurchasePrice()); // Unchanged
+        verify(partRepository).save(existing);
+    }
+
+    @Test
+    void updatePart_ShouldRecalculateSellingPrice_WhenPurchasePriceUpdated() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000"))
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .purchasePrice(new BigDecimal("200000"))
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("SKU123");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertEquals(new BigDecimal("200000"), existing.getPurchasePrice());
+        assertEquals(new BigDecimal("220000"), existing.getSellingPrice()); // 200000 * 1.10
+        verify(partRepository).save(existing);
+    }
+
+    @Test
+    void updatePart_ShouldAllowOverrideSellingPrice() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000"))
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .purchasePrice(new BigDecimal("200000"))
+                .sellingPrice(new BigDecimal("250000")) // Override
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("SKU123");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertEquals(new BigDecimal("200000"), existing.getPurchasePrice());
+        assertEquals(new BigDecimal("250000"), existing.getSellingPrice()); // Overridden, not auto-calculated
+        verify(partRepository).save(existing);
+    }
+
+    @Test
+    void updatePart_ShouldUpdateUniversalAndSpecialPartFlags() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .isUniversal(false)
+                .specialPart(false)
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .universal(true)
+                .specialPart(true)
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("SKU123");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertTrue(existing.isUniversal());
+        assertTrue(existing.isSpecialPart());
+        verify(partRepository).save(existing);
+    }
+
+    @Test
+    void updatePart_ShouldRegenerateSku() {
+        Part existing = Part.builder()
+                .partId(1L)
+                .sku("OLD-SKU")
+                .build();
+
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("New Name")
+                .build();
+
+        when(partRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(skuGenerator.generateSku(existing)).thenReturn("NEW-SKU");
+        when(partRepository.save(existing)).thenReturn(existing);
+        when(partMapper.toDto(existing)).thenReturn(PartReqDto.builder().partId(1L).build());
+
+        service.updatePart(1L, dto);
+
+        assertEquals("NEW-SKU", existing.getSku());
+        verify(skuGenerator).generateSku(existing);
     }
 }
 

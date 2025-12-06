@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -438,6 +439,554 @@ class CustomerServiceImplTest {
 
         verify(customerRepository).getCustomerDetail(1L);
         verify(serviceTicketRepository).getCustomerServiceHistory(1L);
+    }
+
+    // ========== Additional test cases for searchCustomersByPhone ==========
+
+    @Test
+    void searchCustomersByPhone_ShouldReturnEmptyList_WhenQueryIsNull() {
+        List<CustomerDto> result = service.searchCustomersByPhone(null);
+
+        assertTrue(result.isEmpty());
+        verify(customerRepository, never()).findTop10ByPhoneContainingOrderByPhoneAsc(anyString());
+    }
+
+    @Test
+    void searchCustomersByPhone_ShouldReturnEmptyList_WhenQueryIsEmpty() {
+        List<CustomerDto> result = service.searchCustomersByPhone("");
+
+        assertTrue(result.isEmpty());
+        verify(customerRepository, never()).findTop10ByPhoneContainingOrderByPhoneAsc(anyString());
+    }
+
+    @Test
+    void searchCustomersByPhone_ShouldReturnEmptyList_WhenQueryIsBlank() {
+        List<CustomerDto> result = service.searchCustomersByPhone("   ");
+
+        assertTrue(result.isEmpty());
+        verify(customerRepository, never()).findTop10ByPhoneContainingOrderByPhoneAsc(anyString());
+    }
+
+    @Test
+    void searchCustomersByPhone_ShouldReturnMultipleCustomers() {
+        Customer customer1 = Customer.builder()
+                .customerId(1L)
+                .fullName("Customer 1")
+                .phone("0909000001")
+                .build();
+        Customer customer2 = Customer.builder()
+                .customerId(2L)
+                .fullName("Customer 2")
+                .phone("0909000002")
+                .build();
+
+        when(customerRepository.findTop10ByPhoneContainingOrderByPhoneAsc("0909"))
+                .thenReturn(List.of(customer1, customer2));
+
+        List<CustomerDto> result = service.searchCustomersByPhone("0909");
+
+        assertEquals(2, result.size());
+        assertEquals(1L, result.get(0).id());
+        assertEquals("Customer 1", result.get(0).name());
+        assertEquals("0909000001", result.get(0).phoneNumber());
+        verify(customerRepository).findTop10ByPhoneContainingOrderByPhoneAsc("0909");
+    }
+
+    @Test
+    void searchCustomersByPhone_ShouldLimitToTop10() {
+        List<Customer> customers = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            customers.add(Customer.builder()
+                    .customerId((long) i)
+                    .fullName("Customer " + i)
+                    .phone("090900000" + i)
+                    .build());
+        }
+
+        when(customerRepository.findTop10ByPhoneContainingOrderByPhoneAsc("0909"))
+                .thenReturn(customers.subList(0, 10));
+
+        List<CustomerDto> result = service.searchCustomersByPhone("0909");
+
+        assertEquals(10, result.size());
+        verify(customerRepository).findTop10ByPhoneContainingOrderByPhoneAsc("0909");
+    }
+
+    // ========== Additional test cases for createCustomer ==========
+
+    @Test
+    void createCustomer_ShouldThrow_WhenPhoneAlreadyExists() {
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909000000")
+                .fullName("New Customer")
+                .build();
+
+        when(customerRepository.existsByPhone("0909000000")).thenReturn(true);
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.of(customer));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.createCustomer(dto));
+        verify(customerRepository).existsByPhone("0909000000");
+        verify(customerRepository).findByPhone("0909000000");
+    }
+
+
+    @Test
+    void createCustomer_ShouldNormalizePhoneNumber() {
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909 000 000")
+                .fullName("Test Customer")
+                .build();
+
+        when(customerRepository.existsByPhone(anyString())).thenReturn(false);
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer saved = invocation.getArgument(0);
+            // Phone should be normalized
+            assertNotNull(saved.getPhone());
+            return saved;
+        });
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.createCustomer(dto);
+
+        verify(customerRepository).save(any(Customer.class));
+    }
+
+    @Test
+    void createCustomer_ShouldMapToResponseDto() {
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909000000")
+                .fullName("Test Customer")
+                .build();
+
+        when(customerRepository.existsByPhone(anyString())).thenReturn(false);
+        Customer saved = Customer.builder()
+                .customerId(100L)
+                .fullName("Test Customer")
+                .phone("0909000000")
+                .build();
+        when(customerRepository.save(any(Customer.class))).thenReturn(saved);
+
+        CustomerResponseDto responseDto = CustomerResponseDto.builder()
+                .customerId(100L)
+                .fullName("Test Customer")
+                .phone("0909000000")
+                .build();
+        when(customerMapper.toDto(saved)).thenReturn(responseDto);
+
+        CustomerResponseDto result = service.createCustomer(dto);
+
+        assertSame(responseDto, result);
+        verify(customerMapper).toDto(saved);
+    }
+
+    @Test
+    void createCustomer_ShouldSaveNewCustomer() {
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909000000")
+                .fullName("New Customer")
+                .address("Address")
+                .build();
+
+        when(customerRepository.existsByPhone(anyString())).thenReturn(false);
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.createCustomer(dto);
+
+        verify(customerRepository).save(any(Customer.class));
+    }
+
+    // ========== Additional test cases for updateCustomer ==========
+
+    @Test
+    void updateCustomer_ShouldThrow_WhenPhoneExistsForDifferentCustomer() {
+        Customer existing = Customer.builder()
+                .customerId(1L)
+                .phone("0909000000")
+                .build();
+
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909000001")
+                .fullName("Updated Name")
+                .build();
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(customerRepository.existsByPhone("0909000001")).thenReturn(true);
+
+        assertThrows(RuntimeException.class, () -> service.updateCustomer(1L, dto));
+        verify(customerRepository).existsByPhone("0909000001");
+        verify(customerRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCustomer_ShouldAllowSamePhone() {
+        Customer existing = Customer.builder()
+                .customerId(1L)
+                .phone("0909000000")
+                .fullName("Old Name")
+                .build();
+
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909000000") // Same phone
+                .fullName("New Name")
+                .build();
+
+        DiscountPolicy policy = DiscountPolicy.builder()
+                .discountPolicyId(1L)
+                .build();
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(discountPolicyRepository.findById(anyLong())).thenReturn(Optional.of(policy));
+        when(customerRepository.save(existing)).thenReturn(existing);
+        when(customerMapper.toDto(existing)).thenReturn(CustomerResponseDto.builder().build());
+
+        service.updateCustomer(1L, dto);
+
+        assertEquals("New Name", existing.getFullName());
+        verify(customerRepository).save(existing);
+    }
+
+    @Test
+    void updateCustomer_ShouldUpdateAllFields() {
+        Customer existing = Customer.builder()
+                .customerId(1L)
+                .fullName("Old Name")
+                .phone("0909000000")
+                .address("Old Address")
+                .build();
+
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .fullName("New Name")
+                .phone("0909000001")
+                .address("New Address")
+                .customerType(fpt.edu.vn.gms.common.enums.CustomerType.CA_NHAN)
+                .discountPolicyId(1L)
+                .build();
+
+        DiscountPolicy policy = DiscountPolicy.builder()
+                .discountPolicyId(1L)
+                .build();
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(customerRepository.existsByPhone("0909000001")).thenReturn(false);
+        when(discountPolicyRepository.findById(1L)).thenReturn(Optional.of(policy));
+        when(customerRepository.save(existing)).thenReturn(existing);
+        when(customerMapper.toDto(existing)).thenReturn(CustomerResponseDto.builder().build());
+
+        service.updateCustomer(1L, dto);
+
+        assertEquals("New Name", existing.getFullName());
+        assertEquals("0909000001", existing.getPhone());
+        assertEquals("New Address", existing.getAddress());
+        assertEquals(fpt.edu.vn.gms.common.enums.CustomerType.CA_NHAN, existing.getCustomerType());
+        assertEquals(policy, existing.getDiscountPolicy());
+        verify(customerRepository).save(existing);
+    }
+
+    @Test
+    void updateCustomer_ShouldNormalizePhoneNumber() {
+        Customer existing = Customer.builder()
+                .customerId(1L)
+                .phone("0909000000")
+                .build();
+
+        CustomerRequestDto dto = CustomerRequestDto.builder()
+                .phone("0909 000 001")
+                .fullName("Updated Name")
+                .build();
+
+        DiscountPolicy policy = DiscountPolicy.builder()
+                .discountPolicyId(1L)
+                .build();
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(customerRepository.existsByPhone(anyString())).thenReturn(false);
+        when(discountPolicyRepository.findById(anyLong())).thenReturn(Optional.of(policy));
+        when(customerRepository.save(existing)).thenReturn(existing);
+        when(customerMapper.toDto(existing)).thenReturn(CustomerResponseDto.builder().build());
+
+        service.updateCustomer(1L, dto);
+
+        verify(customerRepository).save(existing);
+    }
+
+    // ========== Additional test cases for handleNotMe ==========
+
+    @Test
+    void handleNotMe_ShouldDeactivateOldCustomer_WhenExists() {
+        Customer oldCustomer = Customer.builder()
+                .customerId(99L)
+                .phone("0909000000")
+                .isActive(true)
+                .build();
+
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.of(oldCustomer));
+        when(customerRepository.save(oldCustomer)).thenReturn(oldCustomer);
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.handleNotMe("0909000000");
+
+        assertFalse(oldCustomer.getIsActive());
+        verify(customerRepository).save(oldCustomer);
+        verify(customerRepository).flush();
+    }
+
+    @Test
+    void handleNotMe_ShouldCreateNewCustomer_WhenOldDoesNotExist() {
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.empty());
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer newCustomer = invocation.getArgument(0);
+            newCustomer.setCustomerId(100L);
+            assertEquals("0909000000", newCustomer.getPhone());
+            assertTrue(newCustomer.getIsActive());
+            return newCustomer;
+        });
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.handleNotMe("0909000000");
+
+        verify(customerRepository).save(any(Customer.class));
+        verify(customerRepository, never()).flush();
+    }
+
+    @Test
+    void handleNotMe_ShouldReturnNewCustomerDto() {
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.empty());
+        Customer newCustomer = Customer.builder()
+                .customerId(100L)
+                .phone("0909000000")
+                .isActive(true)
+                .build();
+        when(customerRepository.save(any(Customer.class))).thenReturn(newCustomer);
+
+        CustomerResponseDto responseDto = CustomerResponseDto.builder()
+                .customerId(100L)
+                .phone("0909000000")
+                .build();
+        when(customerMapper.toDto(newCustomer)).thenReturn(responseDto);
+
+        CustomerResponseDto result = service.handleNotMe("0909000000");
+
+        assertSame(responseDto, result);
+        verify(customerMapper).toDto(newCustomer);
+    }
+
+    @Test
+    void handleNotMe_ShouldNotFlush_WhenOldCustomerNull() {
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.empty());
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.handleNotMe("0909000000");
+
+        verify(customerRepository, never()).flush();
+    }
+
+    @Test
+    void handleNotMe_ShouldSetActiveToTrue_ForNewCustomer() {
+        when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.empty());
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer newCustomer = invocation.getArgument(0);
+            assertTrue(newCustomer.getIsActive());
+            return newCustomer;
+        });
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(CustomerResponseDto.builder().build());
+
+        service.handleNotMe("0909000000");
+
+        verify(customerRepository).save(any(Customer.class));
+    }
+
+    // ========== Additional test cases for getCustomerDetail ==========
+
+    @Test
+    void getCustomerDetail_ShouldReturnDetailWithVehicles() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .fullName("Customer")
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+
+        VehicleInfoDto vehicle1 = VehicleInfoDto.builder()
+                .vehicleId(1L)
+                .licensePlate("30A-12345")
+                .build();
+        VehicleInfoDto vehicle2 = VehicleInfoDto.builder()
+                .vehicleId(2L)
+                .licensePlate("30B-67890")
+                .build();
+        when(vehicleRepository.getCustomerVehicles(1L)).thenReturn(List.of(vehicle1, vehicle2));
+
+        CustomerDetailDto result = service.getCustomerDetail(1L);
+
+        assertNotNull(result);
+        assertEquals(2, result.getVehicles().size());
+        assertNull(result.getHistory());
+        verify(customerRepository).getCustomerDetail(1L);
+        verify(vehicleRepository).getCustomerVehicles(1L);
+    }
+
+    @Test
+    void getCustomerDetail_ShouldSetHistoryToNull() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(vehicleRepository.getCustomerVehicles(1L)).thenReturn(Collections.emptyList());
+
+        CustomerDetailDto result = service.getCustomerDetail(1L);
+
+        assertNull(result.getHistory());
+        verify(serviceTicketRepository, never()).getCustomerServiceHistory(anyLong());
+    }
+
+    @Test
+    void getCustomerDetail_ShouldHandleEmptyVehicles() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(vehicleRepository.getCustomerVehicles(1L)).thenReturn(Collections.emptyList());
+
+        CustomerDetailDto result = service.getCustomerDetail(1L);
+
+        assertNotNull(result.getVehicles());
+        assertTrue(result.getVehicles().isEmpty());
+    }
+
+    @Test
+    void getCustomerDetail_ShouldPreserveCustomerInfo() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .fullName("Test Customer")
+                .phone("0909000000")
+                .address("Test Address")
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(vehicleRepository.getCustomerVehicles(1L)).thenReturn(Collections.emptyList());
+
+        CustomerDetailDto result = service.getCustomerDetail(1L);
+
+        assertEquals(1L, result.getCustomerId());
+        assertEquals("Test Customer", result.getFullName());
+        assertEquals("0909000000", result.getPhone());
+        assertEquals("Test Address", result.getAddress());
+    }
+
+    @Test
+    void getCustomerDetail_ShouldCombineDetailAndVehicles() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .fullName("Customer")
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+
+        VehicleInfoDto vehicle = VehicleInfoDto.builder()
+                .vehicleId(1L)
+                .licensePlate("30A-12345")
+                .build();
+        when(vehicleRepository.getCustomerVehicles(1L)).thenReturn(List.of(vehicle));
+
+        CustomerDetailDto result = service.getCustomerDetail(1L);
+
+        assertEquals(dto, result);
+        assertEquals(1, result.getVehicles().size());
+        assertEquals("30A-12345", result.getVehicles().get(0).getLicensePlate());
+    }
+
+    // ========== Additional test cases for getServiceHistory ==========
+
+    @Test
+    void getServiceHistory_ShouldSetVehiclesToNull() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+
+        List<CustomerServiceHistoryDto> history = List.of(
+                CustomerServiceHistoryDto.builder()
+                        .serviceTicketId(1L)
+                        .serviceTicketCode("ST-001")
+                        .build()
+        );
+        when(serviceTicketRepository.getCustomerServiceHistory(1L)).thenReturn(history);
+
+        CustomerDetailDto result = service.getServiceHistory(1L);
+
+        assertNull(result.getVehicles());
+        assertEquals(history, result.getHistory());
+    }
+
+    @Test
+    void getServiceHistory_ShouldHandleEmptyHistory() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(serviceTicketRepository.getCustomerServiceHistory(1L)).thenReturn(Collections.emptyList());
+
+        CustomerDetailDto result = service.getServiceHistory(1L);
+
+        assertNotNull(result.getHistory());
+        assertTrue(result.getHistory().isEmpty());
+        assertNull(result.getVehicles());
+    }
+
+    @Test
+    void getServiceHistory_ShouldPreserveCustomerInfo() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .fullName("Customer")
+                .phone("0909000000")
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(serviceTicketRepository.getCustomerServiceHistory(1L)).thenReturn(Collections.emptyList());
+
+        CustomerDetailDto result = service.getServiceHistory(1L);
+
+        assertEquals(1L, result.getCustomerId());
+        assertEquals("Customer", result.getFullName());
+        assertEquals("0909000000", result.getPhone());
+    }
+
+    @Test
+    void getServiceHistory_ShouldCombineDetailAndHistory() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+
+        List<CustomerServiceHistoryDto> history = List.of(
+                CustomerServiceHistoryDto.builder()
+                        .serviceTicketId(1L)
+                        .serviceTicketCode("ST-001")
+                        .build(),
+                CustomerServiceHistoryDto.builder()
+                        .serviceTicketId(2L)
+                        .serviceTicketCode("ST-002")
+                        .build()
+        );
+        when(serviceTicketRepository.getCustomerServiceHistory(1L)).thenReturn(history);
+
+        CustomerDetailDto result = service.getServiceHistory(1L);
+
+        assertEquals(dto, result);
+        assertEquals(2, result.getHistory().size());
+        assertEquals("ST-001", result.getHistory().get(0).getServiceTicketCode());
+    }
+
+    @Test
+    void getServiceHistory_ShouldNotCallVehicleRepository() {
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .build();
+        when(customerRepository.getCustomerDetail(1L)).thenReturn(dto);
+        when(serviceTicketRepository.getCustomerServiceHistory(1L)).thenReturn(Collections.emptyList());
+
+        service.getServiceHistory(1L);
+
+        verify(vehicleRepository, never()).getCustomerVehicles(anyLong());
     }
 }
 
