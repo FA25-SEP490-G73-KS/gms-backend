@@ -2,208 +2,177 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Phiếu dịch vụ</title>
-
+  <title>BẢNG BÁO GIÁ - HOÀNG TUẤN</title>
   <style>
     body {
-      font-family: DejaVu Sans, Arial, sans-serif;
-      margin: 30px;
-      font-size: 14px;
-      color: #333;
-    }
-
-    /* ===== HEADER ===== */
-    .header-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 10px;
-    }
-
-    .header-left {
+      font-family: "Times New Roman", serif;
       font-size: 13px;
-      line-height: 1.4;
+      display: flex;
+      justify-content: center;
     }
 
-    .header-right {
-      text-align: right;
-      font-size: 13px;
-      line-height: 1.4;
-      vertical-align: top;
+    .page {
+      width: 720px; /* GIỚI HẠN KHỔ A4 */
     }
 
-    /* ===== TITLE ===== */
-    .title-wrapper {
-      text-align: center;
-      margin: 15px 0 25px;
-    }
-
-    .quotation-title {
-      font-size: 28px;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #d32f2f;
-      margin-bottom: 3px;
-    }
-
-    .title-line {
-      width: 140px;
-      height: 3px;
-      background: #d32f2f;
-      margin: 0 auto;
-    }
-
-    /* ===== TABLE GENERAL ===== */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 14px;
+    }
+
+    .bordered td,
+    .bordered th {
+      border: 1px solid #000;
+      padding: 5px;
+    }
+
+    .header-left {
+      width: 40%;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .header-right {
+      width: 60%;
+      vertical-align: top;
+    }
+
+    .main-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin: 10px 0;
     }
 
     th {
-      background: #0d3b66;
-      color: #fff;
-      padding: 6px;
-    }
-
-    td {
-      padding: 6px;
-      border: 1px solid #ccc;
-    }
-
-    /* ===== CONDITIONS BOX ===== */
-    .conditions-box {
-      background: #f5f7fa;
-      padding: 15px;
-      border-radius: 6px;
-      margin-top: 15px;
-    }
-
-    /* ===== FOOTER SIGN ===== */
-    .footer-sign {
-      width: 100%;
-      margin-top: 60px;
-    }
-
-    .sign-cell {
-      width: 50%;
+      font-weight: bold;
       text-align: center;
-      padding-top: 20px;
     }
 
-    .note {
-      font-style: italic;
-      font-size: 12px;
-      margin-top: 4px;
+    .text-center {
+      text-align: center;
+    }
+    .text-right {
+      text-align: right;
     }
   </style>
 </head>
-
 <body>
+<div class="page">
+  <!-- HEADER -->
+  <table>
+    <tr>
+      <td class="header-left">
+        <img src="logo.png" style="max-width: 110px" /><br />
+        <b>GARA Ô TÔ HOÀNG TUẤN</b>
+      </td>
+      <td class="header-right">
+        <b style="font-size: 16px">CÔNG TY TNHH CN Ô TÔ HOÀNG TUẤN</b><br />
+        Địa chỉ: Khu Công Nghiệp công ích - TP Thái Bình<br />
+        ĐT: 0968.666.603<br />
+        Số tài khoản: 636620603<br />
+        Tại NH: Agribank CNĐB Công Sở Thái Bình<br />
+        Ngày: {{date}}
+      </td>
+    </tr>
+  </table>
 
-<!-- ============ HEADER ============ -->
-<table class="header-table">
-  <tr>
-    <td class="header-left">
-      Đ/C: Khu CN Đông Lĩnh - TP Thanh Hóa <br/>
-      ĐT: 0373.691.999 - 0912.603.603
-    </td>
-    <td class="header-right">
-      <strong>Ngày lập:</strong> {{date}} <br/>
-      <strong>Mã báo giá:</strong> {{quotationCode}}
-    </td>
-  </tr>
-</table>
+  <div class="main-title">BẢNG BÁO GIÁ</div>
 
-<!-- ============ TITLE ============ -->
-<div class="title-wrapper">
-  <div class="quotation-title">Báo giá sửa chữa</div>
-  <div class="title-line"></div>
+  <!-- THÔNG TIN KHÁCH HÀNG -->
+  <table class="bordered">
+    <tr>
+      <td>Tên khách hàng:</td>
+      <td>{{customerName}}</td>
+      <td>Loại xe:</td>
+      <td>{{carModel}}</td>
+    </tr>
+    <tr>
+      <td>Địa chỉ:</td>
+      <td>{{customerAddress}}</td>
+      <td>Số khung:</td>
+      <td>{{vin}}</td>
+    </tr>
+    <tr>
+      <td>Màu xe:</td>
+      <td>{{color}}</td>
+      <td>Số máy:</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mã số thuế:</td>
+      <td></td>
+      <td>Biển số xe:</td>
+      <td>{{licensePlate}}</td>
+    </tr>
+    <tr>
+      <td>Lý do sửa chữa:</td>
+      <td colspan="3">{{reason}}</td>
+    </tr>
+  </table>
+
+  <!-- BẢNG NỘI DUNG -->
+  <table class="bordered" style="margin-top: 10px">
+    <tr>
+      <th style="width: 5%">TT</th>
+      <th>Nội dung công việc</th>
+      <th style="width: 12%">Đơn vị</th>
+      <th style="width: 12%">Số lượng</th>
+      <th style="width: 15%">Đơn giá</th>
+      <th style="width: 15%">Thành tiền</th>
+    </tr>
+
+    <!-- 12 hàng mẫu (bạn có thể thêm) -->
+    <!-- Tối ưu hiển thị tránh quá dài -->
+    {{#items}}
+    <tr>
+      <td class="text-center">{{index}}</td>
+      <td>{{name}}</td>
+      <td>{{unit}}</td>
+      <td>{{quantity}}</td>
+      <td>{{unitPrice}}</td>
+      <td>{{total}}</td>
+    </tr>
+    {{/items}}
+
+    <tr>
+      <td colspan="5" class="text-right"><b>TỔNG</b></td>
+      <td class="text-right"><b>{{grandTotal}}</b></td>
+    </tr>
+  </table>
+
+  <!-- BẰNG CHỮ -->
+  <div style="margin-top: 10px">
+    <b>BẰNG CHỮ:</b> {{grandTotalInWords}} &nbsp;&nbsp;&nbsp;
+    <span>(chưa bao gồm thuế VAT)</span>
+  </div>
+
+  <!-- GHI CHÚ -->
+  <div class="note-title" style="margin-top: 10px">CÁC LƯU Ý KHÁC</div>
+  <div class="small">
+    - Cung cấp phụ tùng chính hãng.<br />
+    - Những phát sinh sẽ được báo giá sau khi thực hiện cụ thể.<br />
+    - Báo giá trên chỉ có hiệu lực trong vòng 07 ngày kể từ ngày báo giá.<br />
+    - Khi đặt hàng khách hàng vui lòng đặt tiền trước 50% theo bảng giá trị
+    thanh toán.<br />
+    - Một số phụ tùng đặc biệt vui lòng đặt tiền trước 100% tổng giá trị đơn
+    hàng.
+  </div>
+
+  <!-- CHỮ KÝ -->
+  <table class="signature-table" style="margin-top: 30px">
+    <tr>
+      <td class="text-center" style="width: 50%">
+        <b>T/M CTY Ô TÔ HOÀNG TUẤN</b><br />
+        <b>Giám Đốc</b><br /><br /><br /><br />
+        <u>Hoàng Anh Đạt</u>
+      </td>
+      <td class="text-center" style="width: 50%">
+        <b>Khách hàng chấp thuận</b><br />
+        <span>(Ký, ghi rõ họ tên)</span>
+      </td>
+    </tr>
+  </table>
 </div>
-
-<!-- ============ CUSTOMER INFO ============ -->
-<table>
-  <tr>
-    <td><strong>Tên khách hàng:</strong> {{customerName}}</td>
-    <td><strong>Loại xe:</strong> {{carModel}}</td>
-  </tr>
-  <tr>
-    <td><strong>Địa chỉ:</strong> {{customerAddress}}</td>
-    <td><strong>Số khung:</strong> {{vin}}</td>
-  </tr>
-  <tr>
-    <td><strong>Mã số thuế:</strong> {{taxCode}}</td>
-    <td><strong>Số máy:</strong> {{engineNo}}</td>
-  </tr>
-  <tr>
-    <td><strong>Lý do sửa chữa:</strong> {{reason}}</td>
-    <td><strong>Biển số xe:</strong> {{licensePlate}}</td>
-  </tr>
-</table>
-
-<!-- ============ ITEMS TABLE ============ -->
-<table>
-  <thead>
-  <tr>
-    <th>TT</th>
-    <th>Nội dung công việc</th>
-    <th>Đơn vị</th>
-    <th>SL</th>
-    <th>Đơn giá (VND)</th>
-    <th>Thành tiền (VND)</th>
-  </tr>
-  </thead>
-
-  <tbody>
-  {{#items}}
-  <tr>
-    <td>{{index}}</td>
-    <td>{{name}}</td>
-    <td>{{unit}}</td>
-    <td>{{quantity}}</td>
-    <td>{{unitPrice}}</td>
-    <td>{{total}}</td>
-  </tr>
-  {{/items}}
-
-  <tr>
-    <td colspan="5" style="text-align:right; font-weight:bold;">Tổng cộng</td>
-    <td style="font-weight:bold;">{{grandTotal}}</td>
-  </tr>
-  </tbody>
-</table>
-
-<!-- ============ TOTAL IN WORDS ============ -->
-<div style="margin-top:20px;">
-  <strong>BẰNG CHỮ:</strong> {{grandTotalInWords}} (chưa bao gồm thuế VAT)
-</div>
-
-<!-- ============ CONDITIONS ============ -->
-<h3 style="color:#0d3b66; margin-top:20px;">Điều khoản dịch vụ</h3>
-
-<div class="conditions-box">
-  <ul>
-    <li>Phụ tùng chính hãng 100%</li>
-    <li>Phát sinh ngoài báo giá sẽ được thông báo trước</li>
-    <li>Báo giá có hiệu lực trong vòng 07 ngày</li>
-    <li>Đặt cọc 50% trước khi tiến hành sửa chữa</li>
-    <li>Phụ tùng đặc biệt cần đặt trước 100%</li>
-  </ul>
-</div>
-
-<!-- ============ SIGNATURES ============ -->
-<table class="footer-sign">
-  <tr>
-    <td class="sign-cell">
-      <strong>Giám đốc</strong>
-      <div class="note">(Ký và ghi rõ họ tên)</div>
-    </td>
-    <td class="sign-cell">
-      <strong>Khách hàng xác nhận</strong>
-      <div class="note">(Ký và ghi rõ họ tên)</div>
-    </td>
-  </tr>
-</table>
-
 </body>
 </html>

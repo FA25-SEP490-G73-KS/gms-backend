@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -225,6 +226,31 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     public Page<ServiceTicketResponseDto> getAllServiceTicket(int page, int size) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         return serviceTicketRepository.findAll(pageable).map(serviceTicketMapper::toResponseDto);
+    }
+
+    @Override
+    public Page<ServiceTicketResponseDto> getAllServiceTicket(LocalDate fromDate, LocalDate toDate, ServiceTicketStatus status, int page, int size) {
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+
+        LocalDateTime from = null;
+        LocalDateTime to = null;
+        if (fromDate != null) {
+            from = fromDate.atStartOfDay();
+        }
+        if (toDate != null) {
+            to = toDate.atTime(LocalTime.MAX);
+        }
+
+        Page<ServiceTicket> ticketPage = serviceTicketRepository.searchByStatusAndCreatedAt(status, from, to, pageable);
+
+        ticketPage.getContent().forEach(ticket -> {
+            Hibernate.initialize(ticket.getServiceTypes());
+            Hibernate.initialize(ticket.getTechnicians());
+            Hibernate.initialize(ticket.getCustomer());
+            Hibernate.initialize(ticket.getVehicle());
+        });
+
+        return ticketPage.map(serviceTicketMapper::toResponseDto);
     }
 
     @Transactional

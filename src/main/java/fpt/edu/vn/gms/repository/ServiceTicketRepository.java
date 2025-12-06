@@ -20,6 +20,21 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
 
     Page<ServiceTicket> findByCreatedAt(LocalDateTime createdAt, Pageable pageable);
 
+    @Query("""
+        SELECT st
+        FROM ServiceTicket st
+        WHERE (:status IS NULL OR st.status = :status)
+          AND (:from IS NULL OR st.createdAt >= :from)
+          AND (:to   IS NULL OR st.createdAt <= :to)
+        ORDER BY st.createdAt DESC
+    """)
+    Page<ServiceTicket> searchByStatusAndCreatedAt(
+            @Param("status") ServiceTicketStatus status,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            Pageable pageable
+    );
+
     ServiceTicket findByAppointment_AppointmentId(Long id);
 
     @Query("""

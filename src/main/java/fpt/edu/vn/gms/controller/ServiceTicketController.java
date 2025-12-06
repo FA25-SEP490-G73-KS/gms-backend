@@ -93,16 +93,24 @@ public class ServiceTicketController {
         }
 
         @GetMapping
-        @Operation(summary = "Lấy tất cả phiếu dịch vụ", description = "Lấy danh sách tất cả các phiếu dịch vụ với phân trang.")
+        @Operation(summary = "Lấy tất cả phiếu dịch vụ", description = "Lấy danh sách tất cả các phiếu dịch vụ với phân trang và filter theo khoảng ngày tạo, trạng thái.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy danh sách phiếu dịch vụ thành công"),
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<Page<ServiceTicketResponseDto>>> getAllServiceTicket(
+                        @Parameter(description = "Ngày bắt đầu tạo phiếu", example = "2025-12-01")
+                        @RequestParam(value = "fromDate", required = false)
+                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                        @Parameter(description = "Ngày kết thúc tạo phiếu", example = "2025-12-31")
+                        @RequestParam(value = "toDate", required = false)
+                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                        @Parameter(description = "Trạng thái phiếu dịch vụ")
+                        @RequestParam(value = "status", required = false) ServiceTicketStatus status,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "6") int size) {
 
-                Page<ServiceTicketResponseDto> dtos = serviceTicketService.getAllServiceTicket(page, size);
+                Page<ServiceTicketResponseDto> dtos = serviceTicketService.getAllServiceTicket(fromDate, toDate, status, page, size);
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.created("Get all service tickets", dtos));
