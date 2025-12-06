@@ -66,5 +66,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     """)
     CustomerDetailDto getCustomerDetail(Long customerId);
 
+    // Dashboard: top 5 khách hàng theo tổng chi tiêu
+    List<Customer> findTop5ByIsActiveTrueOrderByTotalSpendingDesc();
 
 }

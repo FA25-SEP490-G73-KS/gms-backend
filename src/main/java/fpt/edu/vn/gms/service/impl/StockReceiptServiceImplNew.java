@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.ExportItemStatus;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import fpt.edu.vn.gms.dto.request.CreateReceiptItemHistoryRequest;
 import fpt.edu.vn.gms.dto.response.*;
@@ -227,6 +228,7 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             Part part = prItem.getPart();
             Double currentStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
             part.setQuantityInStock(currentStock + request.getQuantity());
+            updateStockLevelStatus(part);
             partRepository.save(part);
         }
 
@@ -354,7 +356,6 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
 
                 Part part = prItem.getPart();
 
-                // Điều kiện "nhập kho đủ" bạn có thể tùy chỉnh.
                 // Ở đây giả sử: nếu quantityReceived >= requestedQuantity thì coi là đủ.
                 Double requested = Optional.ofNullable(item.getRequestedQuantity()).orElse(0.0);
                 Double received = Optional.ofNullable(item.getQuantityReceived()).orElse(0.0);
@@ -378,6 +379,30 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             });
         } catch (Exception ex) {
             log.error("Lỗi khi cập nhật trạng thái StockExportItem sau khi nhập kho: {}", ex.getMessage(), ex);
+        }
+    }
+
+
+    private void updateStockLevelStatus(Part part) {
+        if (part == null) return;
+
+        double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+        double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+        double threshold = Optional.ofNullable(part.getReorderLevel()).orElse(0.0);
+
+        double available = inStock - reserved;
+
+        StockLevelStatus newStatus;
+        if (available <= 0) {
+            newStatus = StockLevelStatus.OUT_OF_STOCK;
+        } else if (available <= threshold) {
+            newStatus = StockLevelStatus.LOW_STOCK;
+        } else {
+            newStatus = StockLevelStatus.IN_STOCK;
+        }
+
+        if (part.getStatus() != newStatus) {
+            part.setStatus(newStatus);
         }
     }
 }

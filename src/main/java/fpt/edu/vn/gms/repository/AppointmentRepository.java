@@ -41,4 +41,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalDate date
     );
 
+    long countByAppointmentDate(LocalDate appointmentDate);
 }
