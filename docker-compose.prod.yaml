@@ -29,16 +29,7 @@ services:
     networks:
       - app-net
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-uroot",
-          "-p${DB_PASSWORD:?}",
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:?}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,19 +52,11 @@ services:
     networks:
       - app-net
     healthcheck:
-      test:
-        - CMD
-        - sh
-        - -c
-        - |
-          if [ -n "${REDIS_PASSWORD}" ]; then
-            redis-cli -a "${REDIS_PASSWORD}" ping
-          else
-            redis-cli ping
-          fi
+      test: CMD-SHELL sh -c 'if [ -n "$REDIS_PASSWORD" ]; then redis-cli -a "$REDIS_PASSWORD" ping; else redis-cli ping; fi'
       interval: 10s
       timeout: 5s
       retries: 5
+
 
   nginx:
     container_name: gms_nginx

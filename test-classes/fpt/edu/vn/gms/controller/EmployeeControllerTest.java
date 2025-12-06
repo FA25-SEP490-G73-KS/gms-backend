@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.dto.EmployeeDto;
+import fpt.edu.vn.gms.dto.response.EmployeeListResponse;
 import fpt.edu.vn.gms.service.EmployeeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +48,21 @@ class EmployeeControllerTest {
 
     @Test
     void getAllEmployees_ShouldReturnPagedDtos() throws Exception {
-        EmployeeDto emp1 = new EmployeeDto(1L, "Employee 1", "0912345678");
-        Page<EmployeeDto> page = new PageImpl<>(List.of(emp1), PageRequest.of(0, 6), 1);
-        when(employeeService.findAll(0, 6)).thenReturn(page);
+        EmployeeListResponse emp1 = EmployeeListResponse.builder()
+                .employeeId(1L)
+                .fullName("Employee 1")
+                .phone("0912345678")
+                .build();
+        Page<EmployeeListResponse> page = new PageImpl<>(List.of(emp1), PageRequest.of(0, 6), 1);
+        when(employeeService.findAll(0, 6, null)).thenReturn(page);
 
         mockMvc.perform(get("/api/employees")
                         .param("page", "0")
                         .param("size", "6"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.content").isArray())
-                .andExpect(jsonPath("$.result.content[0].id").value(1L))
-                .andExpect(jsonPath("$.result.content[0].name").value("Employee 1"));
+                .andExpect(jsonPath("$.result.content[0].employeeId").value(1L))
+                .andExpect(jsonPath("$.result.content[0].fullName").value("Employee 1"));
     }
 }
 

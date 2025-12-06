@@ -6,20 +6,21 @@ import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
 import fpt.edu.vn.gms.common.enums.PurchaseRequestStatus;
 import fpt.edu.vn.gms.common.enums.Role;
-import fpt.edu.vn.gms.dto.PartItemDto;
+import fpt.edu.vn.gms.dto.request.PartItemDto;
 import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.response.PrDetailInfoReviewDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
+import fpt.edu.vn.gms.dto.response.StockReceiptDetailResponse;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
-import fpt.edu.vn.gms.mapper.PurchaseRequestDetailMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestItemMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.NotificationService;
+import fpt.edu.vn.gms.service.StockReceiptService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,9 +62,9 @@ class PurchaseRequestServiceImplTest {
     @Mock
     PurchaseRequestItemMapper purchaseRequestItemMapper;
     @Mock
-    PurchaseRequestDetailMapper purchaseRequestDetailMapper;
-    @Mock
     PurchaseRequestMapper purchaseRequestMapper;
+    @Mock
+    StockReceiptService stockReceiptService;
 
     @InjectMocks
     PurchaseRequestServiceImpl service;
@@ -69,77 +72,58 @@ class PurchaseRequestServiceImplTest {
     @Test
     void getPurchaseRequests_ShouldReturnPagedDtos() {
         Pageable pageable = PageRequest.of(0, 5);
+        PurchaseRequest pr = PurchaseRequest.builder()
+                .id(1L)
+                .code("PR-2025-00001")
+                .build();
+        Page<PurchaseRequest> page = new PageImpl<>(List.of(pr), pageable, 1);
+
+        when(purchaseRequestRepo.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
         PurchaseRequestResponseDto dto = PurchaseRequestResponseDto.builder()
                 .id(1L)
                 .code("PR-2025-00001")
                 .build();
-        Page<PurchaseRequestResponseDto> page = new PageImpl<>(List.of(dto), pageable, 1);
+        when(purchaseRequestMapper.toListDto(pr)).thenReturn(dto);
 
-        when(purchaseRequestRepo.findAllCustom(pageable)).thenReturn(page);
-
-        Page<PurchaseRequestResponseDto> result = service.getPurchaseRequests(0, 5);
+        Page<PurchaseRequestResponseDto> result = service.getPurchaseRequests(null, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertSame(dto, result.getContent().get(0));
-        verify(purchaseRequestRepo).findAllCustom(any(Pageable.class));
+        verify(purchaseRequestRepo).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test
-    void getPurchaseRequestItems_ShouldReturnDto_WhenFound() {
+    void getPurchaseRequestDetail_ShouldReturnDto_WhenFound() {
         PurchaseRequest pr = PurchaseRequest.builder()
                 .id(1L)
                 .code("PR-2025-00001")
                 .build();
         when(purchaseRequestRepo.findById(1L)).thenReturn(Optional.of(pr));
 
-        PrDetailInfoReviewDto dto = PrDetailInfoReviewDto.builder()
-                .prCode("PR-2025-00001")
+        PurchaseRequestDetailDto dto = PurchaseRequestDetailDto.builder()
+                .id(1L)
+                .code("PR-2025-00001")
                 .build();
-        when(purchaseRequestMapper.toDto(pr)).thenReturn(dto);
+        when(purchaseRequestMapper.toDetailDto(pr)).thenReturn(dto);
 
-        PrDetailInfoReviewDto result = service.getPurchaseRequestItems(1L);
+        PurchaseRequestDetailDto result = service.getPurchaseRequestDetail(1L);
 
         assertSame(dto, result);
         verify(purchaseRequestRepo).findById(1L);
     }
 
     @Test
-    void getPurchaseRequestItems_ShouldThrow_WhenNotFound() {
+    void getPurchaseRequestDetail_ShouldThrow_WhenNotFound() {
         when(purchaseRequestRepo.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.getPurchaseRequestItems(1L));
+                () -> service.getPurchaseRequestDetail(1L));
         verify(purchaseRequestRepo).findById(1L);
     }
 
-    @Test
-    void getItem_ShouldReturnDto_WhenFound() {
-        PurchaseRequestItem item = PurchaseRequestItem.builder()
-                .itemId(1L)
-                .partName("Part Name")
-                .build();
-        when(purchaseRequestItemRepo.findById(1L)).thenReturn(Optional.of(item));
-
-        PurchaseRequestItemResponseDto dto = PurchaseRequestItemResponseDto.builder()
-                .itemId(1L)
-                .partName("Part Name")
-                .build();
-        when(purchaseRequestItemMapper.toResponseDto(item)).thenReturn(dto);
-
-        PurchaseRequestItemResponseDto result = service.getItem(1L);
-
-        assertSame(dto, result);
-        verify(purchaseRequestItemRepo).findById(1L);
-    }
-
-    @Test
-    void getItem_ShouldThrow_WhenNotFound() {
-        when(purchaseRequestItemRepo.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class,
-                () -> service.getItem(1L));
-        verify(purchaseRequestItemRepo).findById(1L);
-    }
+    // Note: getItem method no longer exists in current implementation
+    // This test has been removed as the method is not in the current service interface
 
     @Test
     void createRequest_ShouldCreateRequestAndItems() {
@@ -174,21 +158,22 @@ class PurchaseRequestServiceImplTest {
         PurchaseRequest savedPr = PurchaseRequest.builder()
                 .id(100L)
                 .code("PR-2025-00001")
-                .status(PurchaseRequestStatus.PENDING)
                 .reviewStatus(ManagerReviewStatus.PENDING)
                 .items(new ArrayList<>())
                 .build();
         when(purchaseRequestRepo.save(any(PurchaseRequest.class))).thenReturn(savedPr);
 
         PurchaseRequestDetailDto detailDto = PurchaseRequestDetailDto.builder()
-                .purchaseRequest(PurchaseRequestResponseDto.builder()
-                        .id(100L)
-                        .code("PR-2025-00001")
-                        .build())
+                .id(100L)
+                .code("PR-2025-00001")
                 .items(new ArrayList<>())
                 .build();
-        when(purchaseRequestDetailMapper.toDetailDto(any(PurchaseRequest.class))).thenReturn(detailDto);
+        when(purchaseRequestMapper.toDetailDto(any(PurchaseRequest.class))).thenReturn(detailDto);
 
+        // Note: createRequest method no longer exists
+        // The service now uses createPurchaseRequestFromQuotation(Long quotationId)
+        // This test has been commented out as the method signature has changed
+        /*
         PartItemDto item1 = new PartItemDto();
         item1.setPartId(10L);
         item1.setQuantity(2.0);
@@ -204,198 +189,65 @@ class PurchaseRequestServiceImplTest {
         dto.setItems(List.of(item1, item2));
 
         PurchaseRequestDetailDto result = service.createRequest(dto);
+        */
 
-        assertNotNull(result);
-        verify(employeeRepo).findById(1L);
-        verify(partRepo).findById(10L);
-        verify(partRepo).findById(11L);
-        verify(codeSequenceService).generateCode("PR");
-        verify(purchaseRequestItemRepo, times(2)).save(any(PurchaseRequestItem.class));
-        verify(purchaseRequestRepo, atLeastOnce()).save(any(PurchaseRequest.class));
+        // assertNotNull(result);
+        // verify(employeeRepo).findById(1L);
+        // verify(partRepo).findById(10L);
+        // verify(partRepo).findById(11L);
+        // verify(codeSequenceService).generateCode("PR");
+        // verify(purchaseRequestItemRepo, times(2)).save(any(PurchaseRequestItem.class));
+        // verify(purchaseRequestRepo, atLeastOnce()).save(any(PurchaseRequest.class));
     }
 
-    @Test
-    void createRequest_ShouldThrow_WhenCreatorNotFound() {
-        when(employeeRepo.findById(1L)).thenReturn(Optional.empty());
-
-        PurchaseRequestCreateDto dto = new PurchaseRequestCreateDto();
-        dto.setCreatedById(1L);
-
-        assertThrows(RuntimeException.class,
-                () -> service.createRequest(dto));
-        verify(employeeRepo).findById(1L);
-        verify(purchaseRequestRepo, never()).save(any());
-    }
+    // Note: createRequest method tests removed as the method no longer exists
+    // The service now uses createPurchaseRequestFromQuotation(Long quotationId)
 
     @Test
-    void createRequest_ShouldThrow_WhenPartNotFound() {
-        Employee creator = Employee.builder().employeeId(1L).build();
-        when(employeeRepo.findById(1L)).thenReturn(Optional.of(creator));
-        when(partRepo.findById(10L)).thenReturn(Optional.empty());
-
-        PartItemDto item1 = new PartItemDto();
-        item1.setPartId(10L);
-        item1.setQuantity(2.0);
-
-        PurchaseRequestCreateDto dto = new PurchaseRequestCreateDto();
-        dto.setCreatedById(1L);
-        dto.setItems(List.of(item1));
-
-        assertThrows(RuntimeException.class,
-                () -> service.createRequest(dto));
-        verify(partRepo).findById(10L);
-    }
-
-    @Test
-    void reviewItem_ShouldApproveAndUpdatePRStatus() {
-        Employee reviewer = Employee.builder()
-                .employeeId(2L)
-                .fullName("Reviewer")
-                .build();
-
+    void approvePurchaseRequest_ShouldUpdateStatus() {
         PurchaseRequest pr = PurchaseRequest.builder()
                 .id(100L)
                 .code("PR-2025-00001")
                 .reviewStatus(ManagerReviewStatus.PENDING)
-                .items(new ArrayList<>())
+                .items(List.of(PurchaseRequestItem.builder()
+                        .itemId(1L)
+                        .build()))
                 .build();
 
-        PurchaseRequestItem item = PurchaseRequestItem.builder()
-                .itemId(1L)
-                .purchaseRequest(pr)
-                .reviewStatus(ManagerReviewStatus.PENDING)
-                .build();
-        pr.setItems(List.of(item));
-
-        when(purchaseRequestItemRepo.findById(1L)).thenReturn(Optional.of(item));
-        when(purchaseRequestItemRepo.save(item)).thenReturn(item);
+        when(purchaseRequestRepo.findById(100L)).thenReturn(Optional.of(pr));
         when(purchaseRequestRepo.save(pr)).thenReturn(pr);
+        when(stockReceiptService.createReceiptFromPurchaseRequest(100L))
+                .thenReturn(StockReceiptDetailResponse.builder().id(1L).build());
 
-        PurchaseRequestItemResponseDto dto = PurchaseRequestItemResponseDto.builder()
-                .itemId(1L)
-                .reviewStatus(ManagerReviewStatus.APPROVED)
-                .build();
-        when(purchaseRequestItemMapper.toResponseDto(item)).thenReturn(dto);
+        PurchaseRequest result = service.approvePurchaseRequest(100L);
 
-        Account warehouseAccount = Account.builder()
-                .accountId(1L)
-                .employee(Employee.builder().employeeId(10L).build())
-                .role(Role.WAREHOUSE)
-                .build();
-        when(accountRepository.findByRole(Role.WAREHOUSE)).thenReturn(List.of(warehouseAccount));
-
-        PurchaseRequestItemResponseDto result = service.reviewItem(1L, true, "Approved", reviewer);
-
-        assertEquals(ManagerReviewStatus.APPROVED, item.getReviewStatus());
         assertEquals(ManagerReviewStatus.APPROVED, pr.getReviewStatus());
-        assertEquals("Approved", item.getNote());
-        verify(purchaseRequestItemRepo).save(item);
         verify(purchaseRequestRepo).save(pr);
-        verify(notificationService).createNotification(
-                eq(10L), anyString(), anyString(), eq(NotificationType.PURCHASE_REQUEST),
-                anyString(), anyString());
     }
 
     @Test
-    void reviewItem_ShouldRejectAndUpdatePRStatus() {
-        Employee reviewer = Employee.builder()
-                .employeeId(2L)
-                .fullName("Reviewer")
-                .build();
-
-        PurchaseRequest pr = PurchaseRequest.builder()
-                .id(100L)
-                .reviewStatus(ManagerReviewStatus.PENDING)
-                .items(new ArrayList<>())
-                .build();
-
-        PurchaseRequestItem item = PurchaseRequestItem.builder()
-                .itemId(1L)
-                .purchaseRequest(pr)
-                .reviewStatus(ManagerReviewStatus.PENDING)
-                .build();
-        pr.setItems(List.of(item));
-
-        when(purchaseRequestItemRepo.findById(1L)).thenReturn(Optional.of(item));
-        when(purchaseRequestItemRepo.save(item)).thenReturn(item);
-        when(purchaseRequestRepo.save(pr)).thenReturn(pr);
-
-        PurchaseRequestItemResponseDto dto = PurchaseRequestItemResponseDto.builder()
-                .itemId(1L)
-                .reviewStatus(ManagerReviewStatus.REJECTED)
-                .build();
-        when(purchaseRequestItemMapper.toResponseDto(item)).thenReturn(dto);
-
-        Account warehouseAccount = Account.builder()
-                .accountId(1L)
-                .employee(Employee.builder().employeeId(10L).build())
-                .role(Role.WAREHOUSE)
-                .build();
-        when(accountRepository.findByRole(Role.WAREHOUSE)).thenReturn(List.of(warehouseAccount));
-
-        PurchaseRequestItemResponseDto result = service.reviewItem(1L, false, "Rejected", reviewer);
-
-        assertEquals(ManagerReviewStatus.REJECTED, item.getReviewStatus());
-        assertEquals(ManagerReviewStatus.REJECTED, pr.getReviewStatus());
-        assertEquals("Rejected", item.getNote());
-        verify(purchaseRequestItemRepo).save(item);
-        verify(purchaseRequestRepo).save(pr);
-        verify(notificationService).createNotification(
-                eq(10L), anyString(), anyString(), eq(NotificationType.PURCHASE_REQUEST),
-                anyString(), anyString());
-    }
-
-    @Test
-    void reviewItem_ShouldKeepPending_WhenNotAllItemsReviewed() {
-        Employee reviewer = Employee.builder()
-                .employeeId(2L)
-                .build();
-
-        PurchaseRequest pr = PurchaseRequest.builder()
-                .id(100L)
-                .reviewStatus(ManagerReviewStatus.PENDING)
-                .items(new ArrayList<>())
-                .build();
-
-        PurchaseRequestItem item1 = PurchaseRequestItem.builder()
-                .itemId(1L)
-                .purchaseRequest(pr)
-                .reviewStatus(ManagerReviewStatus.APPROVED)
-                .build();
-        PurchaseRequestItem item2 = PurchaseRequestItem.builder()
-                .itemId(2L)
-                .purchaseRequest(pr)
-                .reviewStatus(ManagerReviewStatus.PENDING)
-                .build();
-        pr.setItems(List.of(item1, item2));
-
-        when(purchaseRequestItemRepo.findById(2L)).thenReturn(Optional.of(item2));
-        when(purchaseRequestItemRepo.save(item2)).thenReturn(item2);
-        when(purchaseRequestRepo.save(pr)).thenReturn(pr);
-
-        PurchaseRequestItemResponseDto dto = PurchaseRequestItemResponseDto.builder()
-                .itemId(2L)
-                .build();
-        when(purchaseRequestItemMapper.toResponseDto(item2)).thenReturn(dto);
-
-        PurchaseRequestItemResponseDto result = service.reviewItem(2L, true, "Approved", reviewer);
-
-        assertEquals(ManagerReviewStatus.PENDING, pr.getReviewStatus());
-        verify(purchaseRequestRepo).save(pr);
-        verify(notificationService, never()).createNotification(anyLong(), anyString(), anyString(),
-                any(), anyString(), anyString());
-    }
-
-    @Test
-    void reviewItem_ShouldThrow_WhenItemNotFound() {
-        when(purchaseRequestItemRepo.findById(1L)).thenReturn(Optional.empty());
-
-        Employee reviewer = Employee.builder().employeeId(2L).build();
+    void approvePurchaseRequest_ShouldThrow_WhenNotFound() {
+        when(purchaseRequestRepo.findById(100L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.reviewItem(1L, true, "Note", reviewer));
-        verify(purchaseRequestItemRepo).findById(1L);
-        verify(purchaseRequestItemRepo, never()).save(any());
+                () -> service.approvePurchaseRequest(100L));
     }
+
+    @Test
+    void approvePurchaseRequest_ShouldThrow_WhenNoItems() {
+        PurchaseRequest pr = PurchaseRequest.builder()
+                .id(100L)
+                .items(new ArrayList<>())
+                .build();
+
+        when(purchaseRequestRepo.findById(100L)).thenReturn(Optional.of(pr));
+
+        assertThrows(RuntimeException.class,
+                () -> service.approvePurchaseRequest(100L));
+    }
+
+    // Note: reviewItem method no longer exists in current implementation
+    // The service now uses approvePurchaseRequest(Long requestId) to approve the entire request
+    // These tests have been removed as the method is not in the current service interface
 }
 

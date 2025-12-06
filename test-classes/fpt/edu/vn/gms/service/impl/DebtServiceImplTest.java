@@ -3,11 +3,11 @@ package fpt.edu.vn.gms.service.impl;
 import fpt.edu.vn.gms.common.enums.DebtStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
-import fpt.edu.vn.gms.dto.CreateDebtDto;
-import fpt.edu.vn.gms.dto.CustomerDebtSummaryDto;
-import fpt.edu.vn.gms.dto.PayDebtRequestDto;
-import fpt.edu.vn.gms.dto.TransactionResponseDto;
+import fpt.edu.vn.gms.dto.request.CreateDebtDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
+import fpt.edu.vn.gms.dto.request.PayDebtRequestDto;
+import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
+import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
 import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketDebtDetail;
@@ -39,6 +39,7 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -76,22 +77,34 @@ class DebtServiceImplTest {
 
     @Test
     void getAllDebtsSummary_ShouldUseRepositoryAndReturnPage() {
-        CustomerDebtSummaryDto row = CustomerDebtSummaryDto.builder()
-                .customerId(10L)
-                .customerFullName("Nguyễn Văn B")
-                .totalAmount(new BigDecimal("100000"))
-                .build();
+        // Repository returns Page<Object[]>, service maps to CustomerDebtSummaryDto
+        Object[] rawRow = new Object[]{
+                10L,                                    // customerId
+                "Nguyễn Văn B",                         // fullName
+                "0909000000",                           // phone
+                new BigDecimal("100000"),               // totalAmount
+                new BigDecimal("0"),                    // totalPaidAmount
+                new BigDecimal("100000"),              // totalRemaining
+                LocalDate.now().plusDays(7),           // dueDate
+                "OUTSTANDING"                           // status
+        };
 
-        Page<CustomerDebtSummaryDto> page =
-                new PageImpl<>(List.of(row), PageRequest.of(0, 5, Sort.by("createdAt").descending()), 1);
+        List<Object[]> rawRows = new ArrayList<>();
+        rawRows.add(rawRow);
+        Page<Object[]> rawPage = new PageImpl<>(
+                rawRows,
+                PageRequest.of(0, 5),
+                1
+        );
 
         when(debtRepository.findTotalDebtGroupedByCustomer(any(Pageable.class)))
-                .thenReturn(page);
+                .thenReturn(rawPage);
 
         Page<CustomerDebtSummaryDto> result = service.getAllDebtsSummary(0, 5);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Nguyễn Văn B", result.getContent().get(0).getCustomerFullName());
+        assertEquals(new BigDecimal("100000"), result.getContent().get(0).getTotalAmount());
 
         verify(debtRepository).findTotalDebtGroupedByCustomer(any(Pageable.class));
     }

@@ -1,17 +1,15 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.enums.DeductionType;
+import fpt.edu.vn.gms.common.enums.ExportItemStatus;
 import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
-import fpt.edu.vn.gms.dto.PartItemDto;
-import fpt.edu.vn.gms.dto.request.StockExportCreateDto;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
+import fpt.edu.vn.gms.dto.request.ExportItemRequest;
+import fpt.edu.vn.gms.dto.response.StockExportDetailResponse;
 import fpt.edu.vn.gms.dto.response.StockExportItemResponse;
-import fpt.edu.vn.gms.dto.response.StockExportResponse;
-import fpt.edu.vn.gms.dto.response.StockExportResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
-import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
-import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
+import fpt.edu.vn.gms.mapper.StockExportMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import org.junit.jupiter.api.Test;
@@ -23,10 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -39,81 +35,27 @@ import static org.mockito.Mockito.*;
 class StockExportServiceImplTest {
 
     @Mock
-    PriceQuotationRepository quotationRepository;
-    @Mock
-    PriceQuotationItemRepository itemRepository;
-    @Mock
-    PartRepository partRepository;
-    @Mock
-    StockExportRepository exportRepository;
-    @Mock
-    EmployeeRepository employeeRepository;
+    StockExportRepository stockExportRepository;
     @Mock
     StockExportItemRepository stockExportItemRepository;
     @Mock
-    DeductionRepository deductionRepository;
+    StockExportItemHistoryRepository stockExportItemHistoryRepository;
+    @Mock
+    PriceQuotationRepository priceQuotationRepository;
+    @Mock
+    PartRepository partRepository;
+    @Mock
+    EmployeeRepository employeeRepository;
     @Mock
     CodeSequenceService codeSequenceService;
     @Mock
-    PriceQuotationMapper priceQuotationMapper;
-    @Mock
-    PriceQuotationItemMapper itemMapper;
+    StockExportMapper stockExportMapper;
 
     @InjectMocks
     StockExportServiceImpl service;
 
-    @Test
-    void getExportingQuotations_ShouldReturnMappedPage() {
-        Pageable pageable = PageRequest.of(0, 5, Sort.by("updatedAt").descending());
-        PriceQuotation quotation = PriceQuotation.builder().priceQuotationId(1L).build();
-        Page<PriceQuotation> page = new PageImpl<>(List.of(quotation), pageable, 1);
-
-        when(quotationRepository.findByExportStatus(ExportStatus.WAITING_TO_EXPORT, pageable))
-                .thenReturn(page);
-
-        StockExportResponse response = StockExportResponse.builder().build();
-        when(priceQuotationMapper.toStockExportResponse(quotation)).thenReturn(response);
-
-        Page<StockExportResponse> result = service.getExportingQuotations(0, 5);
-
-        assertEquals(1, result.getTotalElements());
-        assertSame(response, result.getContent().get(0));
-        verify(quotationRepository).findByExportStatus(ExportStatus.WAITING_TO_EXPORT, pageable);
-    }
-
-    @Test
-    void getExportingQuotationById_ShouldFilterPartItemsAndMap() {
-        PriceQuotationItem partItem = PriceQuotationItem.builder()
-                .priceQuotationItemId(1L)
-                .itemType(PriceQuotationItemType.PART)
-                .build();
-        PriceQuotationItem otherItem = PriceQuotationItem.builder()
-                .priceQuotationItemId(2L)
-                .itemType(PriceQuotationItemType.SERVICE)
-                .build();
-        PriceQuotation quotation = PriceQuotation.builder()
-                .priceQuotationId(10L)
-                .items(List.of(partItem, otherItem))
-                .build();
-
-        when(quotationRepository.findById(10L)).thenReturn(Optional.of(quotation));
-
-        StockExportItemResponse itemResponse = StockExportItemResponse.builder().build();
-        when(itemMapper.toStockExportItemResponse(partItem)).thenReturn(itemResponse);
-
-        List<StockExportItemResponse> result = service.getExportingQuotationById(10L);
-
-        assertEquals(1, result.size());
-        assertSame(itemResponse, result.get(0));
-        verify(quotationRepository).findById(10L);
-    }
-
-    @Test
-    void getExportingQuotationById_ShouldThrow_WhenQuotationNotFound() {
-        when(quotationRepository.findById(10L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class,
-                () -> service.getExportingQuotationById(10L));
-    }
+    // Note: getExportingQuotations and getExportingQuotationById methods no longer exist
+    // These tests have been removed as they are not in the current service interface
 
     @Test
     void exportItem_ShouldExportPartAndCreateExportItem() {
@@ -121,34 +63,25 @@ class StockExportServiceImplTest {
                 .partId(1L)
                 .quantityInStock(10.0)
                 .reservedQuantity(5.0)
-                .unit(Unit.builder().name("Cái").build())
+                .reorderLevel(2.0)
+                .status(StockLevelStatus.IN_STOCK)
                 .build();
-
-        PriceQuotation quotation = PriceQuotation.builder()
-                .priceQuotationId(100L)
-                .build();
-
-        PriceQuotationItem item = PriceQuotationItem.builder()
-                .priceQuotationItemId(5L)
-                .itemType(PriceQuotationItemType.PART)
-                .exportStatus(ExportStatus.WAITING_TO_EXPORT)
-                .part(part)
-                .quantity(10.0)
-                .exportedQuantity(2.0)
-                .priceQuotation(quotation)
-                .unit("Cái")
-                .build();
-
-        when(itemRepository.findById(5L)).thenReturn(Optional.of(item));
 
         StockExport export = StockExport.builder()
                 .id(1L)
-                .quotation(quotation)
                 .code("XK001")
-                .createdAt(LocalDateTime.now())
                 .build();
-        when(exportRepository.findByQuotationId(quotation.getPriceQuotationId()))
-                .thenReturn(Optional.of(export));
+
+        StockExportItem exportItem = StockExportItem.builder()
+                .id(5L)
+                .part(part)
+                .quantity(10.0)
+                .quantityExported(2.0)
+                .status(ExportItemStatus.EXPORTING)
+                .stockExport(export)
+                .build();
+
+        when(stockExportItemRepository.findById(5L)).thenReturn(Optional.of(exportItem));
 
         Employee receiver = Employee.builder()
                 .employeeId(99L)
@@ -156,10 +89,20 @@ class StockExportServiceImplTest {
                 .build();
         when(employeeRepository.findById(99L)).thenReturn(Optional.of(receiver));
 
-        StockExportItemResponse response = StockExportItemResponse.builder().build();
-        when(itemMapper.toStockExportItemResponse(item)).thenReturn(response);
+        Employee exportedBy = Employee.builder()
+                .employeeId(1L)
+                .fullName("Exporter")
+                .build();
 
-        StockExportItemResponse result = service.exportItem(5L, 3.0, 99L);
+        ExportItemRequest request = new ExportItemRequest();
+        request.setQuantity(3.0);
+        request.setReceiverId(99L);
+        request.setNote("Test export");
+
+        StockExportItemResponse response = StockExportItemResponse.builder().build();
+        when(stockExportMapper.toItemDto(any(StockExportItem.class))).thenReturn(response);
+
+        StockExportItemResponse result = service.exportItem(5L, request, exportedBy);
 
         assertSame(response, result);
 
@@ -168,167 +111,120 @@ class StockExportServiceImplTest {
         assertEquals(2.0, part.getReservedQuantity());
 
         // exported quantity
-        assertEquals(5.0, item.getExportedQuantity());
-        assertEquals(ExportStatus.EXPORTED, item.getExportStatus());
+        assertEquals(5.0, exportItem.getQuantityExported());
+        assertEquals(ExportItemStatus.EXPORTING, exportItem.getStatus());
 
         verify(partRepository).save(part);
-        verify(itemRepository).save(item);
-        verify(stockExportItemRepository).save(any(StockExportItem.class));
+        verify(stockExportItemRepository).save(exportItem);
+        verify(stockExportItemHistoryRepository).save(any(StockExportItemHistory.class));
     }
 
     @Test
-    void exportItem_ShouldThrow_WhenItemNotFoundOrNotPartOrStatusInvalid() {
-        when(itemRepository.findById(1L)).thenReturn(Optional.empty());
+    void exportItem_ShouldThrow_WhenItemNotFound() {
+        when(stockExportItemRepository.findById(1L)).thenReturn(Optional.empty());
+        
+        ExportItemRequest request = new ExportItemRequest();
+        request.setQuantity(1.0);
+        request.setReceiverId(1L);
+        
+        Employee exportedBy = Employee.builder().employeeId(1L).build();
+        
         assertThrows(ResourceNotFoundException.class,
-                () -> service.exportItem(1L, 1.0, 1L));
-
-        PriceQuotationItem notPart = PriceQuotationItem.builder()
-                .priceQuotationItemId(2L)
-                .itemType(PriceQuotationItemType.SERVICE)
-                .build();
-        when(itemRepository.findById(2L)).thenReturn(Optional.of(notPart));
-        assertThrows(RuntimeException.class,
-                () -> service.exportItem(2L, 1.0, 1L));
-
-        PriceQuotationItem wrongStatus = PriceQuotationItem.builder()
-                .priceQuotationItemId(3L)
-                .itemType(PriceQuotationItemType.PART)
-                .exportStatus(ExportStatus.EXPORTED)
-                .build();
-        when(itemRepository.findById(3L)).thenReturn(Optional.of(wrongStatus));
-        assertThrows(RuntimeException.class,
-                () -> service.exportItem(3L, 1.0, 1L));
+                () -> service.exportItem(1L, request, exportedBy));
     }
 
     @Test
-    void exportItem_ShouldThrow_WhenPartNullOrExportQtyExceeds() {
-        PriceQuotationItem noPart = PriceQuotationItem.builder()
-                .priceQuotationItemId(4L)
-                .itemType(PriceQuotationItemType.PART)
-                .exportStatus(ExportStatus.WAITING_TO_EXPORT)
-                .quantity(5.0)
-                .exportedQuantity(0.0)
+    void exportItem_ShouldThrow_WhenItemAlreadyFinished() {
+        StockExportItem finishedItem = StockExportItem.builder()
+                .id(2L)
+                .status(ExportItemStatus.FINISHED)
                 .build();
-        when(itemRepository.findById(4L)).thenReturn(Optional.of(noPart));
+        when(stockExportItemRepository.findById(2L)).thenReturn(Optional.of(finishedItem));
 
+        ExportItemRequest request = new ExportItemRequest();
+        request.setQuantity(1.0);
+        request.setReceiverId(1L);
+        
+        Employee exportedBy = Employee.builder().employeeId(1L).build();
+        
         assertThrows(RuntimeException.class,
-                () -> service.exportItem(4L, 1.0, 1L));
-
-        Part part = Part.builder()
-                .partId(1L)
-                .quantityInStock(10.0)
-                .reservedQuantity(5.0)
-                .build();
-        PriceQuotationItem overExport = PriceQuotationItem.builder()
-                .priceQuotationItemId(5L)
-                .itemType(PriceQuotationItemType.PART)
-                .exportStatus(ExportStatus.WAITING_TO_EXPORT)
-                .quantity(5.0)
-                .exportedQuantity(4.0)
-                .part(part)
-                .build();
-        when(itemRepository.findById(5L)).thenReturn(Optional.of(overExport));
-
-        assertThrows(RuntimeException.class,
-                () -> service.exportItem(5L, 2.0, 1L));
+                () -> service.exportItem(2L, request, exportedBy));
     }
 
     @Test
-    void createExport_ShouldCreateExportAndDeduction_WhenDamageByEmployee() {
+    void exportItem_ShouldThrow_WhenQuantityExceedsRemaining() {
+        StockExportItem item = StockExportItem.builder()
+                .id(3L)
+                .quantity(10.0)
+                .quantityExported(8.0)
+                .status(ExportItemStatus.EXPORTING)
+                .build();
+        when(stockExportItemRepository.findById(3L)).thenReturn(Optional.of(item));
+
+        ExportItemRequest request = new ExportItemRequest();
+        request.setQuantity(3.0); // 8.0 + 3.0 = 11.0 > 10.0
+        request.setReceiverId(1L);
+        
+        Employee exportedBy = Employee.builder().employeeId(1L).build();
+        
+        assertThrows(IllegalArgumentException.class,
+                () -> service.exportItem(3L, request, exportedBy));
+    }
+
+    @Test
+    void createExportFromQuotation_ShouldCreateExport() {
         Employee creator = Employee.builder()
                 .employeeId(1L)
                 .fullName("Creator")
                 .build();
-        Employee receiver = Employee.builder()
-                .employeeId(2L)
-                .fullName("Receiver")
-                .build();
-        Employee damagedBy = Employee.builder()
-                .employeeId(3L)
-                .fullName("Damager")
-                .build();
 
-        when(employeeRepository.findById(1L)).thenReturn(Optional.of(creator));
-        when(employeeRepository.findById(2L)).thenReturn(Optional.of(receiver));
-        when(employeeRepository.findById(3L)).thenReturn(Optional.of(damagedBy));
-
-        Part part1 = Part.builder()
-                .partId(10L)
-                .name("Part1")
-                .quantityInStock(10.0)
-                .unit(Unit.builder().name("Cái").build())
-                .sellingPrice(new BigDecimal("100000"))
-                .build();
-        Part part2 = Part.builder()
-                .partId(11L)
-                .name("Part2")
-                .quantityInStock(20.0)
-                .unit(Unit.builder().name("Cái").build())
-                .sellingPrice(new BigDecimal("200000"))
+        PriceQuotation quotation = PriceQuotation.builder()
+                .priceQuotationId(100L)
+                .code("BG001")
+                .items(List.of(
+                        PriceQuotationItem.builder()
+                                .priceQuotationItemId(1L)
+                                .itemType(PriceQuotationItemType.PART)
+                                .part(Part.builder().partId(10L).build())
+                                .quantity(5.0)
+                                .build()
+                ))
                 .build();
 
-        when(partRepository.findById(10L)).thenReturn(Optional.of(part1));
-        when(partRepository.findById(11L)).thenReturn(Optional.of(part2));
+        when(priceQuotationRepository.findById(100L)).thenReturn(Optional.of(quotation));
+        when(stockExportRepository.findByQuotationId(100L)).thenReturn(Optional.empty());
+        when(codeSequenceService.generateCode("XK")).thenReturn("XK001");
 
-        when(codeSequenceService.generateCode("EXP")).thenReturn("EXP001");
-
-        StockExport export = StockExport.builder()
+        StockExport savedExport = StockExport.builder()
                 .id(100L)
-                .code("EXP001")
-                .createdAt(LocalDateTime.now())
+                .code("XK001")
+                .quotation(quotation)
                 .build();
-        when(exportRepository.save(any(StockExport.class))).thenReturn(export);
+        when(stockExportRepository.save(any(StockExport.class))).thenReturn(savedExport);
 
-        PartItemDto item1 = new PartItemDto();
-        item1.setPartId(10L);
-        item1.setQuantity(2.0);
+        StockExportDetailResponse detailResponse = StockExportDetailResponse.builder()
+                .id(100L)
+                .code("XK001")
+                .build();
+        when(stockExportMapper.toDetailDto(any(StockExport.class))).thenReturn(detailResponse);
+        when(stockExportMapper.toItemDto(any(StockExportItem.class))).thenReturn(StockExportItemResponse.builder().build());
 
-        PartItemDto item2 = new PartItemDto();
-        item2.setPartId(11L);
-        item2.setQuantity(1.0);
-
-        StockExportCreateDto dto = new StockExportCreateDto();
-        dto.setCreatedById(1L);
-        dto.setReceiverId(2L);
-        dto.setDamagedById(3L);
-        dto.setReason("Hỏng do nhân viên");
-        dto.setNote("Lỗi dùng sai");
-        dto.setItems(List.of(item1, item2));
-
-        StockExportResponseDto result = service.createExport(dto);
+        StockExportDetailResponse result = service.createExportFromQuotation(100L, "Test reason", creator);
 
         assertNotNull(result);
-        assertEquals(export.getId(), result.getExportId());
-        assertEquals(export.getCode(), result.getExportCode());
-
-        // quantity decreased
-        assertEquals(8.0, part1.getQuantityInStock());
-        assertEquals(19.0, part2.getQuantityInStock());
-
-        // deduction created with correct amount
-        verify(deductionRepository).save(argThat(d -> {
-            BigDecimal expected = part1.getSellingPrice().multiply(BigDecimal.valueOf(2.0))
-                    .add(part2.getSellingPrice().multiply(BigDecimal.valueOf(1.0)));
-            assertEquals(DeductionType.DAMAGE, d.getType());
-            assertEquals(expected, d.getAmount());
-            assertEquals(damagedBy, d.getEmployee());
-            assertEquals("Lỗi dùng sai", d.getReason());
-            assertEquals(creator.getFullName(), d.getCreatedBy());
-            assertEquals(LocalDate.now(), d.getDate());
-            return true;
-        }));
-
-        verify(stockExportItemRepository, times(2)).save(any(StockExportItem.class));
+        assertEquals(100L, result.getId());
+        assertEquals("XK001", result.getCode());
+        verify(stockExportRepository).save(any(StockExport.class));
     }
 
     @Test
-    void createExport_ShouldThrow_WhenCreatorOrReceiverNotFound() {
-        StockExportCreateDto dto = new StockExportCreateDto();
-        dto.setCreatedById(1L);
-        dto.setReceiverId(2L);
-
-        when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> service.createExport(dto));
+    void createExportFromQuotation_ShouldThrow_WhenQuotationNotFound() {
+        when(priceQuotationRepository.findById(100L)).thenReturn(Optional.empty());
+        
+        Employee creator = Employee.builder().employeeId(1L).build();
+        
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.createExportFromQuotation(100L, "Test", creator));
     }
 }
 

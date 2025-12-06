@@ -2,7 +2,7 @@ package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.DeductionType;
 import fpt.edu.vn.gms.dto.request.DeductionRequestDto;
-import fpt.edu.vn.gms.dto.response.DeductionDto;
+import fpt.edu.vn.gms.dto.request.DeductionDto;
 import fpt.edu.vn.gms.entity.Deduction;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.repository.DeductionRepository;

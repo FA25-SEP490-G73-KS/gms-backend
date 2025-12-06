@@ -301,38 +301,43 @@ class CustomerServiceImplTest {
 
         when(customerRepository.findByPhone("0909000000")).thenReturn(Optional.of(customer));
 
+        CustomerDetailDto detailDto = CustomerDetailDto.builder()
+                .customerId(10L)
+                .fullName(customer.getFullName())
+                .phone(customer.getPhone())
+                .build();
+        when(customerRepository.getCustomerDetail(10L)).thenReturn(detailDto);
+
         VehicleModel model = VehicleModel.builder().name("Model X").brand(
                 fpt.edu.vn.gms.entity.Brand.builder().name("Brand A").build()
         ).build();
-        Vehicle vehicle = Vehicle.builder()
+        VehicleInfoDto vehicleInfo = VehicleInfoDto.builder()
                 .vehicleId(100L)
                 .licensePlate("30A-123.45")
-                .vehicleModel(model)
+                .modelName("Model X")
                 .build();
+        when(vehicleRepository.getCustomerVehicles(10L)).thenReturn(List.of(vehicleInfo));
 
-        ServiceTicket ticket = ServiceTicket.builder()
+        CustomerServiceHistoryDto history = CustomerServiceHistoryDto.builder()
                 .serviceTicketId(1L)
-                .customer(customer)
-                .vehicle(vehicle)
-                .status(fpt.edu.vn.gms.common.enums.ServiceTicketStatus.COMPLETED)
-                .createdAt(LocalDateTime.now())
+                .serviceTicketCode("ST-001")
+                .licensePlate("30A-123.45")
                 .build();
+        when(serviceTicketRepository.getCustomerServiceHistory(10L)).thenReturn(List.of(history));
 
-        when(serviceTicketRepository.findAll()).thenReturn(List.of(ticket));
-
-        CustomerServiceHistoryResponseDto result =
-                service.getCustomerServiceHistoryByPhone("0909000000");
+        CustomerDetailDto result = service.getCustomerServiceHistoryByPhone("0909000000");
 
         assertEquals(customer.getFullName(), result.getFullName());
         assertEquals(1, result.getVehicles().size());
-        CustomerServiceHistoryResponseDto.VehicleServiceInfo info =
-                result.getVehicles().get(0);
-        assertEquals(vehicle.getVehicleId(), info.getId());
-        assertEquals(vehicle.getLicensePlate(), info.getLicensePlate());
-        assertEquals(model.getName(), info.getModelName());
+        VehicleInfoDto info = result.getVehicles().get(0);
+        assertEquals(vehicleInfo.getVehicleId(), info.getVehicleId());
+        assertEquals(vehicleInfo.getLicensePlate(), info.getLicensePlate());
+        assertEquals(vehicleInfo.getModelName(), info.getModelName());
 
         verify(customerRepository).findByPhone("0909000000");
-        verify(serviceTicketRepository).findAll();
+        verify(customerRepository).getCustomerDetail(10L);
+        verify(vehicleRepository).getCustomerVehicles(10L);
+        verify(serviceTicketRepository).getCustomerServiceHistory(10L);
     }
 
     @Test
@@ -375,12 +380,16 @@ class CustomerServiceImplTest {
     @Test
     void getCustomers_ShouldDelegateToRepository() {
         Pageable pageable = PageRequest.of(0, 5);
-        Page<CustomerListResponseDto> page = new PageImpl<>(
-                Collections.singletonList(new CustomerListResponseDto())
+        CustomerDetailDto dto = CustomerDetailDto.builder()
+                .customerId(1L)
+                .fullName("Test Customer")
+                .build();
+        Page<CustomerDetailDto> page = new PageImpl<>(
+                Collections.singletonList(dto)
         );
         when(customerRepository.getAllCustomers(pageable)).thenReturn(page);
 
-        Page<CustomerListResponseDto> result = service.getCustomers(0, 5);
+        Page<CustomerDetailDto> result = service.getCustomers(0, 5);
 
         assertSame(page, result);
         verify(customerRepository).getAllCustomers(pageable);

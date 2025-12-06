@@ -1,8 +1,8 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.DeductionType;
-import fpt.edu.vn.gms.common.enums.ManualVoucherStatus;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import fpt.edu.vn.gms.common.enums.PayrollStatus;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.entity.*;
@@ -39,7 +39,7 @@ class PayrollServiceImplTest {
     @Mock
     DeductionRepository deductionRepository;
     @Mock
-    ManualVoucherRepository voucherRepository;
+    LedgerVoucherRepository voucherRepository;
     @Mock
     PayrollRepository payrollRepository;
 
@@ -91,8 +91,9 @@ class PayrollServiceImplTest {
         when(deductionRepository.sumForMonth(2L, month, year)).thenReturn(new BigDecimal("100000"));
 
         // advance
-        when(voucherRepository.sumAdvanceSalary(1L, month, year)).thenReturn(new BigDecimal("300000"));
-        when(voucherRepository.sumAdvanceSalary(2L, month, year)).thenReturn(new BigDecimal("0"));
+        // Note: sumAdvanceSalary method no longer exists in LedgerVoucherRepository
+        // when(voucherRepository.sumAdvanceSalary(1L, month, year)).thenReturn(new BigDecimal("300000"));
+        // when(voucherRepository.sumAdvanceSalary(2L, month, year)).thenReturn(new BigDecimal("0"));
 
         // existing payroll only for emp2
         Payroll existingPayrollEmp2 = Payroll.builder()
@@ -192,10 +193,10 @@ class PayrollServiceImplTest {
         service.createSalaryPaymentVoucher(1L, 50L);
 
         verify(voucherRepository).save(argThat(v -> {
-            assertEquals(ManualVoucherType.PAYMENT, v.getType());
+            assertEquals(LedgerVoucherType.SALARY, v.getType());
             assertEquals(payroll.getNetSalary(), v.getAmount());
             assertEquals(payroll.getEmployee().getEmployeeId(), v.getRelatedEmployeeId());
-            assertEquals(ManualVoucherStatus.PENDING, v.getStatus());
+            assertEquals(LedgerVoucherStatus.PENDING, v.getStatus());
             assertEquals(accountant, v.getCreatedBy());
             assertTrue(v.getDescription().contains("Chi lương tháng"));
             return true;
@@ -324,8 +325,9 @@ class PayrollServiceImplTest {
                 eq(1L), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of(deduction));
 
-        when(voucherRepository.sumAdvanceSalary(1L, month, year))
-                .thenReturn(new BigDecimal("300000"));
+        // Note: sumAdvanceSalary method no longer exists in LedgerVoucherRepository
+        // when(voucherRepository.sumAdvanceSalary(1L, month, year))
+        //         .thenReturn(new BigDecimal("300000"));
 
         Payroll payroll = Payroll.builder()
                 .id(10L)
@@ -373,7 +375,8 @@ class PayrollServiceImplTest {
         when(deductionRepository.findByEmployeeEmployeeIdAndDateBetween(
                 eq(1L), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
-        when(voucherRepository.sumAdvanceSalary(1L, month, year)).thenReturn(BigDecimal.ZERO);
+        // Note: sumAdvanceSalary method no longer exists in LedgerVoucherRepository
+        // when(voucherRepository.sumAdvanceSalary(1L, month, year)).thenReturn(BigDecimal.ZERO);
         when(payrollRepository.findByEmployeeIdAndMonthAndYear(1L, month, year))
                 .thenReturn(Optional.empty());
 

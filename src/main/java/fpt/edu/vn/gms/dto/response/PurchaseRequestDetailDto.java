@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.dto.response;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 

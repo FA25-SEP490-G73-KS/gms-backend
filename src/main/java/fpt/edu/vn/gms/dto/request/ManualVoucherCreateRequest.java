@@ -1,7 +1,8 @@
 package fpt.edu.vn.gms.dto.request;
 
 import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
-import fpt.edu.vn.gms.common.enums.ManualVoucherType;
+import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
+//import fpt.edu.vn.gms.common.enums.ManualVoucherType;
 import lombok.Builder;
 import lombok.Data;
 

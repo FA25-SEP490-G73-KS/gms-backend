@@ -1,9 +1,14 @@
 package fpt.edu.vn.gms.service.impl;
 
+import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.EmployeeDto;
 import fpt.edu.vn.gms.dto.response.EmployeeInfoResponseDto;
+import fpt.edu.vn.gms.dto.response.EmployeeListResponse;
+import fpt.edu.vn.gms.entity.Account;
+import fpt.edu.vn.gms.entity.Attendance;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.mapper.EmployeeMapper;
+import fpt.edu.vn.gms.repository.AttendanceRepository;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +34,8 @@ class EmployeeServiceImplTest {
     EmployeeRepository employeeRepository;
     @Mock
     EmployeeMapper employeeMapper;
+    @Mock
+    AttendanceRepository attendanceRepository;
 
     @InjectMocks
     EmployeeServiceImpl service;
@@ -61,25 +68,33 @@ class EmployeeServiceImplTest {
     }
 
     @Test
-    void findAll_ShouldUsePagingAndMapper() {
+    void findAll_ShouldUsePagingAndComputeStatus() {
         Employee emp = Employee.builder()
                 .employeeId(1L)
                 .fullName("Emp 1")
                 .phone("0909")
+                .dailySalary(java.math.BigDecimal.valueOf(500000))
+                .hireDate(java.time.LocalDateTime.now())
+                .account(Account.builder()
+                        .role(Role.SERVICE_ADVISOR)
+                        .build())
                 .build();
         Pageable pageable = Pageable.ofSize(5).withPage(0);
         Page<Employee> page = new PageImpl<>(List.of(emp), pageable, 1);
 
         when(employeeRepository.findAll(pageable)).thenReturn(page);
-        EmployeeDto dto = new EmployeeDto(1L, "Emp 1", "0909");
-        when(employeeMapper.toDto(emp)).thenReturn(dto);
+        when(attendanceRepository.findTodayAttendance(any(java.time.LocalDate.class), any(List.class)))
+                .thenReturn(List.of());
 
-        Page<EmployeeDto> result = service.findAll(0, 5);
+        Page<EmployeeListResponse> result = service.findAll(0, 5, null);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(dto, result.getContent().get(0));
+        EmployeeListResponse response = result.getContent().get(0);
+        assertEquals(1L, response.getEmployeeId());
+        assertEquals("Emp 1", response.getFullName());
+        assertEquals("Nghỉ làm", response.getStatus()); // No attendance = "Nghỉ làm"
         verify(employeeRepository).findAll(pageable);
-        verify(employeeMapper).toDto(emp);
+        verify(attendanceRepository).findTodayAttendance(any(java.time.LocalDate.class), any(List.class));
     }
 }
 
