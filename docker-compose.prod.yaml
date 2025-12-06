@@ -75,21 +75,6 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    container_name: gms_nginx
-    image: nginx:alpine3.22
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - ./cert:/etc/nginx/cert:ro
-    restart: unless-stopped
-    networks:
-      - app-net
-
 volumes:
   mysql_data:
   redis_data:
