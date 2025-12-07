@@ -59,6 +59,8 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "DB_DATABASE_NAME=${{ secrets.DB_DATABASE_NAME }}" >> .env
             echo "" >> .env
+            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+            echo "" >> .env
             echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
             echo "" >> .env
             echo "PAYOS_API_KEY=${{ secrets.PAYOS_API_KEY }}" >> .env
