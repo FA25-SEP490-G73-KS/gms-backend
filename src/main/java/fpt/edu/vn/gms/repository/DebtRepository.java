@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.repository;
 
 import fpt.edu.vn.gms.common.enums.DebtStatus;
-import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
 import fpt.edu.vn.gms.entity.Debt;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Repository
@@ -52,8 +52,20 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
                              ELSE 'OUTSTANDING'
                         END
                     FROM Debt d
+                    WHERE (:status IS NULL OR d.status = :status)
+                      AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
+                      AND (:toDate IS NULL OR d.dueDate <= :toDate)
                     GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone, d.dueDate
                 """,
-                countQuery = "SELECT COUNT(DISTINCT d.customer.customerId) FROM Debt d")
-        Page<Object[]> findTotalDebtGroupedByCustomer(Pageable pageable);
+                countQuery = """
+                    SELECT COUNT(DISTINCT d.customer.customerId)
+                    FROM Debt d
+                    WHERE (:status IS NULL OR d.status = :status)
+                      AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
+                      AND (:toDate IS NULL OR d.dueDate <= :toDate)
+                """)
+        Page<Object[]> findTotalDebtGroupedByCustomer(@Param("status") DebtStatus status,
+                                                      @Param("fromDate") LocalDate fromDate,
+                                                      @Param("toDate") LocalDate toDate,
+                                                      Pageable pageable);
 }

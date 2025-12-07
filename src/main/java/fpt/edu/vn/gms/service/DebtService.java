@@ -9,6 +9,8 @@ import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketDebtDetail;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDate;
+
 public interface DebtService {
     Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size);
 
@@ -21,4 +23,8 @@ public interface DebtService {
     TransactionResponseDto payDebt(Long debtId, PayDebtRequestDto request) throws Exception;
 
     ServiceTicketDebtDetail getDebtDetailByServiceTicketId(Long serviceTicketId);
+
+    Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size, DebtStatus status, LocalDate fromDate, LocalDate toDate);
+
+    void updateDueDate(Long debtId, LocalDate dueDate);
 }

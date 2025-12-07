@@ -69,11 +69,25 @@ public class DebtServiceImpl implements DebtService {
         public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size) {
                 // For summary aggregation query, do NOT sort by createdAt (not in GROUP BY) to avoid ONLY_FULL_GROUP_BY error
                 Pageable pageable = PageRequest.of(page, size);
-                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(pageable);
+                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(null, null, null, pageable);
 
                 List<CustomerDebtSummaryDto> content = rawPage.getContent().stream()
                                 .map(this::mapToCustomerDebtSummaryDto)
                                 .toList();
+
+                return new PageImpl<>(content, pageable, rawPage.getTotalElements());
+        }
+
+        @Override
+        public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size, DebtStatus status,
+                                                               LocalDate fromDate,
+                                                               LocalDate toDate) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(status, fromDate, toDate, pageable);
+
+                List<CustomerDebtSummaryDto> content = rawPage.getContent().stream()
+                        .map(this::mapToCustomerDebtSummaryDto)
+                        .toList();
 
                 return new PageImpl<>(content, pageable, rawPage.getTotalElements());
         }
@@ -232,6 +246,21 @@ public class DebtServiceImpl implements DebtService {
 
         }
 
+
+        @Override
+        public void updateDueDate(Long debtId, LocalDate dueDate) {
+                // Validate dueDate: must be strictly after today
+                LocalDate today = LocalDate.now();
+                if (dueDate == null || !dueDate.isAfter(today)) {
+                        throw new IllegalArgumentException("Ngày đến hạn phải sau ngày hiện tại");
+                }
+
+                Debt debt = debtRepository.findById(debtId)
+                                .orElseThrow(DebtNotFoundException::new);
+
+                debt.setDueDate(dueDate);
+                debtRepository.save(debt);
+        }
 
         @Override
         public ServiceTicketDebtDetail getDebtDetailByServiceTicketId(Long serviceTicketId) {

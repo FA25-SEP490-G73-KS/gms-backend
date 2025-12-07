@@ -5,14 +5,12 @@ import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.Notification;
-import fpt.edu.vn.gms.entity.PriceQuotation;
-import fpt.edu.vn.gms.entity.ServiceTicket;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.NotificationMapper;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
 import fpt.edu.vn.gms.repository.NotificationRepository;
 import fpt.edu.vn.gms.service.NotificationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -92,5 +90,17 @@ public class NotificationServiceImpl implements NotificationService {
 
         notification.setStatus(NotificationStatus.READ);
         notificationRepository.save(notification);
+    }
+
+    @Override
+    public NotificationResponseDto getNotificationById(Long id, String recipientPhone) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+
+        if (!notification.getReceiver().getPhone().equals(recipientPhone)) {
+            throw new RuntimeException("Notification does not belong to this user");
+        }
+
+        return notificationMapper.toResponseDto(notification);
     }
 }

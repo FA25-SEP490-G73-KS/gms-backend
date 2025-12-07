@@ -242,7 +242,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Validate allowed transitions (simple example)
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
-            throw new RuntimeException("Cannot change status of a cancelled appointment");
+            throw new RuntimeException("Không thể thay đổi trạng thái của lịch hẹn đã bị hủy.");
         }
 
         appointment.setStatus(status);

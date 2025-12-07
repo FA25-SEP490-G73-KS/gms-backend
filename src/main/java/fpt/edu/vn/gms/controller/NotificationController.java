@@ -13,12 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -45,5 +40,24 @@ public class NotificationController {
         List<NotificationResponseDto> notifications = notificationService.getNotificationsForUser(employee.getPhone());
         return ResponseEntity.status(200)
                 .body(ApiResponse.success("Successfully", notifications));
+    }
+
+    // Lấy chi tiết 1 notification theo id
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy chi tiết thông báo", description = "Lấy chi tiết một thông báo theo id cho user hiện tại")
+    public ResponseEntity<ApiResponse<NotificationResponseDto>> getNotificationById(
+            @PathVariable Long id,
+            @CurrentUser Employee employee) {
+        NotificationResponseDto dto = notificationService.getNotificationById(id, employee.getPhone());
+        return ResponseEntity.ok(ApiResponse.success("Successfully", dto));
+    }
+
+    @PatchMapping("/{id}/read")
+    @Operation(summary = "Đánh dấu thông báo đã đọc", description = "Cập nhật trạng thái thông báo từ UNREAD sang READ")
+    public ResponseEntity<ApiResponse<Void>> markNotificationAsRead(
+            @PathVariable Long id,
+            @CurrentUser Employee employee) {
+        notificationService.markAsRead(id, employee.getPhone());
+        return ResponseEntity.ok(ApiResponse.success("Updated", null));
     }
 }

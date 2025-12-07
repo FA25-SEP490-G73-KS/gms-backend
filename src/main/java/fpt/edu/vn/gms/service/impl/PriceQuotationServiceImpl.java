@@ -335,10 +335,12 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // Lấy nhân viên phụ trách (advisor)
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
 
+        String quotationCode = quotation.getCode();
+
         NotificationResponseDto notiDto = notificationService.createNotification(
                 advisor.getEmployeeId(),
                 template.getTitle(),
-                template.format(quotation.getPriceQuotationId()),
+                template.format(quotationCode),
                 NotificationType.QUOTATION_CONFIRMED,
                 quotation.getPriceQuotationId().toString(),
                 "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
@@ -387,7 +389,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             NotificationResponseDto notificationDto = notificationService.createNotification(
                     advisor.getEmployeeId(),
                     template.getTitle(),
-                    template.format(quotation.getPriceQuotationId()),
+                    template.format(quotation.getCode()),
                     NotificationType.QUOTATION_REJECTED,
                     quotation.getPriceQuotationId().toString(),
                     "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());

@@ -56,7 +56,6 @@ public class Invoice {
     @Column
     private LocalDateTime updatedAt;
 
-    // Người tạo
     private String createdBy;
 
     @PrePersist
