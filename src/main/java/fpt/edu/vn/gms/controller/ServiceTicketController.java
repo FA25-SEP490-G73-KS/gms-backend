@@ -226,7 +226,7 @@ public class ServiceTicketController {
         }
 
         @Public
-        @GetMapping("/{serviceTicketCode}")
+        @GetMapping("/{serviceTicketCode}/quotation")
         @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo mã phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá từ link Zalo")
         @ApiResponses({
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
