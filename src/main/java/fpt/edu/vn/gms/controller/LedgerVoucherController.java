@@ -1,5 +1,7 @@
 package fpt.edu.vn.gms.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fpt.edu.vn.gms.dto.request.ApproveVoucherRequest;
 import fpt.edu.vn.gms.dto.request.CreateVoucherRequest;
 import fpt.edu.vn.gms.dto.request.UpdateVoucherRequest;
@@ -29,12 +31,20 @@ public class LedgerVoucherController {
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu thu/chi thủ công thành công", response));
     }
 
-    @PostMapping(value = "/receipt-payment/{receiptHistoryId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/receipt-payment/{receiptHistoryId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> createPaymentVoucherFromReceiptHistory(
             @PathVariable Long receiptHistoryId,
-            @RequestPart("data") CreateVoucherRequest request,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        LedgerVoucherDetailResponse response = ledgerVoucherService.createPaymentVoucherFromReceiptHistory(receiptHistoryId, request, file);
+            @RequestPart("data") String data,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        CreateVoucherRequest request = mapper.readValue(data, CreateVoucherRequest.class);
+
+        LedgerVoucherDetailResponse response =
+                ledgerVoucherService.createPaymentVoucherFromReceiptHistory(receiptHistoryId, request, file);
+
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu chi thanh toán nhập kho thành công", response));
     }
 

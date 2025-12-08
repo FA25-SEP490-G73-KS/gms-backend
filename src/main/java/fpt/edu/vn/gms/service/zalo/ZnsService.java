@@ -20,89 +20,126 @@ public class ZnsService {
     private String sendZnsUrl;
     private final AccessTokenService accessTokenService;
 
+    /**
+     * Gửi ZNS với retry logic
+     * - Lần 1: Dùng token hiện tại từ DB
+     * - Nếu fail do token: refresh và retry 1 lần duy nhất
+     */
     public boolean sendZns(SendZnsPayload payload) throws Exception {
-        log.info("sendZns payload: {}", payload);
+        log.info("Sending ZNS: {}", payload);
 
-        // First attempt
-        boolean firstAttempt = trySend(payload, false);
-        if (firstAttempt) {
+        // Attempt 1: Dùng token hiện tại
+        SendResult firstAttempt = trySend(payload);
+
+        if (firstAttempt.success) {
             return true;
         }
 
-        // If first attempt fails due to token issues, refresh and retry once
-        try {
-            accessTokenService.refreshAccessToken();
-        } catch (Exception e) {
-            log.error("Failed to refresh access token before retry", e);
-            return false;
+        // Nếu fail do token issue, refresh và retry
+        if (firstAttempt.isTokenIssue) {
+            log.warn("Token issue detected, refreshing token and retrying...");
+
+            try {
+                accessTokenService.refreshAccessToken();
+            } catch (Exception e) {
+                log.error("Failed to refresh token before retry", e);
+                return false;
+            }
+
+            // Attempt 2: Retry với token mới
+            SendResult secondAttempt = trySend(payload);
+            return secondAttempt.success;
         }
 
-        return trySend(payload, true);
+        // Fail vì lý do khác (không phải token)
+        return false;
     }
 
-    private boolean trySend(SendZnsPayload payload, boolean afterRefresh) throws Exception {
+    /**
+     * Thử gửi ZNS một lần
+     */
+    private SendResult trySend(SendZnsPayload payload) throws Exception {
+        // Lấy token mới nhất từ DB (không cache)
         AccessToken accessToken = accessTokenService.getAccessToken();
 
         if (accessToken == null || accessToken.getAccessToken() == null || accessToken.getAccessToken().isEmpty()) {
-            log.error("Access token entity or token string is null/empty");
-            // If first attempt and token missing, let caller refresh and retry
-            if (!afterRefresh) {
-                return false;
-            }
-            return false;
+            log.error("Access token is null or empty");
+            return SendResult.failure(true); // Token issue
         }
 
         OkHttpClient okHttpClient = HttpUtils.createInstance();
-
         Request request = buildRequest(payload, accessToken);
-
         Response response = okHttpClient.newCall(request).execute();
 
         if (!response.isSuccessful()) {
-            log.info("ZNS send request not successful: HTTP {}", response.code());
-            // If unauthorized, likely token is invalid/expired
-            if (!afterRefresh && response.code() == 401) {
-                log.warn("Access token possibly invalid/expired (401). Will refresh and retry.");
-                return false;
-            }
-            return false;
+            log.warn("ZNS request failed: HTTP {}", response.code());
+
+            // 401 = Unauthorized, thường do token expired
+            boolean isTokenIssue = (response.code() == 401);
+            return SendResult.failure(isTokenIssue);
         }
 
-        if (response.body() != null) {
-            String body = response.body().string();
-            log.info("Response body: {}", body);
-            Type type = new TypeToken<ZaloMessageResponse<DataInfo>>() {}.getType();
-            ZaloMessageResponse<DataInfo> res = GsonUtil.fromJson(body, type);
-            if (res.getError() == 0) {
-                return true;
-            } else {
-                log.error("Error when send zns: {}", res.getMessage());
-                // Heuristic: if error message indicates token problem, let caller trigger refresh once
-                String msg = res.getMessage() != null ? res.getMessage().toLowerCase() : "";
-                boolean tokenIssue = msg.contains("access token") || msg.contains("token") || msg.contains("expire");
-                if (!afterRefresh && tokenIssue) {
-                    log.warn("Detected token-related error from Zalo response. Will refresh and retry once.");
-                    return false;
-                }
-                return false;
-            }
+        if (response.body() == null) {
+            log.error("Response body is null");
+            return SendResult.failure(false);
+        }
+
+        String body = response.body().string();
+        log.info("ZNS response: {}", body);
+
+        Type type = new TypeToken<ZaloMessageResponse<DataInfo>>() {}.getType();
+        ZaloMessageResponse<DataInfo> res = GsonUtil.fromJson(body, type);
+
+        if (res.getError() == 0) {
+            log.info("ZNS sent successfully");
+            return SendResult.success();
         } else {
-            log.info("Response body is null");
-            return false;
+            log.error("ZNS error: {}", res.getMessage());
+
+            // Kiểm tra xem error có liên quan đến token không
+            String msg = res.getMessage() != null ? res.getMessage().toLowerCase() : "";
+            boolean isTokenIssue = msg.contains("access token")
+                    || msg.contains("token")
+                    || msg.contains("expire")
+                    || msg.contains("invalid");
+
+            return SendResult.failure(isTokenIssue);
         }
     }
 
-
-    private Request buildRequest(SendZnsPayload payload, AccessToken current) {
+    private Request buildRequest(SendZnsPayload payload, AccessToken token) {
         MediaType mediaType = MediaType.parse("application/json");
         String json = GsonUtil.toJson(payload);
-        log.info("request to: {}", sendZnsUrl);
-        log.info("body: {}", json);
-        RequestBody body = RequestBody.create(mediaType, GsonUtil.toJson(payload));
+        log.debug("Request URL: {}", sendZnsUrl);
+        log.debug("Request body: {}", json);
+
+        RequestBody body = RequestBody.create(mediaType, json);
         return new Request.Builder()
-                .url(sendZnsUrl).method("POST", body)
+                .url(sendZnsUrl)
+                .method("POST", body)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("access_token", current.getAccessToken())
+                .addHeader("access_token", token.getAccessToken())
                 .build();
+    }
+
+    /**
+     * Inner class để wrap kết quả gửi ZNS
+     */
+    private static class SendResult {
+        final boolean success;
+        final boolean isTokenIssue;
+
+        private SendResult(boolean success, boolean isTokenIssue) {
+            this.success = success;
+            this.isTokenIssue = isTokenIssue;
+        }
+
+        static SendResult success() {
+            return new SendResult(true, false);
+        }
+
+        static SendResult failure(boolean isTokenIssue) {
+            return new SendResult(false, isTokenIssue);
+        }
     }
 }

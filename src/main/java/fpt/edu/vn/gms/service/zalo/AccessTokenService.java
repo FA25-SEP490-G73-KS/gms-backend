@@ -8,9 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -24,51 +23,77 @@ public class AccessTokenService {
     private String accessTokenUrl;
     private final AccessTokenRepo accessTokenRepo;
 
-    @CacheEvict(value = "zalo_access_token_cache", allEntries = true)
+    // Lock object để đảm bảo chỉ 1 thread refresh tại 1 thời điểm
+    private final Object refreshLock = new Object();
+
+    /**
+     * Refresh access token với synchronized lock
+     * Đảm bảo chỉ 1 thread thực hiện refresh tại một thời điểm
+     */
+    @Transactional
     public AccessToken refreshAccessToken() throws Exception {
-        AccessToken current = accessTokenRepo.findTopByOrderByIdDesc();
-        log.info("Refresh access token");
-        try {
-            if (current == null || current.getRefreshToken() == null || current.getRefreshToken().isEmpty()) {
-                log.error("No refresh token available to refresh access token");
+        synchronized (refreshLock) {
+            // Double-check: Kiểm tra xem có thread khác vừa refresh chưa
+            AccessToken latest = accessTokenRepo.findTopByOrderByIdDesc();
+
+            // Nếu token vừa được refresh trong vài giây qua, không cần refresh nữa
+            if (latest != null && latest.getCreateAt() != null) {
+                long secondsSinceCreated = java.time.Duration.between(
+                        latest.getCreateAt().toInstant(),
+                        java.time.Instant.now()
+                ).getSeconds();
+
+                if (secondsSinceCreated < 10) { // Token mới được tạo trong 10s qua
+                    log.info("Token was just refreshed {}s ago, reusing it", secondsSinceCreated);
+                    return latest;
+                }
+            }
+
+            log.info("Refreshing access token...");
+
+            if (latest == null || latest.getRefreshToken() == null || latest.getRefreshToken().isEmpty()) {
+                log.error("No refresh token available");
                 throw new Exception("Missing refresh token");
             }
-            Request request = buildRequest(current);
+
+            Request request = buildRequest(latest);
             OkHttpClient okHttpClient = HttpUtils.createInstance();
             Response response = okHttpClient.newCall(request).execute();
-            if (response.isSuccessful()) {
-                log.info("Successfully call refresh token");
-            } else {
-                log.info("Failed to call refresh token");
+
+            if (!response.isSuccessful()) {
+                log.error("Failed to refresh token: HTTP {}", response.code());
                 throw new Exception(response.code() + " " + response.message());
             }
-            if (response.body() != null) {
-                String body = response.body().string();
-                log.info("Response body: {}", body);
-                // Basic validation: do not persist if response indicates error or missing tokens
-                boolean hasAccessToken = body.contains("\"access_token\"");
-                boolean hasRefreshToken = body.contains("\"refresh_token\"");
-                boolean hasError = body.contains("\"error\"");
-                if (hasError && !hasAccessToken) {
-                    throw new Exception("Zalo refresh returned error: " + body);
-                }
-                if (!hasAccessToken || !hasRefreshToken) {
-                    throw new Exception("Zalo refresh did not return tokens");
-                }
-                AccessToken accessToken = GsonUtil.fromJson(body, AccessToken.class);
-                if (accessToken.getAccessToken() == null || accessToken.getAccessToken().isEmpty()
-                        || accessToken.getRefreshToken() == null || accessToken.getRefreshToken().isEmpty()) {
-                    throw new Exception("Parsed token is empty");
-                }
-                accessTokenRepo.save(accessToken);
-                return accessToken;
-            } else {
-                log.info("Response body is null");
+
+            if (response.body() == null) {
+                log.error("Response body is null");
                 throw new Exception("Response body is null");
             }
-        } catch (Exception e) {
-            log.error("Error calling refresh token", e);
-            throw new Exception("Error calling refresh token " + e.getMessage());
+
+            String body = response.body().string();
+            log.info("Refresh token response: {}", body);
+
+            // Validate response
+            if (!body.contains("\"access_token\"") || !body.contains("\"refresh_token\"")) {
+                throw new Exception("Invalid refresh response: " + body);
+            }
+
+            if (body.contains("\"error\"") && !body.contains("\"access_token\"")) {
+                throw new Exception("Zalo refresh error: " + body);
+            }
+
+            AccessToken newToken = GsonUtil.fromJson(body, AccessToken.class);
+
+            if (newToken.getAccessToken() == null || newToken.getAccessToken().isEmpty()
+                    || newToken.getRefreshToken() == null || newToken.getRefreshToken().isEmpty()) {
+                throw new Exception("Parsed token is empty");
+            }
+
+            // Lưu token mới vào DB
+            AccessToken savedToken = accessTokenRepo.save(newToken);
+            log.info("Successfully refreshed and saved new access token");
+
+            return savedToken;
         }
     }
 
@@ -76,7 +101,6 @@ public class AccessTokenService {
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
         String content = String.format("refresh_token=%s&app_id=%s&grant_type=refresh_token",
                 current.getRefreshToken(), appId);
-        log.info("Refresh request content: {}", content);
         RequestBody body = RequestBody.create(mediaType, content);
         return new Request.Builder()
                 .url(accessTokenUrl)
@@ -86,16 +110,11 @@ public class AccessTokenService {
                 .build();
     }
 
-    @Cacheable("zalo_access_token_cache")
-    public AccessToken getAccessToken(boolean refresh) throws Exception {
-        if (refresh) {
-            return refreshAccessToken();
-        }
+    /**
+     * Lấy access token từ DB (không cache)
+     * Query trực tiếp từ database mỗi lần gọi
+     */
+    public AccessToken getAccessToken() {
         return accessTokenRepo.findTopByOrderByIdDesc();
-    }
-
-    @Cacheable("zalo_access_token_cache")
-    public AccessToken getAccessToken() throws Exception {
-        return getAccessToken(false);
     }
 }

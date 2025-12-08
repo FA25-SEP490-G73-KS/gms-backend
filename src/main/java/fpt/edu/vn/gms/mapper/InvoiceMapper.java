@@ -18,12 +18,13 @@ public interface InvoiceMapper {
     InvoiceListResDto toListDto(Invoice payment);
 
     @Mapping(target = "serviceTicket", source = "serviceTicket", qualifiedByName = "toServiceTicketResponseDto")
+
     // Amount in words (nếu bạn tự thêm sau)
     @Mapping(target = "amountInWords", ignore = true)
     InvoiceDetailResDto toDetailDto(Invoice payment);
 
     @AfterMapping
     default void fillAmountInWords(Invoice payment, @MappingTarget InvoiceDetailResDto.InvoiceDetailResDtoBuilder dto) {
-        dto.amountInWords(NumberToVietnameseWordsUtils.convert(payment.getQuotation().getEstimateAmount().longValue()));
+        dto.amountInWords(NumberToVietnameseWordsUtils.convert(payment.getFinalAmount().longValue()));
     }
 }

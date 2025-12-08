@@ -12,11 +12,11 @@ import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import fpt.edu.vn.gms.service.CodeSequenceService;
+import fpt.edu.vn.gms.service.zalo.OneTimeTokenService;
 import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
 import fpt.edu.vn.gms.utils.PhoneUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,9 +46,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     ServiceTypeRepository serviceTypeRepo;
     DiscountPolicyRepository discountPolicyRepo;
     CodeSequenceService codeSequenceService;
+    ZnsNotificationService znsNotificationService;
+    OneTimeTokenService oneTimeTokenService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
-    ZnsNotificationService znsNotificationService;
 
     public List<TimeSlotDto> getTimeSlotsByDate(LocalDate date) {
         List<TimeSlot> slots = timeSlotRepo.findAll();
@@ -148,7 +149,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .toList();
 
         Appointment appointment = Appointment.builder()
-                .appointmentCode(codeSequenceService.generateCode("APT"))
+                .appointmentCode(codeSequenceService.generateCode("LH"))
                 .customer(customer)
                 .customerName(dto.getCustomerName())
                 .vehicle(vehicle)
@@ -156,7 +157,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDate(dto.getAppointmentDate())
                 .serviceTypes(serviceTypes)
                 .description(dto.getNote())
-                .status(AppointmentStatus.CONFIRMED)
+                .status(AppointmentStatus.PENDING)
                 .build();
 
         Appointment saved = appointmentRepo.save(appointment);
@@ -267,4 +268,27 @@ public class AppointmentServiceImpl implements AppointmentService {
         return AppointmentMapper.toDto(appointment);
     }
 
+    @Override
+    public boolean confirmByCode(String appointmentCode) {
+        Appointment appointment = appointmentRepo
+                .findByAppointmentCode(appointmentCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn với mã: " + appointmentCode));
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new IllegalStateException("Chỉ có thể xác nhận lịch hẹn đang ở trạng thái CHỜ.");
+        }
+
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        if (appointment.getConfirmedAt() == null) {
+            appointment.setConfirmedAt(LocalDateTime.now());
+        }
+
+        Appointment saved = appointmentRepo.save(appointment);
+
+        if (saved.getStatus() == AppointmentStatus.CONFIRMED) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.service.auth;
 
+import fpt.edu.vn.gms.dto.ZnsAppointmentInfo;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,20 @@ public class JwtService {
                 .claim("fullName", employee.getFullName())
                 .claim("phone", employee.getPhone())
                 .claim("role", employee.getAccount().getRole())
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .signWith(getSigningKey(ACCESS_SECRET))
+                .compact();
+    }
+
+    public String generateOneTimeToken( Map<String, Object> claims, Long accessTokenExpiration) {
+        Instant currentInstant = Instant.now();
+        Date issuedAt = Date.from(currentInstant);
+        Date expiration = Date.from(currentInstant.plusSeconds(accessTokenExpiration));
+
+        return Jwts.builder()
+                .setSubject(UUID.randomUUID().toString())
+                .setClaims(claims)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(getSigningKey(ACCESS_SECRET))
@@ -120,7 +135,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey(ACCESS_SECRET))
                 .build()
@@ -141,5 +156,19 @@ public class JwtService {
         }
 
         return tokenIssuedAt.toInstant().isBefore(invalidatedBefore);
+    }
+
+
+    // Zalo One-time Token
+    public ZnsAppointmentInfo parseZnsToken(String token) {
+        Claims claims = extractAllClaims(token);
+        //TODO: tách riêng ra từng nút
+        return new ZnsAppointmentInfo(
+                //TODO: map đúng với các param trong ZnsNotificationService
+                claims.get("address", String.class),
+                claims.get("booking_code", String.class),
+                claims.get("schedule_time", String.class),
+                claims.get("customer_name", String.class)
+        );
     }
 }

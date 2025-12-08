@@ -63,9 +63,6 @@ public class NotificationServiceImpl implements NotificationService {
         return dto;
     }
 
-    /**
-     * Lấy danh sách notification của user
-     */
     @Override
     public List<NotificationResponseDto> getNotificationsForUser(String recipientPhone) {
         List<Notification> notifications = notificationRepository
@@ -76,9 +73,6 @@ public class NotificationServiceImpl implements NotificationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Đánh dấu notification là đã đọc
-     */
     @Override
     public void markAsRead(Long notificationId, String recipientPhone) {
         Notification notification = notificationRepository.findById(notificationId)
