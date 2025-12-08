@@ -1,21 +1,24 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
+import fpt.edu.vn.gms.common.enums.NotificationTemplate;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
-import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
+import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.dto.response.StockReceiptDetailResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
-import fpt.edu.vn.gms.repository.PartRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestItemRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
+import fpt.edu.vn.gms.repository.EmployeeRepository;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.InventoryService;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
+import fpt.edu.vn.gms.service.NotificationService;
 import fpt.edu.vn.gms.service.StockReceiptService;
 import fpt.edu.vn.gms.specification.PurchaseRequestSpecification;
 import lombok.AccessLevel;
@@ -30,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -41,11 +46,12 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     PriceQuotationRepository priceQuotationRepository;
     PurchaseRequestRepository purchaseRequestRepository;
     PurchaseRequestItemRepository purchaseRequestItemRepository;
-    PartRepository partRepository;
     InventoryService inventoryService;
     CodeSequenceService codeSequenceService;
     StockReceiptService stockReceiptService;
     PurchaseRequestMapper purchaseRequestMapper;
+    NotificationService notificationService;
+    EmployeeRepository employeeRepository;
 
     @Transactional
     @Override
@@ -57,9 +63,11 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         BigDecimal totalEstimated = BigDecimal.ZERO;
 
         for (PriceQuotationItem qItem : quotation.getItems()) {
-            if (qItem.getItemType() != PriceQuotationItemType.PART) continue;
+            if (qItem.getItemType() != PriceQuotationItemType.PART)
+                continue;
             Part part = qItem.getPart();
-            if (part == null) continue;
+            if (part == null)
+                continue;
 
             double required = qItem.getQuantity() + part.getReorderLevel();
             double available = inventoryService.getAvailableQuantity(part.getPartId());
@@ -72,7 +80,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
             }
 
             BigDecimal unitPrice = qItem.getUnitPrice() != null ? qItem.getUnitPrice() : part.getPurchasePrice();
-            if (unitPrice == null) unitPrice = BigDecimal.ZERO;
+            if (unitPrice == null)
+                unitPrice = BigDecimal.ZERO;
 
             BigDecimal estimatedPrice = unitPrice.multiply(BigDecimal.valueOf(requiredPurchaseQuantity));
 
@@ -130,18 +139,76 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         pr.setReviewStatus(ManagerReviewStatus.APPROVED);
         purchaseRequestRepository.save(pr);
 
-        // Auto create stock receipt
         StockReceiptDetailResponse receipt = stockReceiptService.createReceiptFromPurchaseRequest(pr.getId());
         log.info("Created stock receipt {} from purchase request {}", receipt.getId(), pr.getId());
+
+        // Gửi notification cho người tạo phiếu (nếu có) và toàn bộ nhân viên role
+        NotificationTemplate template = NotificationTemplate.PURCHASE_REQUEST_CONFIRMED;
+        String formattedTitle = String.format(template.getTitle(), pr.getCode());
+
+        Set<Long> receiverIds = new LinkedHashSet<>();
+        if (pr.getCreatedBy() != null) {
+            receiverIds.add(pr.getCreatedBy());
+        }
+        employeeRepository.findByRole(Role.WAREHOUSE)
+                .forEach(emp -> receiverIds.add(emp.getEmployeeId()));
+
+        for (Long receiverId : receiverIds) {
+            notificationService.createNotification(
+                    receiverId,
+                    formattedTitle,
+                    template.format(pr.getCode()),
+                    NotificationType.PURCHASE_REQUEST,
+                    pr.getId().toString(),
+                    "/stock-receipt/" + receipt.getId());
+        }
+
+        return pr;
+    }
+
+    @Transactional
+    @Override
+    public PurchaseRequest rejectPurchaseRequest(Long requestId, String reason) {
+        PurchaseRequest pr = purchaseRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu mua hàng"));
+
+        pr.setReviewStatus(ManagerReviewStatus.REJECTED);
+        if (reason != null) {
+            pr.setReason(reason);
+        }
+        purchaseRequestRepository.save(pr);
+
+        NotificationTemplate template = NotificationTemplate.PURCHASE_REQUEST_REJECTED;
+        String formattedTitle = String.format(template.getTitle(), pr.getCode());
+
+        Set<Long> receiverIds = new LinkedHashSet<>();
+        if (pr.getCreatedBy() != null) {
+            receiverIds.add(pr.getCreatedBy());
+        }
+        if (pr.getRelatedQuotation() != null && pr.getRelatedQuotation().getCreatedBy() != null) {
+            receiverIds.add(pr.getRelatedQuotation().getCreatedBy());
+        }
+        employeeRepository.findByRole(Role.WAREHOUSE)
+                .forEach(emp -> receiverIds.add(emp.getEmployeeId()));
+
+        for (Long receiverId : receiverIds) {
+            notificationService.createNotification(
+                    receiverId,
+                    formattedTitle,
+                    template.format(pr.getCode()),
+                    NotificationType.PURCHASE_REQUEST,
+                    pr.getId().toString(),
+                    "/purchase-requests/" + pr.getId());
+        }
 
         return pr;
     }
 
     @Override
-    public Page<PurchaseRequestResponseDto> getPurchaseRequests(String keyword, String status, String fromDate, String toDate, Pageable pageable) {
+    public Page<PurchaseRequestResponseDto> getPurchaseRequests(String keyword, String status, String fromDate,
+            String toDate, Pageable pageable) {
         Page<PurchaseRequest> page = purchaseRequestRepository.findAll(
-                PurchaseRequestSpecification.build(keyword, status, fromDate, toDate), pageable
-        );
+                PurchaseRequestSpecification.build(keyword, status, fromDate, toDate), pageable);
         return page.map(purchaseRequestMapper::toListDto);
     }
 

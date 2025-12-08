@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.tomcat.Jar;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.APPOINTMENTS_PREFIX;
 
@@ -193,19 +192,6 @@ public class AppointmentController {
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái cuộc hẹn thành công", updated));
         }
 
-//        @PostMapping("/{id}/confirm")
-//        @Operation(
-//                summary = "Xác nhận cuộc hẹn",
-//                description = "Đánh dấu cuộc hẹn là đã được khách hàng xác nhận."
-//        )
-//        public ResponseEntity<ApiResponse<AppointmentResponseDto>> confirmAppointment(
-//                @Parameter(description = "Mã định danh (ID) của cuộc hẹn", example = "1")
-//                @PathVariable Long id
-//        ) {
-//                AppointmentResponseDto confirmed = service.confirmAppointment(id);
-//                return ResponseEntity.ok(ApiResponse.success("Xác nhận cuộc hẹn thành công", confirmed));
-//        }
-
         @PostMapping("/confirm/{one_time_token}")
         @Operation(summary = "Xác nhận cuộc hẹn", description = "Xác nhận cuộc hẹn thông qua liên kết ZNS.")
         @ApiResponses(value = {
@@ -214,22 +200,36 @@ public class AppointmentController {
                 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy cuộc hẹn hoặc mã một lần không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
                 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
-        public ResponseEntity<ApiResponse<String>> confirmAppointment(
+        public ResponseEntity<?> confirmAppointment(
                 @PathVariable("one_time_token") String oneTimeToken) {
 
                 try {
                         ZnsAppointmentInfo info = jwtService.parseZnsToken(oneTimeToken);
 
+                        // Xử lý business
+                        String status = "PENDING";
+
                         boolean result = service.confirmByCode(info.getAppointmentCode());
 
                         if (result) {
                                 oneTimeTokenService.deleteToken(oneTimeToken);
+                                status = "CONFIRMED";
                         }
 
-                        return ResponseEntity.ok(ApiResponse.success("Khách đã xác nhận lịch hẹn!", "OK"));
+                        Map<String, Object> response = Map.of(
+                                "error", 0,
+                                "message", "OK",
+                                "data", Map.of("status", status)
+                        );
+
+                        return ResponseEntity.ok(response);
                 } catch (Exception e) {
-                        return ResponseEntity.badRequest()
-                                .body(ApiResponse.error(400, "Xác nhận cuộc hẹn thất bại: " + e.getMessage()));
+                        Map<String, Object> response = Map.of(
+                                "error", -1,
+                                "message", "Invalid or expired token"
+                        );
+
+                        return ResponseEntity.badRequest().body(response);
                 }
         }
 }
