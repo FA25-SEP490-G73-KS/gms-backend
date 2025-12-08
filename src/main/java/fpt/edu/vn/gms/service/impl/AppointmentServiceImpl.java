@@ -47,7 +47,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     DiscountPolicyRepository discountPolicyRepo;
     CodeSequenceService codeSequenceService;
     ZnsNotificationService znsNotificationService;
-    OneTimeTokenService oneTimeTokenService;
 
     private static final int MAX_APPOINTMENTS_PER_DAY = 1;
 

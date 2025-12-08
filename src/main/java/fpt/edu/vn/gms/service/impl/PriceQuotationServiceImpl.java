@@ -276,50 +276,6 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             partRepository.save(part);
         }
 
-        // // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
-        // BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
-        //
-        // if (!partsToBuy.isEmpty()) {
-        //
-        // PurchaseRequest purchaseRequest = PurchaseRequest.builder()
-        // .code(codeSequenceService.generateCode("PR"))
-        // .relatedQuotation(quotation)
-        // .reviewStatus(ManagerReviewStatus.PENDING)
-        // .createdAt(LocalDateTime.now())
-        // .totalEstimatedAmount(totalEstimatedAmount)
-        // .createdBy(null) // Hệ thống tự tạo
-        // .items(new ArrayList<>())
-        // .build();
-        //
-        // for (PriceQuotationItem item : partsToBuy) {
-        //
-        // double quantityToPurchase = getQuantityToPurchase(item);
-        //
-        // PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
-        // .part(item.getPart())
-        // .partName(item.getItemName())
-        // .quantity(quantityToPurchase)
-        // .unit(item.getUnit())
-        // .estimatedPurchasePrice(
-        // item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
-        // .reviewStatus(ManagerReviewStatus.PENDING)
-        // .purchaseRequest(purchaseRequest)
-        // .quotationItem(item)
-        // .build();
-        //
-        // purchaseRequest.getItems().add(requestItem);
-        //
-        // // Cộng dồn vào tổng
-        // BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
-        //
-        // totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
-        // }
-        //
-        // purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
-        // purchaseRequestRepository.save(purchaseRequest);
-        // }
-
-        // Lưu lại báo giá
         quotationRepository.save(quotation);
 
         try {

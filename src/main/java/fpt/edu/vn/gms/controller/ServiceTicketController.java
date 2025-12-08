@@ -8,6 +8,7 @@ import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.Employee;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.service.ServiceTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,8 +49,8 @@ public class ServiceTicketController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<?>> createServiceTicket(
-                @RequestBody ServiceTicketRequestDto req,
-                @CurrentUser Employee employee) {
+                        @RequestBody ServiceTicketRequestDto req,
+                        @CurrentUser Employee employee) {
 
                 ServiceTicketResponseDto created = serviceTicketService.createServiceTicket(req, employee);
                 return ResponseEntity.status(201)
@@ -99,18 +100,14 @@ public class ServiceTicketController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<Page<ServiceTicketResponseDto>>> getAllServiceTicket(
-                        @Parameter(description = "Ngày bắt đầu tạo phiếu", example = "2025-12-01")
-                        @RequestParam(value = "fromDate", required = false)
-                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-                        @Parameter(description = "Ngày kết thúc tạo phiếu", example = "2025-12-31")
-                        @RequestParam(value = "toDate", required = false)
-                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-                        @Parameter(description = "Trạng thái phiếu dịch vụ")
-                        @RequestParam(value = "status", required = false) ServiceTicketStatus status,
+                        @Parameter(description = "Ngày bắt đầu tạo phiếu", example = "2025-12-01") @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                        @Parameter(description = "Ngày kết thúc tạo phiếu", example = "2025-12-31") @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                        @Parameter(description = "Trạng thái phiếu dịch vụ") @RequestParam(value = "status", required = false) ServiceTicketStatus status,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "6") int size) {
 
-                Page<ServiceTicketResponseDto> dtos = serviceTicketService.getAllServiceTicket(fromDate, toDate, status, page, size);
+                Page<ServiceTicketResponseDto> dtos = serviceTicketService.getAllServiceTicket(fromDate, toDate, status,
+                                page, size);
 
                 return ResponseEntity.status(200)
                                 .body(ApiResponse.created("Get all service tickets", dtos));
@@ -174,67 +171,78 @@ public class ServiceTicketController {
         @GetMapping("/count")
         @Operation(summary = "Đếm tổng số phiếu dịch vụ", description = "Đếm tổng số phiếu dịch vụ hiện có trong hệ thống.")
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số dịch vụ thành công"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số dịch vụ thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<Long>> countServiceTicket(
-                @Parameter(
-                        description = "Ngày cần đếm số lượng phiếu dịch vụ (định dạng yyyy-MM-dd)",
-                        example = "2025-11-17"
-                )
-                @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-        ) {
+                        @Parameter(description = "Ngày cần đếm số lượng phiếu dịch vụ (định dạng yyyy-MM-dd)", example = "2025-11-17") @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
                 Long count = serviceTicketService.countServiceTicketByDate(date);
                 return ResponseEntity.ok(
-                        ApiResponse.success("Đếm số phiếu dịch vụ thành công", count)
-                );
+                                ApiResponse.success("Đếm số phiếu dịch vụ thành công", count));
         }
-
 
         @GetMapping("/completed-per-month")
         @Operation(summary = "Lấy số phiếu dịch vụ hoàn thành theo tháng", description = "Lấy danh sách số phiếu dịch vụ đã hoàn thành, phân theo tháng.")
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy số phiếu dịch vụ hoàn thành theo tháng thành công"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy số phiếu dịch vụ hoàn thành theo tháng thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getCompletedTicketsPerMonth() {
                 List<Map<String, Object>> data = serviceTicketService.getCompletedTicketsByMonth();
                 return ResponseEntity.ok(
-                        ApiResponse.success("Lấy số phiếu dịch vụ hoàn thành theo tháng thành công", data)
-                );
+                                ApiResponse.success("Lấy số phiếu dịch vụ hoàn thành theo tháng thành công", data));
         }
 
         @GetMapping("/count-by-type")
         @Operation(summary = "Đếm số phiếu dịch vụ theo loại trong một tháng", description = "Đếm số phiếu dịch vụ phân theo loại trong một tháng cụ thể.")
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số phiếu dịch vụ theo loại thành công"),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Đếm số phiếu dịch vụ theo loại thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<List<Map<String, Object>>>> countByType(
-                @RequestParam int year,
-                @RequestParam int month) {
+                        @RequestParam int year,
+                        @RequestParam int month) {
 
                 List<Map<String, Object>> data = serviceTicketService.getTicketCountsByType(year, month);
 
                 return ResponseEntity.ok(
-                        ApiResponse.success("Đếm số phiếu dịch vụ theo loại thành công", data)
-                );
+                                ApiResponse.success("Đếm số phiếu dịch vụ theo loại thành công", data));
         }
 
-    @PatchMapping("/{id}/status")
-    @Operation(summary = "Cập nhật trạng thái phiếu dịch vụ", description = "Cập nhật trạng thái của phiếu dịch vụ theo rule nghiệp vụ.")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
-    })
-    public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateStatus(
-            @PathVariable("id") Long id,
-            @RequestParam("status") ServiceTicketStatus newStatus
-    ) {
-        ServiceTicketResponseDto updated = serviceTicketService.updateStatus(id, newStatus);
-        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái phiếu dịch vụ thành công", updated));
-    }
+        @PatchMapping("/{id}/status")
+        @Operation(summary = "Cập nhật trạng thái phiếu dịch vụ", description = "Cập nhật trạng thái của phiếu dịch vụ theo rule nghiệp vụ.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> updateStatus(
+                        @PathVariable("id") Long id,
+                        @RequestParam("status") ServiceTicketStatus newStatus) {
+                ServiceTicketResponseDto updated = serviceTicketService.updateStatus(id, newStatus);
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái phiếu dịch vụ thành công", updated));
+        }
+
+        @Public
+        @GetMapping("/{serviceTicketCode}")
+        @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo mã phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá từ link Zalo")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getServiceTicketByCode(
+                        @PathVariable("serviceTicketCode") String serviceTicketCode) {
+
+                try {
+                        ServiceTicketResponseDto serviceTicket = serviceTicketService
+                                        .getByServiceTicketCode(serviceTicketCode);
+                        return ResponseEntity.ok(
+                                        ApiResponse.success("Lấy phiếu dịch vụ thành công", serviceTicket));
+                } catch (ResourceNotFoundException e) {
+                        return ResponseEntity.status(404)
+                                        .body(ApiResponse.error(404, e.getMessage()));
+                }
+        }
 }

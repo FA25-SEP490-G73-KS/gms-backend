@@ -192,6 +192,7 @@ public class AppointmentController {
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái cuộc hẹn thành công", updated));
         }
 
+        @Public
         @PostMapping("/confirm/{one_time_token}")
         @Operation(summary = "Xác nhận cuộc hẹn", description = "Xác nhận cuộc hẹn thông qua liên kết ZNS.")
         @ApiResponses(value = {
@@ -208,6 +209,7 @@ public class AppointmentController {
 
                         // Xử lý business
                         String status = "PENDING";
+
 
                         boolean result = service.confirmByCode(info.getAppointmentCode());
 

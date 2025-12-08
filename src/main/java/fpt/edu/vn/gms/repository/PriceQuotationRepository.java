@@ -13,4 +13,6 @@ public interface PriceQuotationRepository extends JpaRepository<PriceQuotation, 
     long countByStatus(PriceQuotationStatus status);
 
     long countByStatusIn(Iterable<PriceQuotationStatus> statuses);
+
+    java.util.Optional<PriceQuotation> findByCode(String code);
 }
