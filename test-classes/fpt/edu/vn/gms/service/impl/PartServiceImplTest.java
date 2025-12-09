@@ -61,6 +61,7 @@ class PartServiceImplTest {
                 .build();
     }
 
+    // TC021: Get all parts - Normal flow with pagination
     @Test
     void getAllPart_ShouldReturnPagedDtos() {
         Pageable pageable = PageRequest.of(0, 5);
@@ -81,6 +82,7 @@ class PartServiceImplTest {
         verify(partMapper).toDto(part);
     }
 
+    // TC024: Get part by ID - Part found
     @Test
     void getPartById_ShouldReturnDto_WhenFound() {
         when(partRepository.findById(1L)).thenReturn(Optional.of(part));
@@ -93,6 +95,7 @@ class PartServiceImplTest {
         verify(partRepository).findById(1L);
     }
 
+    // TC025: Get part by ID - Part not found
     @Test
     void getPartById_ShouldReturnNullDto_WhenNotFound() {
         when(partRepository.findById(1L)).thenReturn(Optional.empty());
@@ -104,6 +107,7 @@ class PartServiceImplTest {
         verify(partRepository).findById(1L);
     }
 
+    // TC001: Create part with all dependencies, auto-calculate sellingPrice
     @Test
     void createPart_ShouldResolveAllDependenciesAndSave() {
         PartUpdateReqDto dto = PartUpdateReqDto.builder()
@@ -159,6 +163,7 @@ class PartServiceImplTest {
         verify(partMapper).toDto(saved);
     }
 
+    // TC003: Create universal part (null category, null vehicleModel)
     @Test
     void createPart_ShouldAllowNullCategoryAndUniversalVehicle() {
         PartUpdateReqDto dto = PartUpdateReqDto.builder()
@@ -191,6 +196,7 @@ class PartServiceImplTest {
         verify(vehicleModelRepo, never()).findById(anyLong());
     }
 
+    // TC010: Create part - Market not found
     @Test
     void createPart_ShouldThrow_WhenMarketNotFound() {
         PartUpdateReqDto dto = PartUpdateReqDto.builder()
@@ -207,6 +213,164 @@ class PartServiceImplTest {
                 () -> service.createPart(dto));
     }
 
+    // TC005: Create part with minimum valid purchasePrice
+    @Test
+    void createPart_ShouldCreateSuccessfully_WithMinimumPurchasePrice() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("0.01")) // Minimum valid
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        Part saved = Part.builder()
+                .partId(10L)
+                .name("Test Part")
+                .purchasePrice(new BigDecimal("0.01"))
+                .sellingPrice(new BigDecimal("0.011")) // 0.01 * 1.10
+                .sku("SKU123")
+                .build();
+        when(partRepository.save(any(Part.class))).thenReturn(saved);
+        when(partMapper.toDto(saved)).thenReturn(PartReqDto.builder().partId(10L).build());
+
+        PartReqDto result = service.createPart(dto);
+
+        assertNotNull(result);
+        verify(partRepository).save(any(Part.class));
+    }
+
+    // TC007: Create part with all optional fields
+    @Test
+    void createPart_ShouldCreateSuccessfully_WithAllOptionalFields() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .categoryId(1L)
+                .marketId(2L)
+                .unitId(3L)
+                .vehicleModelId(4L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("100000"))
+                .universal(false)
+                .specialPart(true)
+                .reorderLevel(10.0)
+                .note("Test note")
+                .build();
+
+        PartCategory category = PartCategory.builder().id(1L).build();
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        VehicleModel model = VehicleModel.builder().vehicleModelId(4L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(categoryRepo.findById(1L)).thenReturn(Optional.of(category));
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(vehicleModelRepo.findById(4L)).thenReturn(Optional.of(model));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        Part saved = Part.builder()
+                .partId(10L)
+                .name("Test Part")
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000"))
+                .sku("SKU123")
+                .build();
+        when(partRepository.save(any(Part.class))).thenReturn(saved);
+        when(partMapper.toDto(saved)).thenReturn(PartReqDto.builder().partId(10L).build());
+
+        PartReqDto result = service.createPart(dto);
+
+        assertNotNull(result);
+        verify(partRepository).save(any(Part.class));
+    }
+
+    // TC008: Create part with only required fields
+    @Test
+    void createPart_ShouldCreateSuccessfully_WithOnlyRequiredFields() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("100000"))
+                .universal(true) // Required for universal part
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        Part saved = Part.builder()
+                .partId(10L)
+                .name("Test Part")
+                .purchasePrice(new BigDecimal("100000"))
+                .sellingPrice(new BigDecimal("110000"))
+                .sku("SKU123")
+                .build();
+        when(partRepository.save(any(Part.class))).thenReturn(saved);
+        when(partMapper.toDto(saved)).thenReturn(PartReqDto.builder().partId(10L).build());
+
+        PartReqDto result = service.createPart(dto);
+
+        assertNotNull(result);
+        verify(categoryRepo, never()).findById(anyLong());
+        verify(vehicleModelRepo, never()).findById(anyLong());
+        verify(partRepository).save(any(Part.class));
+    }
+
+    // TC009: Create part with maximum valid purchasePrice
+    @Test
+    void createPart_ShouldCreateSuccessfully_WithMaximumPurchasePrice() {
+        PartUpdateReqDto dto = PartUpdateReqDto.builder()
+                .name("Test Part")
+                .marketId(2L)
+                .unitId(3L)
+                .supplierId(5L)
+                .purchasePrice(new BigDecimal("999999999.99")) // Maximum valid
+                .build();
+
+        Market market = Market.builder().id(2L).build();
+        Unit unit = Unit.builder().id(3L).build();
+        Supplier supplier = Supplier.builder().id(5L).build();
+
+        when(marketRepo.findById(2L)).thenReturn(Optional.of(market));
+        when(unitRepo.findById(3L)).thenReturn(Optional.of(unit));
+        when(supplierRepo.findById(5L)).thenReturn(Optional.of(supplier));
+        when(skuGenerator.generateSku(any(Part.class))).thenReturn("SKU123");
+
+        Part saved = Part.builder()
+                .partId(10L)
+                .name("Test Part")
+                .purchasePrice(new BigDecimal("999999999.99"))
+                .sellingPrice(new BigDecimal("1099999999.989")) // 999999999.99 * 1.10
+                .sku("SKU123")
+                .build();
+        when(partRepository.save(any(Part.class))).thenReturn(saved);
+        when(partMapper.toDto(saved)).thenReturn(PartReqDto.builder().partId(10L).build());
+
+        PartReqDto result = service.createPart(dto);
+
+        assertNotNull(result);
+        verify(partRepository).save(any(Part.class));
+    }
+
+    // TC011: Update part - Full update with all fields
     @Test
     void updatePart_ShouldUpdateFieldsAndSave() {
         Part existing = Part.builder()
@@ -269,6 +433,7 @@ class PartServiceImplTest {
         verify(partRepository).save(existing);
     }
 
+    // TC020: Update part - Part not found
     @Test
     void updatePart_ShouldThrow_WhenPartNotFound() {
         when(partRepository.findById(1L)).thenReturn(Optional.empty());
@@ -276,6 +441,7 @@ class PartServiceImplTest {
                 () -> service.updatePart(1L, PartUpdateReqDto.builder().build()));
     }
 
+    // TC026: Get parts by category - Normal flow
     @Test
     void getPartByCategory_ShouldUseRepositoryAndMapper() {
         Long categoryId = 1L;
