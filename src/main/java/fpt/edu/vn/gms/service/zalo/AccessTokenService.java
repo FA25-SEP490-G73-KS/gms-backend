@@ -29,6 +29,7 @@ public class AccessTokenService {
     /**
      * Refresh access token với synchronized lock
      * Đảm bảo chỉ 1 thread thực hiện refresh tại một thời điểm
+     * Strategy: Xóa token cũ, thêm token mới (luôn giữ 1 record duy nhất)
      */
     @Transactional
     public AccessToken refreshAccessToken() throws Exception {
@@ -56,6 +57,11 @@ public class AccessTokenService {
                 throw new Exception("Missing refresh token");
             }
 
+            // Lưu lại ID của token cũ để xóa sau
+            Long oldTokenId = latest.getId();
+            log.info("Current token ID to be replaced: {}", oldTokenId);
+
+            // Gọi Zalo API để lấy token mới
             Request request = buildRequest(latest);
             OkHttpClient okHttpClient = HttpUtils.createInstance();
             Response response = okHttpClient.newCall(request).execute();
@@ -82,6 +88,7 @@ public class AccessTokenService {
                 throw new Exception("Zalo refresh error: " + body);
             }
 
+            // Parse token mới từ response
             AccessToken newToken = GsonUtil.fromJson(body, AccessToken.class);
 
             if (newToken.getAccessToken() == null || newToken.getAccessToken().isEmpty()
@@ -89,9 +96,15 @@ public class AccessTokenService {
                 throw new Exception("Parsed token is empty");
             }
 
-            // Lưu token mới vào DB
+            // STRATEGY: Xóa cũ, thêm mới
+            // Bước 1: Xóa token cũ
+            accessTokenRepo.deleteById(oldTokenId);
+            log.info("✓ Deleted old token ID: {}", oldTokenId);
+
+            // Bước 2: Lưu token mới (INSERT)
             AccessToken savedToken = accessTokenRepo.save(newToken);
-            log.info("Successfully refreshed and saved new access token");
+            log.info("✓ Saved new token ID: {}", savedToken.getId());
+            log.info("Successfully refreshed access token - Table now has 1 record only");
 
             return savedToken;
         }
@@ -113,6 +126,7 @@ public class AccessTokenService {
     /**
      * Lấy access token từ DB (không cache)
      * Query trực tiếp từ database mỗi lần gọi
+     * Luôn chỉ có 1 record duy nhất trong bảng
      */
     public AccessToken getAccessToken() {
         return accessTokenRepo.findTopByOrderByIdDesc();

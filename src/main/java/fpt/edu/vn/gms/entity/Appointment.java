@@ -71,4 +71,7 @@ public class Appointment {
 
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
+
+    @Column(name = "is_reminder_sent")
+    private boolean isReminderSent;
 }

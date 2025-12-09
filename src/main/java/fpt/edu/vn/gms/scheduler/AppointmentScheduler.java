@@ -25,9 +25,9 @@ public class AppointmentScheduler {
 
 
     @Scheduled(cron = "0 */5 * * * *")
-    public void cancelUnconfirmedBeforeSlot() {
+    public void processPendingAppointments() {
         if (!isWithinWorkingHours()) {
-            log.debug("Skip cancelUnconfirmedBeforeSlot outside working hours");
+            log.debug("Skip processPendingAppointments outside working hours");
             return;
         }
 
@@ -41,18 +41,47 @@ public class AppointmentScheduler {
                 );
 
         List<Appointment> toCancel = new ArrayList<>();
+        List<Appointment> toUpdate = new ArrayList<>();
 
-        for (Appointment a : pendingToday) {
-            if (a.getTimeSlot() == null) continue;
+        for (Appointment appt : pendingToday) {
+            if (appt.getTimeSlot() == null) continue;
 
             LocalDateTime slotStart = LocalDateTime.of(
-                    a.getAppointmentDate(),
-                    a.getTimeSlot().getStartTime());
+                    appt.getAppointmentDate(),
+                    appt.getTimeSlot().getStartTime()
+            );
 
-            if (!now.isBefore(slotStart.minusHours(1))) {
-                a.setStatus(AppointmentStatus.CANCELLED);
-                toCancel.add(a);
+            long minutesBeforeSlot = java.time.Duration.between(now, slotStart).toMinutes();
+
+            /* ===========================
+             *  (1) AUTO REMINDER TRƯỚC 2 TIẾNG
+             * =========================== */
+            if (!appt.isReminderSent()
+                    && minutesBeforeSlot > 30
+                    && minutesBeforeSlot <= 120) {
+
+                try {
+                    znsNotificationService.sendAppointmentReminder(appt);
+                    appt.setReminderSent(true);
+                    toUpdate.add(appt);
+
+                    log.info("Sent smart reminder for appointment ID: {}", appt.getAppointmentId());
+                } catch (Exception e) {
+                    log.error("Failed to send reminder for appointment ID: {}", appt.getAppointmentId(), e);
+                }
             }
+
+            /* ===========================
+             *  (2) AUTO CANCEL TRƯỚC 30 PHÚT (0–30 phút)
+             * =========================== */
+            if (minutesBeforeSlot <= 30 && minutesBeforeSlot >= 0) {
+                appt.setStatus(AppointmentStatus.CANCELLED);
+                toCancel.add(appt);
+            }
+        }
+
+        if (!toUpdate.isEmpty()) {
+            appointmentRepo.saveAll(toUpdate);
         }
 
         if (!toCancel.isEmpty()) {

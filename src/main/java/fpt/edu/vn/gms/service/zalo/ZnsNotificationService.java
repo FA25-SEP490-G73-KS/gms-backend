@@ -114,15 +114,15 @@ public class ZnsNotificationService {
 
         Map<String, Object> templateData = new HashMap<>();
 
-        templateData.put("schedule_time", appointment.getAppointmentDate()
+        templateData.put("appointment_date", appointment.getAppointmentDate()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
-        templateData.put("customer_name", appointment.getCustomer().getFullName() != null
+        templateData.put("full_name", appointment.getCustomer().getFullName() != null
                 ? appointment.getCustomer().getFullName() : "Quý khách");
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
 
-        templateData.put("booking_code", appointment.getAppointmentCode());
+        templateData.put("appointment_code", appointment.getAppointmentCode());
 
         //Tạo OT token và đưa vào templateData để gửi (với OT token reminder thì chỉ có hạn là 24 tiếng)
         String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_DAY);
@@ -157,7 +157,9 @@ public class ZnsNotificationService {
         templateData.put("full_name", ticket.getCustomer().getFullName() != null
                 ? ticket.getCustomer().getFullName() : "Quý khách");
 
-        templateData.put("service_ticket_id", ticket.getServiceTicketId().toString());
+        templateData.put("service_ticket_code", ticket.getServiceTicketCode().toString());
+
+        templateData.put("serviceTicketCode_path", ticket.getServiceTicketCode().toString());
 
         templateData.put("delivery_at", ticket.getDeliveryAt().toString());
 
@@ -199,7 +201,7 @@ public class ZnsNotificationService {
 
         templateData.put("transfer_amount", ticket.getPriceQuotation().getEstimateAmount().toString());
 
-        templateData.put("service_ticket_id", "Thanh toán dịch vụ - Mã phiếu: " + ticket.getServiceTicketId());
+        templateData.put("service_ticket_id",  ticket.getServiceTicketId().toString());
 
         templateData.put("license_plate", ticket.getVehicle().getLicensePlate());
 

@@ -22,7 +22,6 @@ import java.util.List;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.CUSTOMERS_PREFIX;
 
-
 @Tag(name = "customers", description = "Quản lý thông tin khách hàng")
 @CrossOrigin(origins = "${fe-local-host}")
 @RestController
@@ -123,141 +122,91 @@ public class CustomerController {
         @GetMapping("/service-history")
         @Operation(summary = "Lấy lịch sử sử dụng dịch vụ của khách hàng theo số điện thoại", description = "Trả về họ tên, số điện thoại, danh sách xe đã từng sửa chữa (biển số, model, hãng, ngày sửa gần nhất) dựa trên service ticket hoàn thành.")
         @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDetailDto.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy khách hàng hoặc xe", content = @Content(schema = @Schema(hidden = true))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy thông tin thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDetailDto.class))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy khách hàng hoặc xe", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<CustomerDetailDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
-            return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
+                return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
         }
 
+        @PatchMapping("/{id}/toggle-active")
+        @Operation(summary = "Bật/tắt trạng thái hoạt động của khách hàng", description = "Nếu đang active sẽ chuyển sang inactive và ngược lại.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật trạng thái thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy khách hàng", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<CustomerResponseDto>> toggleActive(@PathVariable Long id) {
+                CustomerResponseDto updated = customerService.toggleActive(id);
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái khách hàng thành công", updated));
+        }
 
-        @Operation(
-                summary = "Lấy danh sách khách hàng (manager)",
-                description = "API trả về danh sách khách hàng với tìm kiếm, lọc trạng thái, phân trang"
-        )
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "Danh sách khách hàng",
-                content = @Content(schema = @Schema(implementation = CustomerDetailDto.class))
-        )
+        @Operation(summary = "Lấy danh sách khách hàng (manager)", description = "API trả về danh sách khách hàng với tìm kiếm, lọc trạng thái, phân trang")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Danh sách khách hàng", content = @Content(schema = @Schema(implementation = CustomerDetailDto.class)))
         @GetMapping("/manager")
         public ResponseEntity<ApiResponse<Page<CustomerDetailDto>>> getCustomers(
-                @RequestParam(defaultValue = "0") @Min(0) int page,
-                @RequestParam(defaultValue = "6") @Min(1) int size
-        ) {
+                        @RequestParam(defaultValue = "0") @Min(0) int page,
+                        @RequestParam(defaultValue = "6") @Min(1) int size) {
                 return ResponseEntity.ok(
-                        ApiResponse.success("Danh sách khách hàng!", customerService.getCustomers(page, size))
-                );
+                                ApiResponse.success("Danh sách khách hàng!", customerService.getCustomers(page, size)));
         }
 
-        @Operation(
-                summary = "Lấy thông tin chi tiết khách hàng (manager)",
-                description = "Bao gồm thông tin cá nhân, tổng chi tiêu, số xe, số lần sửa xe và danh sách xe"
-        )
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "Thông tin chi tiết khách hàng",
-                content = @Content(schema = @Schema(implementation = CustomerDetailDto.class))
-        )
+        @Operation(summary = "Lấy thông tin chi tiết khách hàng (manager)", description = "Bao gồm thông tin cá nhân, tổng chi tiêu, số xe, số lần sửa xe và danh sách xe")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thông tin chi tiết khách hàng", content = @Content(schema = @Schema(implementation = CustomerDetailDto.class)))
         @GetMapping("/manager/{customerId}/vehicles")
         public ResponseEntity<ApiResponse<CustomerDetailDto>> getCustomerDetail(
-                @PathVariable Long customerId
-        ) {
-                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!", customerService.getCustomerDetail(customerId)));
+                        @PathVariable Long customerId) {
+                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!",
+                                customerService.getCustomerDetail(customerId)));
         }
 
-        @Operation(
-                summary = "Lịch sử dịch vụ của khách hàng (manager)",
-                description = "Trả về danh sách Service Ticket theo customerId"
-        )
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                responseCode = "200",
-                description = "Danh sách lịch sử dịch vụ",
-                content = @Content(schema = @Schema(implementation = CustomerServiceHistoryDto.class))
-        )
+        @Operation(summary = "Lịch sử dịch vụ của khách hàng (manager)", description = "Trả về danh sách Service Ticket theo customerId")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Danh sách lịch sử dịch vụ", content = @Content(schema = @Schema(implementation = CustomerServiceHistoryDto.class)))
         @GetMapping("/manager/{customerId}/service-history")
         public ResponseEntity<ApiResponse<CustomerDetailDto>> getServiceHistory(
-                @PathVariable Long customerId
-        ) {
-                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!", customerService.getServiceHistory(customerId)));
+                        @PathVariable Long customerId) {
+                return ResponseEntity.ok(ApiResponse.success("Chi tiết khách hàng!",
+                                customerService.getServiceHistory(customerId)));
         }
 
         @Public
         @GetMapping("/check")
-        @Operation(
-                summary = "Kiểm tra khách hàng theo số điện thoại",
-                description = """
-            Kiểm tra xem khách hàng đã tồn tại trong hệ thống hay chưa.
-            
-            • Nếu tồn tại → hiện popup trả Về thông tin chi tiết khách hàng  
-            • Nếu chưa tồn tại → trả về DTO với các trường = null (FE tự hiểu là 'chưa có khách')
-            
-            API này không yêu cầu đăng nhập.
-            """
-        )
+        @Operation(summary = "Kiểm tra khách hàng theo số điện thoại", description = """
+                        Kiểm tra xem khách hàng đã tồn tại trong hệ thống hay chưa.
+
+                        • Nếu tồn tại → hiện popup trả Về thông tin chi tiết khách hàng
+                        • Nếu chưa tồn tại → trả về DTO với các trường = null (FE tự hiểu là 'chưa có khách')
+
+                        API này không yêu cầu đăng nhập.
+                        """)
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "200",
-                        description = "Kiểm tra thành công",
-                        content = @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = CustomerDetailResponseDto.class)
-                        )
-                ),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "400",
-                        description = "Số điện thoại không hợp lệ",
-                        content = @Content(schema = @Schema(hidden = true))
-                ),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "500",
-                        description = "Lỗi máy chủ nội bộ",
-                        content = @Content(schema = @Schema(hidden = true))
-                )
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Kiểm tra thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerDetailResponseDto.class))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Số điện thoại không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<ApiResponse<CustomerDetailResponseDto>> checkCustomerExists(
-                @RequestParam String phone
-        ) {
+                        @RequestParam String phone) {
                 CustomerDetailResponseDto dto = customerService.getByPhone(phone);
 
                 return ResponseEntity.ok(ApiResponse.success("Kiểm tra khách đã tồn tại?", dto));
         }
 
-        @Operation(
-                summary = "Xử lý trường hợp khách hàng chọn 'Không phải tôi'",
-                description = """
-            Khi khách hàng xác thực OTP nhưng chọn 'Không phải tôi', hệ thống sẽ:
-            
-            • Vô hiệu hóa khách hàng cũ (isActive = false)  
-            • Đổi số điện thoại của bản ghi cũ để tránh trùng lặp  
-            • Tạo một khách hàng mới với đúng số điện thoại đã nhập  
-            
-            API này giúp tách biệt dữ liệu của khách cũ – khách mới mà không gây xung đột.
-            
-            Không yêu cầu đăng nhập.
-            """
-        )
+        @Operation(summary = "Xử lý trường hợp khách hàng chọn 'Không phải tôi'", description = """
+                        Khi khách hàng xác thực OTP nhưng chọn 'Không phải tôi', hệ thống sẽ:
+
+                        • Vô hiệu hóa khách hàng cũ (isActive = false)
+                        • Đổi số điện thoại của bản ghi cũ để tránh trùng lặp
+                        • Tạo một khách hàng mới với đúng số điện thoại đã nhập
+
+                        API này giúp tách biệt dữ liệu của khách cũ – khách mới mà không gây xung đột.
+
+                        Không yêu cầu đăng nhập.
+                        """)
         @ApiResponses(value = {
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "200",
-                        description = "Tạo khách hàng mới thành công",
-                        content = @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = CustomerResponseDto.class)
-                        )
-                ),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "400",
-                        description = "Số điện thoại không hợp lệ",
-                        content = @Content(schema = @Schema(hidden = true))
-                ),
-                @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                        responseCode = "500",
-                        description = "Lỗi máy chủ nội bộ",
-                        content = @Content(schema = @Schema(hidden = true))
-                )
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tạo khách hàng mới thành công", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerResponseDto.class))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Số điện thoại không hợp lệ", content = @Content(schema = @Schema(hidden = true))),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         @PostMapping("/not-me")
         @Public

@@ -20,9 +20,6 @@ public class EmployeeCreateRequest {
     @NotBlank(message = "Họ tên không được để trống")
     private String fullName;
 
-    @NotBlank(message = "Giới tính không được để trống")
-    private String gender;
-
     @NotNull(message = "Ngày sinh không được để trống")
     private LocalDate dateOfBirth;
 

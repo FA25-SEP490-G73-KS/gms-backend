@@ -34,6 +34,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
@@ -422,6 +423,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         DecimalFormat df = new DecimalFormat("#,###");
 
         Map<String, Object> data = new HashMap<>();
+        data.put("logoPath", Paths.get("src/main/resources/templates/logo.png").toUri().toString());
         data.put("date", ticket.getCreatedAt().format(formatter));
         data.put("quotationCode", ticket.getServiceTicketCode());
         data.put("customerName", ticket.getCustomer().getFullName());
@@ -467,5 +469,35 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             items.add(row);
         }
         return items;
+    }
+
+    @Override
+    public PriceQuotationResponseDto updateQuotationToDraft(Long quotationId) {
+        PriceQuotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
+
+        ServiceTicket ticket = quotation.getServiceTicket();
+        if (ticket == null) {
+            throw new ResourceNotFoundException("Báo giá không gắn với phiếu dịch vụ nào");
+        }
+
+        // Nếu phiếu dịch vụ đã hoàn tất thì không cho chỉnh về draft
+        if (ticket.getStatus() == ServiceTicketStatus.COMPLETED) {
+            throw new RuntimeException("Không thể cập nhật báo giá về DRAFT khi phiếu dịch vụ đã hoàn tất");
+        }
+
+        // Cập nhật trạng thái báo giá về DRAFT
+        quotation.setStatus(PriceQuotationStatus.DRAFT);
+        quotation.setUpdatedAt(LocalDateTime.now());
+
+        // Nếu phiếu dịch vụ đang ở trạng thái chờ bàn giao xe thì đưa về chờ báo giá
+        if (ticket.getStatus() == ServiceTicketStatus.WAITING_FOR_DELIVERY) {
+            ticket.setStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
+        }
+
+        serviceTicketRepository.save(ticket);
+        quotationRepository.save(quotation);
+
+        return priceQuotationMapper.toResponseDto(quotation);
     }
 }

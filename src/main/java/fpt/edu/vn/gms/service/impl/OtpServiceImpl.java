@@ -52,7 +52,7 @@ public class OtpServiceImpl implements OtpService {
                 .purpose(purpose)
                 .build();
 
-        otpRepository.save(otp);
+        otpRepository.saveAndFlush(otp);
 
         // Delete all older OTPs of this phone except the new one
         otpRepository.deleteOldOtps(phone, otp.getOtpId());

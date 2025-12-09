@@ -33,4 +33,6 @@ public interface CustomerService {
     CustomerDetailDto getServiceHistory(Long customerId);
 
     CustomerResponseDto handleNotMe(String phone);
+
+    CustomerResponseDto toggleActive(Long customerId);
 }
