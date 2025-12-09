@@ -33,4 +33,6 @@ public interface PriceQuotationService {
     PriceQuotationResponseDto updateLaborCost(Long id);
 
     byte[] exportPdfQuotation(Long quotationId);
+
+    PriceQuotationResponseDto updateQuotationToDraft(Long quotationId);
 }

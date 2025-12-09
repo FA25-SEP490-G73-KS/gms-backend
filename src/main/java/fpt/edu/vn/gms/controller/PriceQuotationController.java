@@ -338,4 +338,10 @@ public class PriceQuotationController {
                 }
         }
 
+        @PatchMapping("/{id}/draft")
+        @Operation(summary = "Cập nhật báo giá về trạng thái DRAFT", description = "Chỉ cho phép cập nhật về DRAFT nếu phiếu dịch vụ chưa hoàn tất. Nếu phiếu dịch vụ đang chờ bàn giao xe thì chuyển về chờ báo giá.")
+        public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateToDraft(@PathVariable Long id) {
+                PriceQuotationResponseDto responseDto = priceQuotationService.updateQuotationToDraft(id);
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá về DRAFT thành công", responseDto));
+        }
 }

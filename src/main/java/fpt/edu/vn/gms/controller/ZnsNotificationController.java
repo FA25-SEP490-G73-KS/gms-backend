@@ -145,7 +145,8 @@ public class ZnsNotificationController {
             znsSendSurveyDTO.setCustomerName(ticket.getCustomer().getFullName());
             znsSendSurveyDTO.setCarModel(ticket.getVehicle().getVehicleModel().getName());
             znsSendSurveyDTO.setLicensePlate(ticket.getVehicle().getLicensePlate());
-            znsSendSurveyDTO.setServiceCode(ticket.getServiceTicketId());
+            znsSendSurveyDTO.setServiceId(ticket.getServiceTicketId());
+            znsSendSurveyDTO.setServiceCode(ticket.getServiceTicketCode());
 
             znsNotificationService.sendSurveyLink(ticket.getCustomer().getPhone(), znsSendSurveyDTO);
             return ResponseEntity.ok(ApiResponse.success("Survey link sent successfully", "OK"));

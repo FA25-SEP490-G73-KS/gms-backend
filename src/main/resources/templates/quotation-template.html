@@ -1,178 +1,198 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <title>BẢNG BÁO GIÁ - HOÀNG TUẤN</title>
-  <style>
-    body {
-      font-family: "Times New Roman", serif;
-      font-size: 13px;
-      display: flex;
-      justify-content: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>BẢNG BÁO GIÁ - HOÀNG TUẤN</title>
+    <style>
+      /* Sử dụng DejaVu Sans để hỗ trợ Unicode (đã register trong PdfGeneratorServiceImpl) */
+      body {
+        font-family: "DejaVu Sans", "Arial", sans-serif;
+        font-size: 13px;
+        display: flex;
+        justify-content: center;
+      }
 
-    .page {
-      width: 720px; /* GIỚI HẠN KHỔ A4 */
-    }
+      .page {
+        width: 720px; /* GIỚI HẠN KHỔ A4 */
+      }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
 
-    .bordered td,
-    .bordered th {
-      border: 1px solid #000;
-      padding: 5px;
-    }
+      .bordered {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        border: 1px solid #000;
+      }
 
-    .header-left {
-      width: 40%;
-      text-align: center;
-      vertical-align: top;
-    }
+      .bordered td,
+      .bordered th {
+        border: 1px solid #000 !important;
+        padding: 5px;
+      }
 
-    .header-right {
-      width: 60%;
-      vertical-align: top;
-    }
+      /* Đảm bảo không mất đường kẻ biên phải */
+      .bordered tr > td:last-child,
+      .bordered tr > th:last-child {
+        border-right: 1px solid #000;
+      }
 
-    .main-title {
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
+      .header-left {
+        width: 40%;
+        text-align: center;
+        vertical-align: top;
+      }
 
-    th {
-      font-weight: bold;
-      text-align: center;
-    }
+      .header-right {
+        width: 60%;
+        vertical-align: top;
+      }
 
-    .text-center {
-      text-align: center;
-    }
-    .text-right {
-      text-align: right;
-    }
-  </style>
-</head>
-<body>
-<div class="page">
-  <!-- HEADER -->
-  <table>
-    <tr>
-      <td class="header-left">
-        <img src="logo.png" style="max-width: 110px" /><br />
-        <b>GARA Ô TÔ HOÀNG TUẤN</b>
-      </td>
-      <td class="header-right">
-        <b style="font-size: 16px">CÔNG TY TNHH CN Ô TÔ HOÀNG TUẤN</b><br />
-        Địa chỉ: Khu Công Nghiệp công ích - TP Thái Bình<br />
-        ĐT: 0968.666.603<br />
-        Số tài khoản: 636620603<br />
-        Tại NH: Agribank CNĐB Công Sở Thái Bình<br />
-        Ngày: {{date}}
-      </td>
-    </tr>
-  </table>
+      .main-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
 
-  <div class="main-title">BẢNG BÁO GIÁ</div>
+      th {
+        font-weight: bold;
+        text-align: center;
+      }
 
-  <!-- THÔNG TIN KHÁCH HÀNG -->
-  <table class="bordered">
-    <tr>
-      <td>Tên khách hàng:</td>
-      <td>{{customerName}}</td>
-      <td>Loại xe:</td>
-      <td>{{carModel}}</td>
-    </tr>
-    <tr>
-      <td>Địa chỉ:</td>
-      <td>{{customerAddress}}</td>
-      <td>Số khung:</td>
-      <td>{{vin}}</td>
-    </tr>
-    <tr>
-      <td>Màu xe:</td>
-      <td>{{color}}</td>
-      <td>Số máy:</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>Mã số thuế:</td>
-      <td></td>
-      <td>Biển số xe:</td>
-      <td>{{licensePlate}}</td>
-    </tr>
-    <tr>
-      <td>Lý do sửa chữa:</td>
-      <td colspan="3">{{reason}}</td>
-    </tr>
-  </table>
+      .text-center {
+        text-align: center;
+      }
+      .text-right {
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- HEADER -->
+      <table>
+        <tr>
+          <td class="header-left">
+            <img
+              src="{{logoPath}}"
+              width="70"
+              style="
+                width: 100px;
+                height: auto;
+                max-height: 45px;
+                display: block;
+                object-fit: contain;
+                margin: 0 auto 4px auto;
+              "
+            /><br />
+            <b>GARA Ô TÔ HOÀNG TUẤN</b>
+          </td>
+          <td class="header-right">
+            <b style="font-size: 16px">CÔNG TY TNHH CN Ô TÔ HOÀNG TUẤN</b><br />
+            Địa chỉ: Khu Công Nghiệp công ích - TP Thái Bình<br />
+            ĐT: 0968.666.603<br />
+            Số tài khoản: 636620603<br />
+            Tại NH: Agribank CNĐB Công Sở Thái Bình<br />
+            Ngày: {{date}}
+          </td>
+        </tr>
+      </table>
 
-  <!-- BẢNG NỘI DUNG -->
-  <table class="bordered" style="margin-top: 10px">
-    <tr>
-      <th style="width: 5%">TT</th>
-      <th>Nội dung công việc</th>
-      <th style="width: 12%">Đơn vị</th>
-      <th style="width: 12%">Số lượng</th>
-      <th style="width: 15%">Đơn giá</th>
-      <th style="width: 15%">Thành tiền</th>
-    </tr>
+      <div class="main-title">BẢNG BÁO GIÁ</div>
 
-    <!-- 12 hàng mẫu (bạn có thể thêm) -->
-    <!-- Tối ưu hiển thị tránh quá dài -->
-    {{#items}}
-    <tr>
-      <td class="text-center">{{index}}</td>
-      <td>{{name}}</td>
-      <td>{{unit}}</td>
-      <td>{{quantity}}</td>
-      <td>{{unitPrice}}</td>
-      <td>{{total}}</td>
-    </tr>
-    {{/items}}
+      <!-- THÔNG TIN KHÁCH HÀNG -->
+      <table class="bordered">
+        <tr>
+          <td>Tên khách hàng:</td>
+          <td>{{customerName}}</td>
+          <td>Loại xe:</td>
+          <td>{{carModel}}</td>
+        </tr>
+        <tr>
+          <td>Địa chỉ:</td>
+          <td>{{customerAddress}}</td>
+          <td>Số khung:</td>
+          <td>{{vin}}</td>
+        </tr>
+        <tr>
+          <td>Mã số thuế:</td>
+          <td></td>
+          <td>Biển số xe:</td>
+          <td>{{licensePlate}}</td>
+        </tr>
+        <tr>
+          <td>Lý do sửa chữa:</td>
+          <td colspan="3">{{reason}}</td>
+        </tr>
+      </table>
 
-    <tr>
-      <td colspan="5" class="text-right"><b>TỔNG</b></td>
-      <td class="text-right"><b>{{grandTotal}}</b></td>
-    </tr>
-  </table>
+      <!-- BẢNG NỘI DUNG -->
+      <table class="bordered" style="margin-top: 10px">
+        <tr>
+          <th style="width: 5%">TT</th>
+          <th>Nội dung công việc</th>
+          <th style="width: 12%">Đơn vị</th>
+          <th style="width: 12%">Số lượng</th>
+          <th style="width: 15%">Đơn giá</th>
+          <th style="width: 15%">Thành tiền</th>
+        </tr>
 
-  <!-- BẰNG CHỮ -->
-  <div style="margin-top: 10px">
-    <b>BẰNG CHỮ:</b> {{grandTotalInWords}} &nbsp;&nbsp;&nbsp;
-    <span>(chưa bao gồm thuế VAT)</span>
-  </div>
+        <!-- 12 hàng mẫu (bạn có thể thêm) -->
+        <!-- Tối ưu hiển thị tránh quá dài -->
+        {{#items}}
+        <tr>
+          <td class="text-center">{{index}}</td>
+          <td>{{name}}</td>
+          <td>{{unit}}</td>
+          <td>{{quantity}}</td>
+          <td>{{unitPrice}}</td>
+          <td>{{total}}</td>
+        </tr>
+        {{/items}}
 
-  <!-- GHI CHÚ -->
-  <div class="note-title" style="margin-top: 10px">CÁC LƯU Ý KHÁC</div>
-  <div class="small">
-    - Cung cấp phụ tùng chính hãng.<br />
-    - Những phát sinh sẽ được báo giá sau khi thực hiện cụ thể.<br />
-    - Báo giá trên chỉ có hiệu lực trong vòng 07 ngày kể từ ngày báo giá.<br />
-    - Khi đặt hàng khách hàng vui lòng đặt tiền trước 50% theo bảng giá trị
-    thanh toán.<br />
-    - Một số phụ tùng đặc biệt vui lòng đặt tiền trước 100% tổng giá trị đơn
-    hàng.
-  </div>
+        <tr>
+          <td colspan="5" class="text-right"><b>TỔNG</b></td>
+          <td class="text-right"><b>{{grandTotal}}</b></td>
+        </tr>
+      </table>
 
-  <!-- CHỮ KÝ -->
-  <table class="signature-table" style="margin-top: 30px">
-    <tr>
-      <td class="text-center" style="width: 50%">
-        <b>T/M CTY Ô TÔ HOÀNG TUẤN</b><br />
-        <b>Giám Đốc</b><br /><br /><br /><br />
-        <u>Hoàng Anh Đạt</u>
-      </td>
-      <td class="text-center" style="width: 50%">
-        <b>Khách hàng chấp thuận</b><br />
-        <span>(Ký, ghi rõ họ tên)</span>
-      </td>
-    </tr>
-  </table>
-</div>
-</body>
+      <!-- BẰNG CHỮ -->
+      <div style="margin-top: 10px">
+        <b>BẰNG CHỮ:</b> {{grandTotalInWords}} &nbsp;&nbsp;&nbsp;
+        <span>(chưa bao gồm thuế VAT)</span>
+      </div>
+
+      <!-- GHI CHÚ -->
+      <div class="note-title" style="margin-top: 10px">CÁC LƯU Ý KHÁC</div>
+      <div class="small">
+        - Cung cấp phụ tùng chính hãng.<br />
+        - Những phát sinh sẽ được báo giá sau khi thực hiện cụ thể.<br />
+        - Báo giá trên chỉ có hiệu lực trong vòng 07 ngày kể từ ngày báo giá.<br />
+        - Khi đặt hàng khách hàng vui lòng đặt tiền trước 50% theo bảng giá trị
+        thanh toán.<br />
+        - Một số phụ tùng đặc biệt vui lòng đặt tiền trước 100% tổng giá trị đơn
+        hàng.
+      </div>
+
+      <!-- CHỮ KÝ -->
+      <table class="signature-table" style="margin-top: 30px">
+        <tr>
+          <td class="text-center" style="width: 50%">
+            <b>T/M CTY Ô TÔ HOÀNG TUẤN</b><br />
+            <b>Giám Đốc</b><br /><br /><br /><br />
+            <u>Hoàng Anh Đạt</u>
+          </td>
+          <td class="text-center" style="width: 50%">
+            <b>Khách hàng chấp thuận</b><br />
+            <span>(Ký, ghi rõ họ tên)</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
 </html>

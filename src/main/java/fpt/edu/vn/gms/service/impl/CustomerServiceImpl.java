@@ -207,4 +207,18 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customerMapper.toDto(newCus);
     }
+
+    @Override
+    @Transactional
+    public CustomerResponseDto toggleActive(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+
+        Boolean current = customer.getIsActive();
+        boolean newStatus = current != null && !current;
+        customer.setIsActive(newStatus);
+
+        Customer saved = customerRepository.save(customer);
+        return customerMapper.toDto(saved);
+    }
 }

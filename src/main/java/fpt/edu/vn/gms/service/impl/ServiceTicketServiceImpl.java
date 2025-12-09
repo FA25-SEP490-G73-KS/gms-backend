@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.request.ServiceTicketRequestDto;
 import fpt.edu.vn.gms.dto.request.TicketUpdateReqDto;
@@ -46,6 +47,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
     VehicleModelRepository vehicleModelRepository;
     DiscountPolicyRepository discountPolicyRepo;
     CodeSequenceService codeSequenceService;
+    PriceQuotationRepository priceQuotationRepository;
     BrandRepository brandRepository;
 
     @Transactional
@@ -403,6 +405,18 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 throw new IllegalStateException(
                         "Chỉ phiếu ở trạng thái 'Chờ báo giá' mới được chuyển sang 'Chờ bàn giao xe'");
             }
+
+            // Phải có báo giá và báo giá đã được khách confirm
+            PriceQuotation quotation = ticket.getPriceQuotation();
+            if (quotation == null || quotation.getStatus() != PriceQuotationStatus.CUSTOMER_CONFIRMED) {
+                throw new IllegalStateException(
+                        "Báo giá chưa được khách hàng xác nhận, không thể chuyển sang 'Chờ bàn giao xe'");
+            }
+
+            // Khi chuyển sang CHỜ BÀN GIAO XE, cập nhật báo giá thành COMPLETED
+            quotation.setStatus(PriceQuotationStatus.COMPLETED);
+            priceQuotationRepository.save(quotation);
+
             ticket.setStatus(ServiceTicketStatus.WAITING_FOR_DELIVERY);
         } else if (newStatus == ServiceTicketStatus.COMPLETED) {
             // Chỉ từ CHỜ BÀN GIAO XE → HOÀN THÀNH
