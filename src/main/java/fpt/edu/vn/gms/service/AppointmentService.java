@@ -33,4 +33,5 @@ public interface AppointmentService {
 
     AppointmentResponseDto confirmAppointment(Long id);
 
+    boolean confirmByCode(String appointmentCode);
 }

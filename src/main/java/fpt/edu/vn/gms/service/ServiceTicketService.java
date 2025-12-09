@@ -21,6 +21,9 @@ public interface ServiceTicketService {
 
     Page<ServiceTicketResponseDto> getAllServiceTicket(int page, int size);
 
+    Page<ServiceTicketResponseDto> getAllServiceTicket(LocalDate fromDate, LocalDate toDate, ServiceTicketStatus status,
+            int page, int size);
+
     Page<ServiceTicketResponseDto> getServiceTicketsByCreatedAt(LocalDateTime createdAt, Pageable pageable);
 
     ServiceTicketResponseDto updateServiceTicket(Long serviceTicketId, TicketUpdateReqDto dto);
@@ -36,4 +39,6 @@ public interface ServiceTicketService {
     List<Map<String, Object>> getTicketCountsByType(int year, int month);
 
     ServiceTicketResponseDto updateStatus(Long id, ServiceTicketStatus newStatus);
+
+    ServiceTicketResponseDto getByServiceTicketCode(String serviceTicketCode);
 }

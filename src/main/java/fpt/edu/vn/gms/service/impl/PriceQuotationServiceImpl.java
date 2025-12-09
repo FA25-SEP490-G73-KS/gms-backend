@@ -276,51 +276,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             partRepository.save(part);
         }
 
-//        // 2. Tạo PurchaseRequest cho OUT_OF_STOCK và UNKNOWN
-//        BigDecimal totalEstimatedAmount = BigDecimal.ZERO;
-//
-//        if (!partsToBuy.isEmpty()) {
-//
-//            PurchaseRequest purchaseRequest = PurchaseRequest.builder()
-//                    .code(codeSequenceService.generateCode("PR"))
-//                    .relatedQuotation(quotation)
-//                    .reviewStatus(ManagerReviewStatus.PENDING)
-//                    .createdAt(LocalDateTime.now())
-//                    .totalEstimatedAmount(totalEstimatedAmount)
-//                    .createdBy(null) // Hệ thống tự tạo
-//                    .items(new ArrayList<>())
-//                    .build();
-//
-//            for (PriceQuotationItem item : partsToBuy) {
-//
-//                double quantityToPurchase = getQuantityToPurchase(item);
-//
-//                PurchaseRequestItem requestItem = PurchaseRequestItem.builder()
-//                        .part(item.getPart())
-//                        .partName(item.getItemName())
-//                        .quantity(quantityToPurchase)
-//                        .unit(item.getUnit())
-//                        .estimatedPurchasePrice(
-//                                item.getPart().getPurchasePrice().multiply(BigDecimal.valueOf(quantityToPurchase)))
-//                        .reviewStatus(ManagerReviewStatus.PENDING)
-//                        .purchaseRequest(purchaseRequest)
-//                        .quotationItem(item)
-//                        .build();
-//
-//                purchaseRequest.getItems().add(requestItem);
-//
-//                // Cộng dồn vào tổng
-//                BigDecimal lineTotal = requestItem.getEstimatedPurchasePrice();
-//
-//                totalEstimatedAmount = totalEstimatedAmount.add(lineTotal);
-//            }
-//
-//            purchaseRequest.setTotalEstimatedAmount(totalEstimatedAmount);
-//            purchaseRequestRepository.save(purchaseRequest);
-//        }
-
-        // Lưu lại báo giá
-        priceQuotationRepository.save(quotation);
+        quotationRepository.save(quotation);
 
         try {
             stockExportService.createExportFromQuotation(quotation.getPriceQuotationId(),
@@ -335,10 +291,14 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         // Lấy nhân viên phụ trách (advisor)
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
 
+        String quotationCode = quotation.getCode();
+
+        String formattedTitle = String.format(template.getTitle(), quotationCode);
+
         NotificationResponseDto notiDto = notificationService.createNotification(
                 advisor.getEmployeeId(),
-                template.getTitle(),
-                template.format(quotation.getPriceQuotationId()),
+                formattedTitle,
+                template.format(quotationCode),
                 NotificationType.QUOTATION_CONFIRMED,
                 quotation.getPriceQuotationId().toString(),
                 "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
@@ -380,19 +340,19 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
         // Lấy nhân viên phụ trách (advisor)
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
+
         if (advisor != null) {
-            // Sử dụng NotificationTemplate
             NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_REJECTED;
+
+            String formattedTitle = String.format(template.getTitle(), quotation.getCode());
 
             NotificationResponseDto notificationDto = notificationService.createNotification(
                     advisor.getEmployeeId(),
-                    template.getTitle(),
-                    template.format(quotation.getPriceQuotationId()),
+                    formattedTitle,
+                    template.format(quotation.getCode()),
                     NotificationType.QUOTATION_REJECTED,
                     quotation.getPriceQuotationId().toString(),
                     "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
-
-            // WebSocket realtime đã được push trong createNotification
         }
 
         return priceQuotationMapper.toResponseDto(quotation);
@@ -499,8 +459,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             row.put("name",
                     item.getPart() != null
                             ? item.getPart().getName()
-                            : item.getItemName()
-            );
+                            : item.getItemName());
             row.put("unit", item.getUnit());
             row.put("quantity", item.getQuantity());
             row.put("unitPrice", df.format(item.getUnitPrice()).replace(",", "."));

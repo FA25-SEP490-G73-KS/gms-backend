@@ -11,7 +11,7 @@ import fpt.edu.vn.gms.common.enums.Role;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Account")
+@Table(name = "account")
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

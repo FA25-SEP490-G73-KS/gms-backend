@@ -18,4 +18,7 @@ public interface NotificationService {
     List<NotificationResponseDto> getNotificationsForUser(String recipientPhone);
 
     void markAsRead(Long notificationId, String recipientPhone);
+
+    // Lấy chi tiết 1 notification theo id (dùng cho API get by id)
+    NotificationResponseDto getNotificationById(Long id, String recipientPhone);
 }

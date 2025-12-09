@@ -20,8 +20,12 @@ public interface OtpVerificationRepository extends JpaRepository<OtpVerification
             String phone, String purpose, LocalDateTime now);
 
     @Modifying
-    @Query("DELETE FROM OtpVerification o WHERE o.expiresAt < :now")
-    void deleteExpiredOtps(@Param("now") LocalDateTime now);
+    @Query("""
+        DELETE FROM OtpVerification o
+        WHERE o.phone = :phone AND o.otpId <> :newOtpId
+    """)
+    void deleteOldOtps(@Param("phone") String phone, @Param("newOtpId")  Long newOtpId);
+
 
     @Modifying
     @Query("UPDATE OtpVerification o SET o.isVerified = true WHERE o.phone = :phone AND o.purpose = :purpose AND o.isVerified = false")

@@ -24,10 +24,15 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.DEBTS_PREFIX;
 
@@ -50,8 +55,11 @@ public class DebtController {
         })
         public ResponseEntity<ApiResponse<Page<CustomerDebtSummaryDto>>> getDebtSummaryByCustomer(
                         @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
-                var result = debtService.getAllDebtsSummary(page, size);
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(required = false) DebtStatus status,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+                var result = debtService.getAllDebtsSummary(page, size, status, fromDate, toDate);
                 return ResponseEntity.ok(ApiResponse.success("Lấy tổng hợp công nợ thành công", result));
         }
 
@@ -104,6 +112,15 @@ public class DebtController {
         ) {
                 var result = debtService.getDebtDetailByServiceTicketId(serviceTicketId);
                 return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết công nợ thành công", result));
+        }
+
+        @PatchMapping("/{id}/due-date")
+        @Operation(summary = "Cập nhật ngày đến hạn của công nợ", description = "Không cho phép chọn ngày trong quá khứ hoặc ngày hiện tại")
+        public ResponseEntity<ApiResponse<Void>> updateDueDate(
+                        @PathVariable Long id,
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueDate) {
+                debtService.updateDueDate(id, dueDate);
+                return ResponseEntity.ok(ApiResponse.success("Cập nhật ngày đến hạn thành công", null));
         }
 
 }

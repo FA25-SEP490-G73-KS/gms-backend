@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum LedgerVoucherType {
 
-    STOCK_RECEIPT_PAYMENT("Thanh toán phiếu nhập kho"),
+    STOCK_RECEIPT_PAYMENT("Phí linh kiện"),
     SALARY("Tiền lương"),
     SERVICE_FEE("Phí dịch vụ"),
     OTHER("Khác");

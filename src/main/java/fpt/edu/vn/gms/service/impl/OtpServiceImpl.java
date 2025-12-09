@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,10 @@ public class OtpServiceImpl implements OtpService {
     @Transactional
     public String generateAndSendOtp(String phone, String purpose) {
         // Generate 6-digit OTP
-        String otpCode = String.format("%06d", new Random().nextInt(1000000));
+        // Generate secure OTP
+        SecureRandom random = new SecureRandom();
+        String otpCode = String.format("%06d", random.nextInt(1_000_000));
+
 
         // Calculate expiration time
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expirationMinutes);
@@ -50,20 +54,23 @@ public class OtpServiceImpl implements OtpService {
 
         otpRepository.save(otp);
 
+        // Delete all older OTPs of this phone except the new one
+        otpRepository.deleteOldOtps(phone, otp.getOtpId());
+
+
         // Send OTP via ZNS
         try {
-            Map<String, Object> templateData = new HashMap<>();
-            templateData.put("otp_code", otpCode);
-            templateData.put("expiration_time", expirationMinutes + " phút");
-
             znsNotificationService.sendOtpNotification(phone, otpCode, otpTemplateId);
             log.info("OTP sent successfully to phone: {}", phone);
         } catch (Exception e) {
             log.error("Failed to send OTP via ZNS to phone: {}", phone, e);
             // Still return OTP for development/testing, but in production might want to throw exception
+
+            // rollback whole transaction
+            throw new RuntimeException("Cannot send OTP at the moment");
         }
 
-        return otpCode; // Return for testing, remove in production
+        return otpCode; // only for dev mode
     }
 
     @Override

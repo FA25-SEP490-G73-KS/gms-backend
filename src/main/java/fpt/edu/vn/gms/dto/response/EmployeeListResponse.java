@@ -21,9 +21,6 @@ public class EmployeeListResponse {
     private Role role;
     private LocalDateTime hireDate;
     private BigDecimal dailySalary;
-    /**
-     * Trạng thái hiển thị tính động theo Attendance hôm nay:
-     * - "Đang hoạt động" / "Nghỉ phép" / "Nghỉ làm"
-     */
+
     private String status;
 }

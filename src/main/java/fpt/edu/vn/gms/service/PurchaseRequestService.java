@@ -12,7 +12,10 @@ public interface PurchaseRequestService {
 
     PurchaseRequest approvePurchaseRequest(Long requestId);
 
-    Page<PurchaseRequestResponseDto> getPurchaseRequests(String keyword, String status, String fromDate, String toDate, Pageable pageable);
+    PurchaseRequest rejectPurchaseRequest(Long requestId, String reason);
+
+    Page<PurchaseRequestResponseDto> getPurchaseRequests(String keyword, String status, String fromDate, String toDate,
+            Pageable pageable);
 
     PurchaseRequestDetailDto getPurchaseRequestDetail(Long id);
 }

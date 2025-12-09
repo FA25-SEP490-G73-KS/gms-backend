@@ -16,4 +16,3 @@ public class TopImportedPartDto {
     private String unitName;
     private Double totalImportedQuantity;
 }
-

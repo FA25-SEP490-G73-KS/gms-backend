@@ -18,4 +18,3 @@ public class MonthWarehouseCostDto {
     private BigDecimal importCost;
     private BigDecimal exportCost;
 }
-

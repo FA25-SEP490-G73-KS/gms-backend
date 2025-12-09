@@ -38,6 +38,16 @@ public class PurchaseRequestControllerNew {
         return ApiResponse.success("Duyệt yêu cầu mua hàng thành công", dto);
     }
 
+    @PutMapping("/{id}/reject")
+    @Operation(summary = "Từ chối phiếu yêu cầu mua hàng")
+    public ApiResponse<PurchaseRequestResponseDto> reject(
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason) {
+        PurchaseRequest pr = purchaseRequestService.rejectPurchaseRequest(id, reason);
+        PurchaseRequestResponseDto dto = PurchaseRequestResponseDto.fromEntity(pr);
+        return ApiResponse.success("Từ chối yêu cầu mua hàng thành công", dto);
+    }
+
     @GetMapping
     @Operation(summary = "Danh sách phiếu yêu cầu mua hàng", description = "Lấy danh sách PR có phân trang + filter")
     public ApiResponse<Page<PurchaseRequestResponseDto>> getPurchaseRequests(

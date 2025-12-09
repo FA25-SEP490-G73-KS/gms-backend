@@ -1,12 +1,19 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
+import fpt.edu.vn.gms.entity.PriceQuotation;
+import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.service.PriceQuotationService;
 import fpt.edu.vn.gms.service.WarehouseQuotationService;
+import fpt.edu.vn.gms.service.auth.JwtService;
+import fpt.edu.vn.gms.service.zalo.OneTimeTokenService;
+import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +28,8 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.Map;
+
 import static fpt.edu.vn.gms.utils.AppRoutes.PRICE_QUOTATIONS_PREFIX;
 
 @Tag(name = "price-quotations", description = "Quản lý báo giá và phê duyệt báo giá")
@@ -32,7 +41,10 @@ import static fpt.edu.vn.gms.utils.AppRoutes.PRICE_QUOTATIONS_PREFIX;
 public class PriceQuotationController {
 
         PriceQuotationService priceQuotationService;
+        JwtService jwtService;
+        OneTimeTokenService oneTimeTokenService;
         WarehouseQuotationService warehouseQuotationService;
+        PriceQuotationRepository priceQuotationRepository;
 
         @GetMapping("/pending")
         @Operation(summary = "Lấy báo giá đang chờ xử lý", description = "Lấy danh sách các báo giá đang chờ xử lý từ kho với phân trang.")
@@ -221,6 +233,109 @@ public class PriceQuotationController {
                 return ResponseEntity.ok()
                                 .headers(headers)
                                 .body(pdfBytes);
+        }
+
+        @Public
+        @PostMapping("/confirm-quotation/{one_time_token}")
+        @Operation(summary = "Xác nhận báo giá", description = "API callback khi khách hàng ấn nút xác nhận báo giá từ ZNS.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token không hợp lệ"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
+        })
+        public ResponseEntity<?> confirmQuotation(
+                        @PathVariable("one_time_token") String token) {
+
+                try {
+                        // 1. Giải mã token
+                        Claims claims = jwtService.extractAllClaims(token);
+
+                        String quotationCode = claims.get("quotation_code", String.class);
+
+                        // 2. Tìm quotation từ code
+                        PriceQuotation quotation = priceQuotationRepository.findByCode(quotationCode)
+                                        .orElseThrow(() -> new ResourceNotFoundException(
+                                                        "Không tìm thấy báo giá với mã: " + quotationCode));
+
+                        // 3. Gọi xử lý business xác nhận báo giá
+                        priceQuotationService.confirmQuotationByCustomer(quotation.getPriceQuotationId());
+
+                        // 4. Xóa token sau khi xử lý thành công
+                        oneTimeTokenService.deleteToken(token);
+
+                        // 5. Trả về status để Zalo hiện tin nhắn cho khách
+                        Map<String, Object> response = Map.of(
+                                        "error", 0,
+                                        "message", "OK",
+                                        "data", Map.of("status", "CONFIRMED"));
+
+                        return ResponseEntity.ok(response);
+
+                } catch (ResourceNotFoundException e) {
+                        Map<String, Object> error = Map.of(
+                                        "error", -1,
+                                        "message", e.getMessage());
+                        return ResponseEntity.badRequest().body(error);
+                } catch (Exception e) {
+                        Map<String, Object> error = Map.of(
+                                        "error", -1,
+                                        "message", "Invalid token or processing error: " + e.getMessage());
+                        return ResponseEntity.badRequest().body(error);
+                }
+        }
+
+        @Public
+        @PostMapping("/reject-quotation/{one_time_token}")
+        @Operation(summary = "Từ chối báo giá", description = "API callback khi khách hàng ấn nút từ chối báo giá từ ZNS.")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token không hợp lệ"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ")
+        })
+        public ResponseEntity<?> rejectQuotation(
+                        @PathVariable("one_time_token") String token,
+                        @RequestParam(required = false) String reason) {
+
+                try {
+                        // 1. Giải mã token
+                        Claims claims = jwtService.extractAllClaims(token);
+
+                        String quotationCode = claims.get("quotation_code", String.class);
+                        // Lấy reason từ token nếu không có trong request param
+                        String rejectionReason = reason != null ? reason : claims.get("reason", String.class);
+
+                        // 2. Tìm quotation từ code
+                        PriceQuotation quotation = priceQuotationRepository.findByCode(quotationCode)
+                                        .orElseThrow(() -> new ResourceNotFoundException(
+                                                        "Không tìm thấy báo giá với mã: " + quotationCode));
+
+                        // 3. Gọi xử lý business từ chối báo giá
+                        priceQuotationService.rejectQuotationByCustomer(
+                                        quotation.getPriceQuotationId(),
+                                        rejectionReason);
+
+                        // 4. Xóa token sau khi xử lý thành công
+                        oneTimeTokenService.deleteToken(token);
+
+                        // 5. Trả về status để Zalo hiện tin nhắn cho khách
+                        Map<String, Object> response = Map.of(
+                                        "error", 0,
+                                        "message", "OK",
+                                        "data", Map.of("status", "REJECTED"));
+
+                        return ResponseEntity.ok(response);
+
+                } catch (ResourceNotFoundException e) {
+                        Map<String, Object> error = Map.of(
+                                        "error", -1,
+                                        "message", e.getMessage());
+                        return ResponseEntity.badRequest().body(error);
+                } catch (Exception e) {
+                        Map<String, Object> error = Map.of(
+                                        "error", -1,
+                                        "message", "Invalid token or processing error: " + e.getMessage());
+                        return ResponseEntity.badRequest().body(error);
+                }
         }
 
 }
