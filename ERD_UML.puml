@@ -1,0 +1,626 @@
+@startuml ERD_Complete
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+' ============================================
+' 1. Core Entities - Khách hàng, Xe và Lịch hẹn
+' ============================================
+
+package "Core Entities" {
+  class BRAND {
+    + Long brandId {PK}
+    + String name {UK}
+  }
+
+  class VEHICLE_MODEL {
+    + Long vehicleModelId {PK}
+    + String name {UK}
+    + Long brandId {FK}
+  }
+
+  class CUSTOMER {
+    + Long customerId {PK}
+    + String fullName
+    + String phone {UK}
+    + String address
+    + String customerType
+    + Long discountPolicyId {FK}
+    + BigDecimal totalSpending
+    + Boolean isActive
+  }
+
+  class VEHICLE {
+    + Long vehicleId {PK}
+    + Long customerId {FK}
+    + String licensePlate {UK}
+    + Long vehicleModelId {FK}
+    + Integer year
+    + String vin
+  }
+
+  class TIME_SLOT {
+    + Long timeSlotId {PK}
+    + String label {UK}
+    + Time startTime
+    + Time endTime
+    + Integer maxCapacity
+  }
+
+  class APPOINTMENT {
+    + Long appointmentId {PK}
+    + String appointmentCode {UK}
+    + Long customerId {FK}
+    + String customerName
+    + Long vehicleId {FK}
+    + Long timeSlotId {FK}
+    + Date appointmentDate
+    + String status
+    + String description
+    + DateTime createdAt
+    + DateTime confirmedAt
+  }
+
+  class SERVICE_TYPE {
+    + Long serviceTypeId {PK}
+    + String name {UK}
+  }
+
+  class APPOINTMENT_SERVICE_TYPE {
+    + Long appointmentId {PK}
+    + Long serviceTypeId {PK}
+  }
+
+  ' Relationships
+  BRAND ||--o{ VEHICLE_MODEL : "có"
+  VEHICLE_MODEL ||--o{ VEHICLE : "model của"
+  CUSTOMER ||--|{ VEHICLE : "sở hữu"
+  CUSTOMER ||--o{ APPOINTMENT : "đặt"
+  VEHICLE ||--o{ APPOINTMENT : "cho xe"
+  TIME_SLOT ||--o{ APPOINTMENT : "trong khung giờ"
+  APPOINTMENT ||--o{ APPOINTMENT_SERVICE_TYPE : "yêu cầu dịch vụ"
+  SERVICE_TYPE ||--o{ APPOINTMENT_SERVICE_TYPE : "được yêu cầu"
+}
+
+' ============================================
+' 2. Service & Quotation - Dịch vụ và Báo giá
+' ============================================
+
+package "Service & Quotation" {
+  class SERVICE_TICKET {
+    + Long serviceTicketId {PK}
+    + String serviceTicketCode {UK}
+    + Long appointmentId {FK}
+    + Long customerId {FK}
+    + String customerName
+    + String customerPhone
+    + Long vehicleId {FK}
+    + String vehicleLicensePlate
+    + Long quotationId {FK}
+    + Long createdByEmployeeId {FK}
+    + String status
+    + String receiveCondition
+    + String notes
+    + DateTime createdAt
+    + DateTime updatedAt
+    + Date deliveryAt
+  }
+
+  class TICKET_SERVICE_TYPE {
+    + Long serviceTicketId {PK}
+    + Long serviceTypeId {PK}
+  }
+
+  class SERVICE_TICKET_TECHNICIANS {
+    + Long serviceTicketId {PK}
+    + Long employeeId {PK}
+  }
+
+  class SERVICE_RATING {
+    + Long ratingId {PK}
+    + Long serviceTicketId {FK}
+    + Long customerId {FK}
+    + Integer stars
+    + String feedback
+    + DateTime createdAt
+  }
+
+  class PRICE_QUOTATION {
+    + Long priceQuotationId {PK}
+    + String code {UK}
+    + BigDecimal discount
+    + BigDecimal estimateAmount
+    + String status
+    + Long createdBy
+    + Long updatedBy
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class PRICE_QUOTATION_ITEM {
+    + Long priceQuotationItemId {PK}
+    + Long quotationId {FK}
+    + Long partId {FK}
+    + String partName
+    + BigDecimal unitPrice
+    + Double quantity
+    + String unit
+    + BigDecimal totalPrice
+    + Double exportedQuantity
+    + String itemType
+    + String status
+    + String warehouseReviewStatus
+    + String warehouseNote
+    + Long createdBy
+    + Long updatedBy
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class PART_RESERVATION {
+    + Long reservationId {PK}
+    + Long partId {FK}
+    + Long quotationItemId {FK}
+    + Double reservedQuantity
+    + DateTime reservedAt
+    + Boolean active
+  }
+
+  ' Relationships
+  APPOINTMENT }o--o| SERVICE_TICKET : "tạo ra"
+  SERVICE_TICKET ||--o{ TICKET_SERVICE_TYPE : "bao gồm"
+  SERVICE_TYPE ||--o{ TICKET_SERVICE_TYPE : "được sử dụng"
+  SERVICE_TICKET ||--o{ SERVICE_TICKET_TECHNICIANS : "phân công"
+  SERVICE_TICKET ||--o| SERVICE_RATING : "được đánh giá"
+  CUSTOMER ||--o{ SERVICE_RATING : "đánh giá"
+  SERVICE_TICKET ||--o| PRICE_QUOTATION : "có"
+  PRICE_QUOTATION ||--|{ PRICE_QUOTATION_ITEM : "chứa"
+  PRICE_QUOTATION_ITEM ||--o| PART_RESERVATION : "đặt chỗ"
+}
+
+' ============================================
+' 3. Inventory & Parts - Kho và Phụ tùng
+' ============================================
+
+package "Inventory & Parts" {
+  class PART_CATEGORY {
+    + Long id {PK}
+    + String name
+  }
+
+  class PART {
+    + Long partId {PK}
+    + String sku {UK}
+    + String partName
+    + Long categoryId {FK}
+    + Long vehicleModel {FK}
+    + Long market {FK}
+    + BigDecimal purchasePrice
+    + BigDecimal sellingPrice
+    + BigDecimal discountRate
+    + Double quantityInStock
+    + Long unit {FK}
+    + Double reservedQuantity
+    + Double reorderLevel
+    + Long supplier {FK}
+    + Boolean isUniversal
+    + Boolean specialPart
+    + String status
+    + String note
+  }
+
+  class PART_ORIGIN {
+    + Long id {PK}
+    + String country
+    + Long partId {FK}
+  }
+
+  class MARKET {
+    + Long marketId {PK}
+    + String name
+  }
+
+  class UNIT {
+    + Long unitId {PK}
+    + String name
+  }
+
+  class SUPPLIER {
+    + Long supplierId {PK}
+    + String name
+    + String phone
+    + String email
+    + String address
+    + Boolean isActive
+  }
+
+  ' Relationships
+  PART_CATEGORY ||--o{ PART : "phân loại"
+  VEHICLE_MODEL ||--o{ PART : "tương thích"
+  MARKET ||--o{ PART : "thị trường"
+  UNIT ||--o{ PART : "đơn vị đo"
+  SUPPLIER ||--o{ PART : "cung cấp"
+  PART ||--o{ PART_ORIGIN : "có nguồn gốc"
+  PART ||--o{ PRICE_QUOTATION_ITEM : "được báo giá"
+  PART ||--o{ PART_RESERVATION : "được đặt chỗ"
+}
+
+' ============================================
+' 4. Purchase & Receipt - Mua hàng và Nhập kho
+' ============================================
+
+package "Purchase & Receipt" {
+  class PURCHASE_REQUEST {
+    + Long purchaseRequestId {PK}
+    + String code {UK}
+    + Long quotationId {FK}
+    + BigDecimal totalEstimatedAmount
+    + String reviewStatus
+    + String reason
+    + Long createdBy
+    + Long updatedBy
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class PURCHASE_REQUEST_ITEM {
+    + Long purchaseRequestItemId {PK}
+    + Long purchaseRequestId {FK}
+    + Long quotationItemId {FK}
+    + Long partId {FK}
+    + String partName
+    + Double quantity
+    + String unit
+    + BigDecimal estimatedPurchasePrice
+    + Double quantityReceived
+    + String reviewStatus
+    + String note
+    + Long createdBy
+    + Long updatedBy
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class STOCK_RECEIPT {
+    + Long receiptId {PK}
+    + String code {UK}
+    + Long purchaseRequestId {FK}
+    + Long supplierId {FK}
+    + String createdBy
+    + DateTime createdAt
+    + String receivedBy
+    + DateTime receivedAt
+    + String status
+    + BigDecimal totalAmount
+    + String note
+  }
+
+  class STOCK_RECEIPT_ITEM {
+    + Long stockReceiptItemId {PK}
+    + Long stockReceiptId {FK}
+    + Long purchaseRequestItemId {FK}
+    + Double requestedQuantity
+    + Double quantityReceived
+    + BigDecimal actualUnitPrice
+    + BigDecimal actualTotalPrice
+    + String attachmentUrl
+    + String note
+    + DateTime receivedAt
+    + String receivedBy
+    + String status
+  }
+
+  class STOCK_RECEIPT_ITEM_HISTORY {
+    + Long historyId {PK}
+    + Long stockReceiptItemId {FK}
+    + Double quantity
+    + BigDecimal unitPrice
+    + BigDecimal totalPrice
+    + String attachmentUrl
+    + DateTime receivedAt
+    + String receivedBy
+    + String note
+    + String paymentStatus
+    + BigDecimal amountPaid
+    + String paymentAttachment
+  }
+
+  ' Relationships
+  PRICE_QUOTATION ||--o| PURCHASE_REQUEST : "tạo yêu cầu"
+  PURCHASE_REQUEST ||--|{ PURCHASE_REQUEST_ITEM : "chứa"
+  PRICE_QUOTATION_ITEM ||--o| PURCHASE_REQUEST_ITEM : "ánh xạ"
+  PART ||--o{ PURCHASE_REQUEST_ITEM : "được yêu cầu"
+  PURCHASE_REQUEST ||--o| STOCK_RECEIPT : "tạo phiếu nhập"
+  SUPPLIER ||--o{ STOCK_RECEIPT : "cung cấp"
+  STOCK_RECEIPT ||--|{ STOCK_RECEIPT_ITEM : "chứa"
+  PURCHASE_REQUEST_ITEM ||--|| STOCK_RECEIPT_ITEM : "tham chiếu"
+  STOCK_RECEIPT_ITEM ||--o{ STOCK_RECEIPT_ITEM_HISTORY : "lịch sử"
+}
+
+' ============================================
+' 5. Stock Export - Xuất kho
+' ============================================
+
+package "Stock Export" {
+  class STOCK_EXPORT {
+    + Long exportId {PK}
+    + String code {UK}
+    + Long quotationId {FK}
+    + String reason
+    + String status
+    + String createdBy
+    + String exportedBy
+    + String approvedBy
+    + DateTime createdAt
+    + DateTime exportedAt
+    + DateTime approvedAt
+  }
+
+  class STOCK_EXPORT_ITEM {
+    + Long exportItemId {PK}
+    + Long exportId {FK}
+    + Long quotationItemId {FK}
+    + Long partId {FK}
+    + Double quantity
+    + Double quantityExported
+    + Long receiverId {FK}
+    + DateTime exportedAt
+    + String status
+    + String note
+  }
+
+  class STOCK_EXPORT_ITEM_HISTORY {
+    + Long id {PK}
+    + Long exportItemId {FK}
+    + Double quantity
+    + DateTime exportedAt
+    + Long exportedBy {FK}
+  }
+
+  class STOCK_EXPORT_ITEM_EMPLOYEE {
+    + Long exportItemId {PK}
+    + Long employeeId {PK}
+  }
+
+  ' Relationships
+  PRICE_QUOTATION ||--o| STOCK_EXPORT : "tạo phiếu xuất"
+  STOCK_EXPORT ||--|{ STOCK_EXPORT_ITEM : "chứa"
+  PRICE_QUOTATION_ITEM ||--o| STOCK_EXPORT_ITEM : "hạng mục"
+  PART ||--o{ STOCK_EXPORT_ITEM : "phụ tùng xuất"
+  STOCK_EXPORT_ITEM ||--o{ STOCK_EXPORT_ITEM_HISTORY : "lịch sử"
+  STOCK_EXPORT_ITEM }o--o{ STOCK_EXPORT_ITEM_EMPLOYEE : "người nhận"
+  EMPLOYEE }o--o{ STOCK_EXPORT_ITEM_EMPLOYEE : "nhận"
+}
+
+' ============================================
+' 6. Finance & Payment - Tài chính và Thanh toán
+' ============================================
+
+package "Finance & Payment" {
+  class INVOICE {
+    + Long id {PK}
+    + String code
+    + Long priceQuotationId {FK}
+    + Long serviceTicketId {FK}
+    + BigDecimal depositReceived
+    + BigDecimal finalAmount
+    + String status
+    + DateTime createdAt
+    + DateTime updatedAt
+    + String createdBy
+  }
+
+  class DEBT {
+    + Long id {PK}
+    + Long customerId {FK}
+    + Long serviceTicketId {FK}
+    + BigDecimal amount
+    + Date dueDate
+    + BigDecimal paidAmount
+    + String status
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class TRANSACTION {
+    + Long id {PK}
+    + String paymentLinkId
+    + Long invoiceId {FK}
+    + Long debtId {FK}
+    + String customerFullName
+    + String customerPhone
+    + String method
+    + String type
+    + Long amount
+    + DateTime createdAt
+    + Boolean isActive
+  }
+
+  ' Relationships
+  PRICE_QUOTATION ||--o| INVOICE : "tạo"
+  SERVICE_TICKET ||--o| INVOICE : "có"
+  INVOICE ||--o{ TRANSACTION : "thanh toán"
+  CUSTOMER ||--o{ DEBT : "nợ"
+  SERVICE_TICKET ||--o| DEBT : "tạo nợ"
+  DEBT ||--o{ TRANSACTION : "thanh toán"
+}
+
+' ============================================
+' 7. Employee & Payroll - Nhân viên và Lương
+' ============================================
+
+package "Employee & Payroll" {
+  class ACCOUNT {
+    + Long accountId {PK}
+    + String phone {UK}
+    + String role
+    + String password
+    + Boolean active
+  }
+
+  class EMPLOYEE {
+    + Long employeeId {PK}
+    + String fullName
+    + String gender
+    + Date dateOfBirth
+    + String phone {UK}
+    + String address
+    + DateTime hireDate
+    + DateTime terminationDate
+    + BigDecimal dailySalary
+    + String status
+    + Long accountId {FK}
+  }
+
+  class PAYROLL {
+    + Long payrollId {PK}
+    + Long employeeId {FK}
+    + Integer month
+    + Integer year
+    + BigDecimal baseSalary
+    + BigDecimal totalAllowance
+    + BigDecimal totalDeduction
+    + BigDecimal totalAdvance
+    + Integer workingDays
+    + BigDecimal netSalary
+    + String status
+    + Long approvedBy {FK}
+    + DateTime approvedAt
+    + Long paidBy {FK}
+    + DateTime paidAt
+    + DateTime createdAt
+  }
+
+  class ALLOWANCE {
+    + Long allowanceId {PK}
+    + Long employeeId {FK}
+    + String type
+    + BigDecimal amount
+    + String note
+    + Integer month
+    + Integer year
+    + DateTime createdAt
+    + String createdBy
+  }
+
+  class DEDUCTION {
+    + Long deductionId {PK}
+    + Long employeeId {FK}
+    + String type
+    + BigDecimal amount
+    + String reason
+    + Date date
+    + String createdBy
+  }
+
+  class ATTENDANCE {
+    + Long attendanceId {PK}
+    + Long employeeId {FK}
+    + Date date {UK}
+    + Boolean isPresent
+    + String note
+    + Long recordedBy
+    + DateTime recordedAt
+  }
+
+  class NOTIFICATION {
+    + Long id {PK}
+    + Long receiverId {FK}
+    + String type
+    + String title
+    + String message
+    + Long referenceId
+    + String referenceType
+    + String actionPath
+    + String status
+    + DateTime createdAt
+  }
+
+  class LEDGER_VOUCHER {
+    + Long ledgerId {PK}
+    + String code {UK}
+    + String type
+    + BigDecimal amount
+    + Long relatedEmployeeId
+    + Long relatedSupplierId
+    + String description
+    + String category
+    + DateTime createdAt
+    + DateTime approvedAt
+    + Long createdByEmployeeId {FK}
+    + Long approvedByEmployeeId {FK}
+    + String attachmentUrl
+    + String status
+    + Long receiptHistoryId {FK}
+  }
+
+  ' Relationships
+  ACCOUNT }o--o| EMPLOYEE : "liên kết"
+  EMPLOYEE ||--o{ PAYROLL : "có lương"
+  EMPLOYEE ||--o{ ALLOWANCE : "nhận phụ cấp"
+  EMPLOYEE ||--o{ DEDUCTION : "bị khấu trừ"
+  EMPLOYEE ||--o{ ATTENDANCE : "chấm công"
+  EMPLOYEE ||--o{ NOTIFICATION : "nhận thông báo"
+  EMPLOYEE ||--o{ LEDGER_VOUCHER : "tạo/phê duyệt"
+  EMPLOYEE ||--o{ SERVICE_TICKET_TECHNICIANS : "được phân công"
+  STOCK_RECEIPT_ITEM_HISTORY ||--o| LEDGER_VOUCHER : "liên kết"
+}
+
+' ============================================
+' 8. System & Auth - Hệ thống và Xác thực
+' ============================================
+
+package "System & Auth" {
+  class OTP_VERIFICATION {
+    + Long otpId {PK}
+    + String phone
+    + String otpCode
+    + DateTime expiresAt
+    + Boolean isVerified
+    + String purpose
+    + DateTime createdAt
+  }
+
+  class CODE_SEQUENCE {
+    + String prefix {PK}
+    + Integer year {PK}
+    + Long currentValue
+  }
+
+  class ACCESS_TOKEN {
+    + Long id {PK}
+    + String accessToken
+    + String refreshToken
+    + DateTime createdAt
+    + DateTime updatedAt
+  }
+
+  class ONE_TIME_TOKEN {
+    + Long id {PK}
+    + String token
+    + String expiresAt
+  }
+
+  class DISCOUNT {
+    + Long id {PK}
+    + String code {UK}
+    + String name
+    + String type
+    + BigDecimal value
+    + DateTime expiredAt
+  }
+
+  class DISCOUNT_POLICY {
+    + Long discountPolicyId {PK}
+    + String loyaltyLevel {UK}
+    + BigDecimal discountRate
+    + BigDecimal requiredSpending
+    + String description
+  }
+}
+
+' Relationships
+DISCOUNT_POLICY ||--o{ CUSTOMER : "áp dụng cho"
+
+@enduml
+

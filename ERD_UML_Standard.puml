@@ -1,0 +1,652 @@
+@startuml ERD_Standard
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor<<Entity>> LightBlue
+    BackgroundColor<<Relationship>> LightYellow
+    ArrowColor Black
+    BorderColor Black
+}
+
+' ============================================
+' ERD Standard - Entity Relationship Diagram
+' ============================================
+
+' Core Entities
+entity "BRAND" <<Entity>> {
+  * brandId : BIGINT <<PK>>
+  --
+  name : VARCHAR <<UK>>
+}
+
+entity "VEHICLE_MODEL" <<Entity>> {
+  * vehicleModelId : BIGINT <<PK>>
+  --
+  name : VARCHAR <<UK>>
+  brandId : BIGINT <<FK>>
+}
+
+entity "CUSTOMER" <<Entity>> {
+  * customerId : BIGINT <<PK>>
+  --
+  fullName : VARCHAR
+  phone : VARCHAR <<UK>>
+  address : VARCHAR
+  customerType : VARCHAR
+  discountPolicyId : BIGINT <<FK>>
+  totalSpending : DECIMAL
+  isActive : BOOLEAN
+}
+
+entity "VEHICLE" <<Entity>> {
+  * vehicleId : BIGINT <<PK>>
+  --
+  customerId : BIGINT <<FK>>
+  licensePlate : VARCHAR <<UK>>
+  vehicleModelId : BIGINT <<FK>>
+  year : INTEGER
+  vin : VARCHAR
+}
+
+entity "TIME_SLOT" <<Entity>> {
+  * timeSlotId : BIGINT <<PK>>
+  --
+  label : VARCHAR <<UK>>
+  startTime : TIME
+  endTime : TIME
+  maxCapacity : INTEGER
+}
+
+entity "APPOINTMENT" <<Entity>> {
+  * appointmentId : BIGINT <<PK>>
+  --
+  appointmentCode : VARCHAR <<UK>>
+  customerId : BIGINT <<FK>>
+  customerName : VARCHAR
+  vehicleId : BIGINT <<FK>>
+  timeSlotId : BIGINT <<FK>>
+  appointmentDate : DATE
+  status : VARCHAR
+  description : NVARCHAR
+  createdAt : DATETIME
+  confirmedAt : DATETIME
+}
+
+entity "SERVICE_TYPE" <<Entity>> {
+  * serviceTypeId : BIGINT <<PK>>
+  --
+  name : VARCHAR <<UK>>
+}
+
+entity "APPOINTMENT_SERVICE_TYPE" <<Relationship>> {
+  * appointmentId : BIGINT <<PK>>
+  * serviceTypeId : BIGINT <<PK>>
+}
+
+entity "SERVICE_TICKET" <<Entity>> {
+  * serviceTicketId : BIGINT <<PK>>
+  --
+  serviceTicketCode : VARCHAR <<UK>>
+  appointmentId : BIGINT <<FK>>
+  customerId : BIGINT <<FK>>
+  customerName : VARCHAR
+  customerPhone : VARCHAR
+  vehicleId : BIGINT <<FK>>
+  vehicleLicensePlate : VARCHAR
+  quotationId : BIGINT <<FK>>
+  createdByEmployeeId : BIGINT <<FK>>
+  status : VARCHAR
+  receiveCondition : TEXT
+  notes : TEXT
+  createdAt : DATETIME
+  updatedAt : DATETIME
+  deliveryAt : DATE
+}
+
+entity "TICKET_SERVICE_TYPE" <<Relationship>> {
+  * serviceTicketId : BIGINT <<PK>>
+  * serviceTypeId : BIGINT <<PK>>
+}
+
+entity "SERVICE_TICKET_TECHNICIANS" <<Relationship>> {
+  * serviceTicketId : BIGINT <<PK>>
+  * employeeId : BIGINT <<PK>>
+}
+
+entity "SERVICE_RATING" <<Entity>> {
+  * ratingId : BIGINT <<PK>>
+  --
+  serviceTicketId : BIGINT <<FK>>
+  customerId : BIGINT <<FK>>
+  stars : INTEGER
+  feedback : VARCHAR
+  createdAt : DATETIME
+}
+
+entity "PRICE_QUOTATION" <<Entity>> {
+  * priceQuotationId : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  discount : DECIMAL
+  estimateAmount : DECIMAL
+  status : VARCHAR
+  createdBy : BIGINT
+  updatedBy : BIGINT
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "PRICE_QUOTATION_ITEM" <<Entity>> {
+  * priceQuotationItemId : BIGINT <<PK>>
+  --
+  quotationId : BIGINT <<FK>>
+  partId : BIGINT <<FK>>
+  partName : VARCHAR
+  unitPrice : DECIMAL
+  quantity : DOUBLE
+  unit : VARCHAR
+  totalPrice : DECIMAL
+  exportedQuantity : DOUBLE
+  itemType : VARCHAR
+  status : VARCHAR
+  warehouseReviewStatus : VARCHAR
+  warehouseNote : VARCHAR
+  createdBy : BIGINT
+  updatedBy : BIGINT
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "PART_RESERVATION" <<Entity>> {
+  * reservationId : BIGINT <<PK>>
+  --
+  partId : BIGINT <<FK>>
+  quotationItemId : BIGINT <<FK>>
+  reservedQuantity : DOUBLE
+  reservedAt : DATETIME
+  active : BOOLEAN
+}
+
+entity "PART_CATEGORY" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  name : VARCHAR
+}
+
+entity "PART" <<Entity>> {
+  * partId : BIGINT <<PK>>
+  --
+  sku : VARCHAR <<UK>>
+  partName : VARCHAR
+  categoryId : BIGINT <<FK>>
+  vehicleModel : BIGINT <<FK>>
+  market : BIGINT <<FK>>
+  purchasePrice : DECIMAL
+  sellingPrice : DECIMAL
+  discountRate : DECIMAL
+  quantityInStock : DOUBLE
+  unit : BIGINT <<FK>>
+  reservedQuantity : DOUBLE
+  reorderLevel : DOUBLE
+  supplier : BIGINT <<FK>>
+  isUniversal : BOOLEAN
+  specialPart : BOOLEAN
+  status : VARCHAR
+  note : VARCHAR
+}
+
+entity "PART_ORIGIN" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  country : VARCHAR
+  partId : BIGINT <<FK>>
+}
+
+entity "MARKET" <<Entity>> {
+  * marketId : BIGINT <<PK>>
+  --
+  name : VARCHAR
+}
+
+entity "UNIT" <<Entity>> {
+  * unitId : BIGINT <<PK>>
+  --
+  name : VARCHAR
+}
+
+entity "SUPPLIER" <<Entity>> {
+  * supplierId : BIGINT <<PK>>
+  --
+  name : VARCHAR
+  phone : VARCHAR
+  email : VARCHAR
+  address : VARCHAR
+  isActive : BOOLEAN
+}
+
+entity "PURCHASE_REQUEST" <<Entity>> {
+  * purchaseRequestId : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  quotationId : BIGINT <<FK>>
+  totalEstimatedAmount : DECIMAL
+  reviewStatus : VARCHAR
+  reason : VARCHAR
+  createdBy : BIGINT
+  updatedBy : BIGINT
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "PURCHASE_REQUEST_ITEM" <<Entity>> {
+  * purchaseRequestItemId : BIGINT <<PK>>
+  --
+  purchaseRequestId : BIGINT <<FK>>
+  quotationItemId : BIGINT <<FK>>
+  partId : BIGINT <<FK>>
+  partName : VARCHAR
+  quantity : DOUBLE
+  unit : VARCHAR
+  estimatedPurchasePrice : DECIMAL
+  quantityReceived : DOUBLE
+  reviewStatus : VARCHAR
+  note : VARCHAR
+  createdBy : BIGINT
+  updatedBy : BIGINT
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "STOCK_RECEIPT" <<Entity>> {
+  * receiptId : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  purchaseRequestId : BIGINT <<FK>>
+  supplierId : BIGINT <<FK>>
+  createdBy : VARCHAR
+  createdAt : DATETIME
+  receivedBy : VARCHAR
+  receivedAt : DATETIME
+  status : VARCHAR
+  totalAmount : DECIMAL
+  note : VARCHAR
+}
+
+entity "STOCK_RECEIPT_ITEM" <<Entity>> {
+  * stockReceiptItemId : BIGINT <<PK>>
+  --
+  stockReceiptId : BIGINT <<FK>>
+  purchaseRequestItemId : BIGINT <<FK>>
+  requestedQuantity : DOUBLE
+  quantityReceived : DOUBLE
+  actualUnitPrice : DECIMAL
+  actualTotalPrice : DECIMAL
+  attachmentUrl : VARCHAR
+  note : VARCHAR
+  receivedAt : DATETIME
+  receivedBy : VARCHAR
+  status : VARCHAR
+}
+
+entity "STOCK_RECEIPT_ITEM_HISTORY" <<Entity>> {
+  * historyId : BIGINT <<PK>>
+  --
+  stockReceiptItemId : BIGINT <<FK>>
+  quantity : DOUBLE
+  unitPrice : DECIMAL
+  totalPrice : DECIMAL
+  attachmentUrl : VARCHAR
+  receivedAt : DATETIME
+  receivedBy : VARCHAR
+  note : VARCHAR
+  paymentStatus : VARCHAR
+  amountPaid : DECIMAL
+  paymentAttachment : VARCHAR
+}
+
+entity "STOCK_EXPORT" <<Entity>> {
+  * exportId : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  quotationId : BIGINT <<FK>>
+  reason : VARCHAR
+  status : VARCHAR
+  createdBy : VARCHAR
+  exportedBy : VARCHAR
+  approvedBy : VARCHAR
+  createdAt : DATETIME
+  exportedAt : DATETIME
+  approvedAt : DATETIME
+}
+
+entity "STOCK_EXPORT_ITEM" <<Entity>> {
+  * exportItemId : BIGINT <<PK>>
+  --
+  exportId : BIGINT <<FK>>
+  quotationItemId : BIGINT <<FK>>
+  partId : BIGINT <<FK>>
+  quantity : DOUBLE
+  quantityExported : DOUBLE
+  receiverId : BIGINT <<FK>>
+  exportedAt : DATETIME
+  status : VARCHAR
+  note : VARCHAR
+}
+
+entity "STOCK_EXPORT_ITEM_HISTORY" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  exportItemId : BIGINT <<FK>>
+  quantity : DOUBLE
+  exportedAt : DATETIME
+  exportedBy : BIGINT <<FK>>
+}
+
+entity "STOCK_EXPORT_ITEM_EMPLOYEE" <<Relationship>> {
+  * exportItemId : BIGINT <<PK>>
+  * employeeId : BIGINT <<PK>>
+}
+
+entity "INVOICE" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  code : VARCHAR
+  priceQuotationId : BIGINT <<FK>>
+  serviceTicketId : BIGINT <<FK>>
+  depositReceived : DECIMAL
+  finalAmount : DECIMAL
+  status : VARCHAR
+  createdAt : DATETIME
+  updatedAt : DATETIME
+  createdBy : VARCHAR
+}
+
+entity "DEBT" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  customerId : BIGINT <<FK>>
+  serviceTicketId : BIGINT <<FK>>
+  amount : DECIMAL
+  dueDate : DATE
+  paidAmount : DECIMAL
+  status : VARCHAR
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "TRANSACTION" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  paymentLinkId : VARCHAR
+  invoiceId : BIGINT <<FK>>
+  debtId : BIGINT <<FK>>
+  customerFullName : VARCHAR
+  customerPhone : VARCHAR
+  method : VARCHAR
+  type : VARCHAR
+  amount : BIGINT
+  createdAt : DATETIME
+  isActive : BOOLEAN
+}
+
+entity "ACCOUNT" <<Entity>> {
+  * accountId : BIGINT <<PK>>
+  --
+  phone : VARCHAR <<UK>>
+  role : VARCHAR
+  password : VARCHAR
+  active : BOOLEAN
+}
+
+entity "EMPLOYEE" <<Entity>> {
+  * employeeId : BIGINT <<PK>>
+  --
+  fullName : VARCHAR
+  gender : VARCHAR
+  dateOfBirth : DATE
+  phone : VARCHAR <<UK>>
+  address : VARCHAR
+  hireDate : DATETIME
+  terminationDate : DATETIME
+  dailySalary : DECIMAL
+  status : VARCHAR
+  accountId : BIGINT <<FK>>
+}
+
+entity "PAYROLL" <<Entity>> {
+  * payrollId : BIGINT <<PK>>
+  --
+  employeeId : BIGINT <<FK>>
+  month : INTEGER
+  year : INTEGER
+  baseSalary : DECIMAL
+  totalAllowance : DECIMAL
+  totalDeduction : DECIMAL
+  totalAdvance : DECIMAL
+  workingDays : INTEGER
+  netSalary : DECIMAL
+  status : VARCHAR
+  approvedBy : BIGINT <<FK>>
+  approvedAt : DATETIME
+  paidBy : BIGINT <<FK>>
+  paidAt : DATETIME
+  createdAt : DATETIME
+}
+
+entity "ALLOWANCE" <<Entity>> {
+  * allowanceId : BIGINT <<PK>>
+  --
+  employeeId : BIGINT <<FK>>
+  type : VARCHAR
+  amount : DECIMAL
+  note : VARCHAR
+  month : INTEGER
+  year : INTEGER
+  createdAt : DATETIME
+  createdBy : VARCHAR
+}
+
+entity "DEDUCTION" <<Entity>> {
+  * deductionId : BIGINT <<PK>>
+  --
+  employeeId : BIGINT <<FK>>
+  type : VARCHAR
+  amount : DECIMAL
+  reason : VARCHAR
+  date : DATE
+  createdBy : VARCHAR
+}
+
+entity "ATTENDANCE" <<Entity>> {
+  * attendanceId : BIGINT <<PK>>
+  --
+  employeeId : BIGINT <<FK>>
+  date : DATE <<UK>>
+  isPresent : BOOLEAN
+  note : VARCHAR
+  recordedBy : BIGINT
+  recordedAt : DATETIME
+}
+
+entity "NOTIFICATION" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  receiverId : BIGINT <<FK>>
+  type : VARCHAR
+  title : VARCHAR
+  message : VARCHAR
+  referenceId : BIGINT
+  referenceType : VARCHAR
+  actionPath : VARCHAR
+  status : VARCHAR
+  createdAt : DATETIME
+}
+
+entity "LEDGER_VOUCHER" <<Entity>> {
+  * ledgerId : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  type : VARCHAR
+  amount : DECIMAL
+  relatedEmployeeId : BIGINT
+  relatedSupplierId : BIGINT
+  description : VARCHAR
+  category : VARCHAR
+  createdAt : DATETIME
+  approvedAt : DATETIME
+  createdByEmployeeId : BIGINT <<FK>>
+  approvedByEmployeeId : BIGINT <<FK>>
+  attachmentUrl : VARCHAR
+  status : VARCHAR
+  receiptHistoryId : BIGINT <<FK>>
+}
+
+entity "OTP_VERIFICATION" <<Entity>> {
+  * otpId : BIGINT <<PK>>
+  --
+  phone : VARCHAR
+  otpCode : VARCHAR
+  expiresAt : DATETIME
+  isVerified : BOOLEAN
+  purpose : VARCHAR
+  createdAt : DATETIME
+}
+
+entity "CODE_SEQUENCE" <<Entity>> {
+  * prefix : VARCHAR <<PK>>
+  * year : INTEGER <<PK>>
+  --
+  currentValue : BIGINT
+}
+
+entity "ACCESS_TOKEN" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  accessToken : VARCHAR
+  refreshToken : VARCHAR
+  createdAt : DATETIME
+  updatedAt : DATETIME
+}
+
+entity "ONE_TIME_TOKEN" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  token : TEXT
+  expiresAt : VARCHAR
+}
+
+entity "DISCOUNT" <<Entity>> {
+  * id : BIGINT <<PK>>
+  --
+  code : VARCHAR <<UK>>
+  name : VARCHAR
+  type : VARCHAR
+  value : DECIMAL
+  expiredAt : DATETIME
+}
+
+entity "DISCOUNT_POLICY" <<Entity>> {
+  * discountPolicyId : BIGINT <<PK>>
+  --
+  loyaltyLevel : VARCHAR <<UK>>
+  discountRate : DECIMAL
+  requiredSpending : DECIMAL
+  description : VARCHAR
+}
+
+' ============================================
+' Relationships - Core Entities
+' ============================================
+
+BRAND ||--o{ VEHICLE_MODEL : "có"
+VEHICLE_MODEL ||--o{ VEHICLE : "model của"
+CUSTOMER ||--|{ VEHICLE : "sở hữu"
+DISCOUNT_POLICY ||--o{ CUSTOMER : "áp dụng cho"
+
+CUSTOMER ||--o{ APPOINTMENT : "đặt"
+VEHICLE ||--o{ APPOINTMENT : "cho xe"
+TIME_SLOT ||--o{ APPOINTMENT : "trong khung giờ"
+APPOINTMENT ||--o{ APPOINTMENT_SERVICE_TYPE : "yêu cầu dịch vụ"
+SERVICE_TYPE ||--o{ APPOINTMENT_SERVICE_TYPE : "được yêu cầu"
+
+' ============================================
+' Relationships - Service & Quotation
+' ============================================
+
+APPOINTMENT }o--o| SERVICE_TICKET : "tạo ra"
+SERVICE_TICKET ||--o{ TICKET_SERVICE_TYPE : "bao gồm"
+SERVICE_TYPE ||--o{ TICKET_SERVICE_TYPE : "được sử dụng"
+SERVICE_TICKET ||--o{ SERVICE_TICKET_TECHNICIANS : "phân công"
+SERVICE_TICKET ||--o| SERVICE_RATING : "được đánh giá"
+CUSTOMER ||--o{ SERVICE_RATING : "đánh giá"
+SERVICE_TICKET ||--o| PRICE_QUOTATION : "có"
+PRICE_QUOTATION ||--|{ PRICE_QUOTATION_ITEM : "chứa"
+PRICE_QUOTATION_ITEM ||--o| PART_RESERVATION : "đặt chỗ"
+
+' ============================================
+' Relationships - Inventory & Parts
+' ============================================
+
+PART_CATEGORY ||--o{ PART : "phân loại"
+VEHICLE_MODEL ||--o{ PART : "tương thích"
+MARKET ||--o{ PART : "thị trường"
+UNIT ||--o{ PART : "đơn vị đo"
+SUPPLIER ||--o{ PART : "cung cấp"
+PART ||--o{ PART_ORIGIN : "có nguồn gốc"
+PART ||--o{ PRICE_QUOTATION_ITEM : "được báo giá"
+PART ||--o{ PART_RESERVATION : "được đặt chỗ"
+
+' ============================================
+' Relationships - Purchase & Receipt
+' ============================================
+
+PRICE_QUOTATION ||--o| PURCHASE_REQUEST : "tạo yêu cầu"
+PURCHASE_REQUEST ||--|{ PURCHASE_REQUEST_ITEM : "chứa"
+PRICE_QUOTATION_ITEM ||--o| PURCHASE_REQUEST_ITEM : "ánh xạ"
+PART ||--o{ PURCHASE_REQUEST_ITEM : "được yêu cầu"
+PURCHASE_REQUEST ||--o| STOCK_RECEIPT : "tạo phiếu nhập"
+SUPPLIER ||--o{ STOCK_RECEIPT : "cung cấp"
+STOCK_RECEIPT ||--|{ STOCK_RECEIPT_ITEM : "chứa"
+PURCHASE_REQUEST_ITEM ||--|| STOCK_RECEIPT_ITEM : "tham chiếu"
+STOCK_RECEIPT_ITEM ||--o{ STOCK_RECEIPT_ITEM_HISTORY : "lịch sử"
+
+' ============================================
+' Relationships - Stock Export
+' ============================================
+
+PRICE_QUOTATION ||--o| STOCK_EXPORT : "tạo phiếu xuất"
+STOCK_EXPORT ||--|{ STOCK_EXPORT_ITEM : "chứa"
+PRICE_QUOTATION_ITEM ||--o| STOCK_EXPORT_ITEM : "hạng mục"
+PART ||--o{ STOCK_EXPORT_ITEM : "phụ tùng xuất"
+STOCK_EXPORT_ITEM ||--o{ STOCK_EXPORT_ITEM_HISTORY : "lịch sử"
+STOCK_EXPORT_ITEM }o--o{ STOCK_EXPORT_ITEM_EMPLOYEE : "người nhận"
+
+' ============================================
+' Relationships - Finance & Payment
+' ============================================
+
+PRICE_QUOTATION ||--o| INVOICE : "tạo"
+SERVICE_TICKET ||--o| INVOICE : "có"
+INVOICE ||--o{ TRANSACTION : "thanh toán"
+CUSTOMER ||--o{ DEBT : "nợ"
+SERVICE_TICKET ||--o| DEBT : "tạo nợ"
+DEBT ||--o{ TRANSACTION : "thanh toán"
+
+' ============================================
+' Relationships - Employee & Payroll
+' ============================================
+
+ACCOUNT }o--o| EMPLOYEE : "liên kết"
+EMPLOYEE ||--o{ PAYROLL : "có lương"
+EMPLOYEE ||--o{ ALLOWANCE : "nhận phụ cấp"
+EMPLOYEE ||--o{ DEDUCTION : "bị khấu trừ"
+EMPLOYEE ||--o{ ATTENDANCE : "chấm công"
+EMPLOYEE ||--o{ NOTIFICATION : "nhận thông báo"
+EMPLOYEE ||--o{ LEDGER_VOUCHER : "tạo/phê duyệt"
+EMPLOYEE }o--o{ SERVICE_TICKET_TECHNICIANS : "được phân công"
+EMPLOYEE }o--o{ STOCK_EXPORT_ITEM_EMPLOYEE : "nhận"
+STOCK_RECEIPT_ITEM_HISTORY ||--o| LEDGER_VOUCHER : "liên kết"
+
+@enduml
+
