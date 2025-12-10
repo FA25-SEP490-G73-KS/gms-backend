@@ -25,4 +25,6 @@ public interface EmployeeService {
     EmployeeDetailResponse getEmployeeDetail(Long id);
 
     EmployeeDetailResponse updateEmployee(Long id, EmployeeUpdateRequest request);
+
+    void updateEmployeeActiveStatus(Long id, boolean isActive);
 }

@@ -19,4 +19,6 @@ public interface PartService {
 
     // New method to support filtering by category id and stock status
     Page<PartReqDto> getAllPart(int page, int size, Long categoryId, StockLevelStatus status);
+
+    void deletePart(Long id);
 }

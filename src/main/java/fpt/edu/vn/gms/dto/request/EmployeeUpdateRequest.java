@@ -41,8 +41,5 @@ public class EmployeeUpdateRequest {
     private LocalDateTime hireDate;
 
     private LocalDateTime terminationDate;
-
-    @NotBlank(message = "Trạng thái không được để trống")
-    private String status;
 }
 

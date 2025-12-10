@@ -6,6 +6,7 @@ import fpt.edu.vn.gms.dto.request.CustomerRequestDto;
 import fpt.edu.vn.gms.dto.request.NotMeRequest;
 import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.service.CustomerService;
+import fpt.edu.vn.gms.utils.PhoneUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -127,7 +128,26 @@ public class CustomerController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
         })
         public ResponseEntity<CustomerDetailDto> getCustomerServiceHistoryByPhone(@RequestParam("phone") String phone) {
-                return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(phone));
+
+                String normalizedPhone = PhoneUtils.normalize(phone);
+
+                return ResponseEntity.ok(customerService.getCustomerServiceHistoryByPhone(normalizedPhone));
+        }
+
+        @Public
+        @GetMapping("/otp/lookup")
+        @Operation(summary = "Lấy thông tin khách hàng sau khi xác thực OTP", description = "Trả về thông tin khách hàng và lịch sử dịch vụ nếu khách đã từng sử dụng dịch vụ. Nếu chưa có lịch sử, trả 404.")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tìm thấy khách hàng"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy hoặc chưa từng sử dụng dịch vụ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<CustomerDetailDto>> lookupCustomerAfterOtp(
+                        @RequestParam("phone") String phone) {
+
+                String formateString = PhoneUtils.normalize(phone);
+
+                CustomerDetailDto dto = customerService.getCustomerIfHasServiceHistory(formateString);
+                return ResponseEntity.ok(ApiResponse.success("Tìm thấy khách hàng", dto));
         }
 
         @PatchMapping("/{id}/toggle-active")

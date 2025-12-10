@@ -81,4 +81,13 @@ public class EmployeeController {
         EmployeeResponse response = employeeService.createEmployee(request);
         return ResponseEntity.ok(ApiResponse.success("Tạo nhân viên thành công", response));
     }
+
+    @PatchMapping("/{id}/active")
+    @Operation(summary = "Cập nhật trạng thái hoạt động của nhân viên")
+    public ResponseEntity<ApiResponse<Void>> updateEmployeeActiveStatus(
+            @PathVariable Long id,
+            @RequestParam("isActive") boolean isActive) {
+        employeeService.updateEmployeeActiveStatus(id, isActive);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái hoạt động nhân viên thành công", null));
+    }
 }

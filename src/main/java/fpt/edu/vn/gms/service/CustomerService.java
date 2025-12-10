@@ -35,4 +35,12 @@ public interface CustomerService {
     CustomerResponseDto handleNotMe(String phone);
 
     CustomerResponseDto toggleActive(Long customerId);
+
+    /**
+     * Lấy thông tin khách hàng theo số điện thoại và chỉ trả về khi khách đã từng
+     * sử dụng dịch vụ.
+     * Nếu không tồn tại hoặc chưa có lịch sử dịch vụ sẽ bắn
+     * ResourceNotFoundException.
+     */
+    CustomerDetailDto getCustomerIfHasServiceHistory(String phone);
 }

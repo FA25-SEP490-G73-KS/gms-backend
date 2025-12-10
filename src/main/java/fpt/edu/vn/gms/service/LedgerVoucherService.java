@@ -13,7 +13,8 @@ public interface LedgerVoucherService {
 
     LedgerVoucherDetailResponse createManualVoucher(CreateVoucherRequest request);
 
-    LedgerVoucherDetailResponse createPaymentVoucherFromReceiptHistory(Long receiptHistoryId, CreateVoucherRequest request, MultipartFile file);
+    LedgerVoucherDetailResponse createPaymentVoucherFromReceiptHistory(Long receiptHistoryId,
+            CreateVoucherRequest request, MultipartFile file);
 
     LedgerVoucherDetailResponse updateVoucher(Long id, UpdateVoucherRequest request);
 
@@ -26,11 +27,16 @@ public interface LedgerVoucherService {
     LedgerVoucherDetailResponse getVoucherDetail(Long id);
 
     Page<LedgerVoucherListResponse> getVoucherList(String keyword,
-                                                   String type,
-                                                   String status,
-                                                   String fromDate,
-                                                   String toDate,
-                                                   Long supplierId,
-                                                   Long employeeId,
-                                                   Pageable pageable);
+            String type,
+            String status,
+            String fromDate,
+            String toDate,
+            Long supplierId,
+            Long employeeId,
+            Pageable pageable);
+
+    /**
+     * Xóa phiếu thu/chi. Chỉ cho phép xóa khi trạng thái là PENDING (chờ duyệt).
+     */
+    void deleteVoucher(Long id);
 }

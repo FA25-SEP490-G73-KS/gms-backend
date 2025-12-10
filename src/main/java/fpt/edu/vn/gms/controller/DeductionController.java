@@ -14,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,30 +26,38 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "deduction-controller", description = "Quản lý khấu trừ lương nhân viên")
 public class DeductionController {
 
-    private final DeductionService deductionService;
+        private final DeductionService deductionService;
 
-    @Operation(
-            summary = "Tạo khấu trừ",
-            description = """
-                Tạo mới một khoản khấu trừ cho nhân viên.
-                Bao gồm:
-                - Danh mục (DeductionType)
-                - Nội dung mô tả
-                - Số tiền
-                """
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tạo khấu trừ thành công")
-    })
-    @PostMapping()
-    public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<DeductionDto>> createDeduction(
-            @Valid @RequestBody DeductionRequestDto dto,
-            @Parameter(description = "ID người tạo") @CurrentUser Employee employee) {
+        @Operation(summary = "Tạo khấu trừ", description = """
+                        Tạo mới một khoản khấu trừ cho nhân viên.
+                        Bao gồm:
+                        - Danh mục (DeductionType)
+                        - Nội dung mô tả
+                        - Số tiền
+                        """)
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Tạo khấu trừ thành công")
+        })
+        @PostMapping()
+        public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<DeductionDto>> createDeduction(
+                        @Valid @RequestBody DeductionRequestDto dto,
+                        @Parameter(description = "ID người tạo") @CurrentUser Employee employee) {
 
-        return ResponseEntity.ok(
-                fpt.edu.vn.gms.dto.response.ApiResponse.success("Tạo khấu trừ thành công",
-                        deductionService.createDeduction(dto, employee))
-        );
-    }
+                return ResponseEntity.ok(
+                                fpt.edu.vn.gms.dto.response.ApiResponse.success("Tạo khấu trừ thành công",
+                                                deductionService.createDeduction(dto, employee)));
+        }
+
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Xóa khấu trừ", description = "Chỉ xóa theo ID khấu trừ.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Xóa khấu trừ thành công"),
+                        @ApiResponse(responseCode = "404", description = "Không tìm thấy khấu trừ")
+        })
+        public ResponseEntity<fpt.edu.vn.gms.dto.response.ApiResponse<Void>> deleteDeduction(
+                        @PathVariable Long id) {
+                deductionService.deleteDeduction(id);
+                return ResponseEntity.ok(
+                                fpt.edu.vn.gms.dto.response.ApiResponse.success("Xóa khấu trừ thành công", null));
+        }
 }
-

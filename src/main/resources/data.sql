@@ -213,6 +213,7 @@
 #                              description NVARCHAR(255),
 #                              created_at DATETIME NOT NULL,
 #                              confirmed_at DATETIME,
+#                              is_reminder_sent BOOLEAN DEFAULT FALSE,
 #                              FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
 #                              FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id),
 #                              FOREIGN KEY (time_slot_id) REFERENCES time_slot(time_slot_id)

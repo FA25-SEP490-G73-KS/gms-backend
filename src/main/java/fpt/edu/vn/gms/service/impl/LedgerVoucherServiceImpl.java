@@ -61,7 +61,8 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
 
     @Override
     @Transactional
-    public LedgerVoucherDetailResponse createPaymentVoucherFromReceiptHistory(Long receiptHistoryId, CreateVoucherRequest request, MultipartFile file) {
+    public LedgerVoucherDetailResponse createPaymentVoucherFromReceiptHistory(Long receiptHistoryId,
+            CreateVoucherRequest request, MultipartFile file) {
         StockReceiptItemHistory history = stockReceiptItemHistoryRepository.findById(receiptHistoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch sử nhập kho"));
 
@@ -117,7 +118,7 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
     @Transactional
     public LedgerVoucherDetailResponse approveVoucher(Long id, ApproveVoucherRequest request) {
         LedgerVoucher voucher = ledgerVoucherRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
 
         if (voucher.getStatus() != LedgerVoucherStatus.PENDING) {
             throw new IllegalStateException("Chỉ được duyệt phiếu ở trạng thái Chờ duyệt");
@@ -160,19 +161,18 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
     @Override
     @Transactional(readOnly = true)
     public Page<LedgerVoucherListResponse> getVoucherList(String keyword,
-                                                          String type,
-                                                          String status,
-                                                          String fromDate,
-                                                          String toDate,
-                                                          Long supplierId,
-                                                          Long employeeId,
-                                                          Pageable pageable) {
+            String type,
+            String status,
+            String fromDate,
+            String toDate,
+            Long supplierId,
+            Long employeeId,
+            Pageable pageable) {
         Specification<LedgerVoucher> spec = Specification.unrestricted();
 
         if (keyword != null && !keyword.isBlank()) {
             String kw = keyword.trim().toLowerCase();
-            spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("code")), "%" + kw + "%"));
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("code")), "%" + kw + "%"));
         }
 
         if (type != null && !type.isBlank()) {
@@ -209,9 +209,23 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
         return page.map(mapper::toListDto);
     }
 
+    @Override
+    @Transactional
+    public void deleteVoucher(Long id) {
+        LedgerVoucher voucher = ledgerVoucherRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu thu/chi"));
+
+        if (voucher.getStatus() != LedgerVoucherStatus.PENDING) {
+            throw new IllegalStateException("Chỉ được xóa phiếu ở trạng thái Chờ duyệt (PENDING)");
+        }
+
+        ledgerVoucherRepository.delete(voucher);
+    }
+
     private String generateVoucherCode(LedgerVoucherType type) {
         String prefix;
-        if (type == LedgerVoucherType.SALARY || type == LedgerVoucherType.SERVICE_FEE || type == LedgerVoucherType.STOCK_RECEIPT_PAYMENT || type == LedgerVoucherType.OTHER) {
+        if (type == LedgerVoucherType.SALARY || type == LedgerVoucherType.SERVICE_FEE
+                || type == LedgerVoucherType.STOCK_RECEIPT_PAYMENT || type == LedgerVoucherType.OTHER) {
             prefix = "PC"; // Phiếu chi
         } else {
             prefix = "PT"; // Phiếu thu (nếu sau này có thêm loại thu)
