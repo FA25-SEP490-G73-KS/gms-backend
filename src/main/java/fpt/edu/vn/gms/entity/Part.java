@@ -80,7 +80,8 @@ public class Part {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private StockLevelStatus status;
+    @Builder.Default
+    private StockLevelStatus status = StockLevelStatus.LOW_STOCK;
 
     @OneToMany(mappedBy = "part")
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();

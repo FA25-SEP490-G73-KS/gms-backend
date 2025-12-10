@@ -14,6 +14,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByPhone(String phone);
 
+    // Thêm method: tìm customer theo phone và isActive = true
+    Optional<Customer> findByPhoneAndIsActiveTrue(String phone);
+
     // Lấy top 10 số điện thoại khớp với ký tự
     List<Customer> findTop10ByPhoneContainingOrderByPhoneAsc(String phone);
 
