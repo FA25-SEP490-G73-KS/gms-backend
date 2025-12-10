@@ -229,10 +229,6 @@ public class CustomerServiceImpl implements CustomerService {
 
         CustomerDetailDto dto = getCustomerServiceHistoryByPhone(customer.getPhone());
 
-        if (dto.getHistory() == null || dto.getHistory().isEmpty()) {
-            throw new ResourceNotFoundException("Khách hàng chưa từng sử dụng dịch vụ");
-        }
-
         return dto;
     }
 }

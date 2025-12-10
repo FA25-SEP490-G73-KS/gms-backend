@@ -73,7 +73,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         dto.setPhoneNumber(PhoneUtils.normalize(dto.getPhoneNumber()));
 
-        Optional<Customer> existingCustomer = customerRepo.findByPhone(dto.getPhoneNumber());
+        Optional<Customer> existingCustomer = customerRepo.findByPhoneAndIsActiveTrue(dto.getPhoneNumber());
 
         Customer customer;
 
