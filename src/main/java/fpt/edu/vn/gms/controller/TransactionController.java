@@ -2,9 +2,13 @@ package fpt.edu.vn.gms.controller;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.TRANSACTIONS_PREFIX;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +21,7 @@ import fpt.edu.vn.gms.dto.request.TransactionManualCallbackRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -45,5 +50,13 @@ public class TransactionController {
       @RequestBody @Valid TransactionManualCallbackRequestDto request) {
     TransactionResponseDto dto = transactionService.manualCallback(request);
     return ResponseEntity.ok(ApiResponse.success("Cập nhật giao dịch thành công", dto));
+  }
+
+  @GetMapping("/invoice/{invoiceId}")
+  @Operation(summary = "Lấy danh sách giao dịch theo invoice ID", description = "Lấy tất cả các giao dịch liên quan đến một invoice cụ thể")
+  public ResponseEntity<ApiResponse<List<TransactionResponseDto>>> getTransactionsByInvoiceId(
+      @PathVariable Long invoiceId) {
+    List<TransactionResponseDto> transactions = transactionService.getTransactionsByInvoiceId(invoiceId);
+    return ResponseEntity.ok(ApiResponse.success("Lấy danh sách giao dịch thành công", transactions));
   }
 }

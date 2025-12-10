@@ -149,7 +149,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         // Create Employee entity
         Employee employee = Employee.builder()
                 .fullName(request.getFullName())
-                .gender(request.getGender())
                 .dateOfBirth(request.getDateOfBirth())
                 .phone(request.getPhone())
                 .address(address)
@@ -260,7 +259,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private Role mapPositionToRole(String position) {
-        if (position == null) return null;
+        if (position == null)
+            return null;
         String normalized = position.trim().toLowerCase();
         for (Role role : Role.values()) {
             if (role.getValue().toLowerCase().equals(normalized) || role.name().toLowerCase().equals(normalized)) {

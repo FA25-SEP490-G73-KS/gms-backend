@@ -52,12 +52,10 @@ public class EmployeeController {
     public ResponseEntity<ApiResponse<Page<EmployeeListResponse>>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
-            @RequestParam(required = false) String status
-    ) {
+            @RequestParam(required = false) String status) {
         Page<EmployeeListResponse> result = employeeService.findAll(page, size, status);
         return ResponseEntity.ok(
-                ApiResponse.success("Lấy danh sách nhân viên thành công", result)
-        );
+                ApiResponse.success("Lấy danh sách nhân viên thành công", result));
     }
 
     @GetMapping("/{id}")
@@ -71,15 +69,15 @@ public class EmployeeController {
     @Operation(summary = "Cập nhật thông tin nhân viên")
     public ResponseEntity<ApiResponse<EmployeeDetailResponse>> updateEmployee(
             @PathVariable Long id,
-            @Valid @RequestBody EmployeeUpdateRequest request
-    ) {
+            @Valid @RequestBody EmployeeUpdateRequest request) {
         EmployeeDetailResponse detail = employeeService.updateEmployee(id, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật nhân viên thành công", detail));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Tạo mới nhân viên")
-    public ResponseEntity<ApiResponse<EmployeeResponse>> createEmployee(@Valid @RequestBody EmployeeCreateRequest request) {
+    public ResponseEntity<ApiResponse<EmployeeResponse>> createEmployee(
+            @Valid @RequestBody EmployeeCreateRequest request) {
         EmployeeResponse response = employeeService.createEmployee(request);
         return ResponseEntity.ok(ApiResponse.success("Tạo nhân viên thành công", response));
     }

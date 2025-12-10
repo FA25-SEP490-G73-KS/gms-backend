@@ -167,6 +167,14 @@ public class TransactionServiceImpl implements TransactionService {
     return transactionMapper.toResponseDto(tx);
   }
 
+  @Override
+  public List<TransactionResponseDto> getTransactionsByInvoiceId(Long invoiceId) {
+    List<Transaction> transactions = transactionRepository.findByInvoiceId(invoiceId);
+    return transactions.stream()
+        .map(transactionMapper::toResponseDto)
+        .toList();
+  }
+
   private String getDescriptionOfTransaction(PaymentTransactionType type, Invoice invoice) {
     String typeName = switch (type) {
       case PaymentTransactionType.DEPOSIT -> "Dat coc";

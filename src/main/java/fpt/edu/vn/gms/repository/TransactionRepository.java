@@ -19,4 +19,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   List<Transaction> findByInvoiceAndIsActiveTrue(Invoice invoice);
 
   List<Transaction> findAllByCustomerPhone(String phone);
+
+  List<Transaction> findByInvoiceId(Long invoiceId);
 }
