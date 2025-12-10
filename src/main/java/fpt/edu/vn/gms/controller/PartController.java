@@ -128,5 +128,12 @@ public class PartController {
                                 .body(ApiResponse.success("Part có categoryId " + categoryId, resDtoPage));
         }
 
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Xóa linh kiện", description = "Chỉ xóa khi số lượng tồn kho bằng 0.")
+        public ResponseEntity<ApiResponse<Void>> deletePart(@PathVariable Long id) {
+                partService.deletePart(id);
+                return ResponseEntity.ok(ApiResponse.success("Xóa linh kiện thành công", null));
+        }
+
 
 }

@@ -67,7 +67,8 @@ public class DebtServiceImpl implements DebtService {
 
         @Override
         public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size) {
-                // For summary aggregation query, do NOT sort by createdAt (not in GROUP BY) to avoid ONLY_FULL_GROUP_BY error
+                // For summary aggregation query, do NOT sort by createdAt (not in GROUP BY) to
+                // avoid ONLY_FULL_GROUP_BY error
                 Pageable pageable = PageRequest.of(page, size);
                 Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(null, null, null, pageable);
 
@@ -80,14 +81,15 @@ public class DebtServiceImpl implements DebtService {
 
         @Override
         public Page<CustomerDebtSummaryDto> getAllDebtsSummary(int page, int size, DebtStatus status,
-                                                               LocalDate fromDate,
-                                                               LocalDate toDate) {
+                        LocalDate fromDate,
+                        LocalDate toDate) {
                 Pageable pageable = PageRequest.of(page, size);
-                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(status, fromDate, toDate, pageable);
+                Page<Object[]> rawPage = debtRepository.findTotalDebtGroupedByCustomer(status, fromDate, toDate,
+                                pageable);
 
                 List<CustomerDebtSummaryDto> content = rawPage.getContent().stream()
-                        .map(this::mapToCustomerDebtSummaryDto)
-                        .toList();
+                                .map(this::mapToCustomerDebtSummaryDto)
+                                .toList();
 
                 return new PageImpl<>(content, pageable, rawPage.getTotalElements());
         }
@@ -112,25 +114,24 @@ public class DebtServiceImpl implements DebtService {
                                 totalPaidAmount,
                                 totalRemaining,
                                 dueDate,
-                                status
-                );
+                                status);
         }
 
         @Override
         @Transactional(readOnly = true)
         public DebtDetailResponseDto getDebtsByCustomer(Long customerId,
-                                                             DebtStatus status,
-                                                             String keyword,
-                                                             int page,
-                                                             int size,
-                                                             String sort) {
+                        DebtStatus status,
+                        String keyword,
+                        int page,
+                        int size,
+                        String sort) {
 
                 log.info("Fetching debts for customerId={} status={} keyword={} page={} size={} sort={}",
-                        customerId, status, keyword, page, size, sort);
+                                customerId, status, keyword, page, size, sort);
 
                 // Lấy customer
                 Customer customer = customerRepository.findById(customerId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
 
                 // Build pageable
                 Pageable pageable = buildPageable(page, size, sort);
@@ -138,34 +139,33 @@ public class DebtServiceImpl implements DebtService {
 
                 // Lấy danh sách công nợ của KH
                 Page<Debt> debts = debtRepository.findByCustomerAndFilter(
-                        customer.getCustomerId(),
-                        status,
-                        normalizedKeyword,
-                        pageable
-                );
+                                customer.getCustomerId(),
+                                status,
+                                normalizedKeyword,
+                                pageable);
 
                 // Map sang DTO từng debt
                 List<CustomerDebtResponseDto> debtList = customerDebtMapper.toDto(debts.getContent());
 
                 // Tính tổng "còn lại"
                 BigDecimal totalRemaining = debts.getContent().stream()
-                        .map(Debt::getAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                .map(Debt::getAmount)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // Lấy biển số đầu tiên
                 String licensePlate = customer.getVehicles().isEmpty()
-                        ? null
-                        : customer.getVehicles().get(0).getLicensePlate();
+                                ? null
+                                : customer.getVehicles().get(0).getLicensePlate();
 
                 // Build response cho FE
                 return DebtDetailResponseDto.builder()
-                        .customerName(customer.getFullName())
-                        .phone(customer.getPhone())
-                        .licensePlate(licensePlate)
-                        .address(customer.getAddress())
-                        .debts(debtList)
-                        .totalRemainingAmount(totalRemaining)
-                        .build();
+                                .customerName(customer.getFullName())
+                                .phone(customer.getPhone())
+                                .licensePlate(licensePlate)
+                                .address(customer.getAddress())
+                                .debts(debtList)
+                                .totalRemainingAmount(totalRemaining)
+                                .build();
         }
 
         private Pageable buildPageable(int page, int size, String sort) {
@@ -246,7 +246,6 @@ public class DebtServiceImpl implements DebtService {
 
         }
 
-
         @Override
         public void updateDueDate(Long debtId, LocalDate dueDate) {
                 // Validate dueDate: must be strictly after today
@@ -267,15 +266,22 @@ public class DebtServiceImpl implements DebtService {
 
                 // 1. Lấy phiếu dịch vụ
                 ServiceTicket serviceTicket = serviceTicketRepository.findById(serviceTicketId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu dịch vụ"));
 
                 String customerPhone = serviceTicket.getCustomer().getPhone();
 
                 // 2. Lấy lịch sử theo SỐ ĐIỆN THOẠI
-                List<Transaction> transactions =
-                        transactionRepository.findAllByCustomerPhone(customerPhone);
+                List<Transaction> transactions = transactionRepository.findAllByCustomerPhone(customerPhone);
 
-                // 3. Map về DTO detail
-                return serviceTicketDebtDetailMapper.toDebtDetail(serviceTicket, transactions);
+                // 3. Lấy debtId từ ServiceTicket
+                Long debtId = debtRepository.findByServiceTicket_ServiceTicketId(serviceTicketId)
+                                .map(Debt::getId)
+                                .orElse(null);
+
+                // 4. Map về DTO detail
+                ServiceTicketDebtDetail detail = serviceTicketDebtDetailMapper.toDebtDetail(serviceTicket,
+                                transactions);
+                detail.setDebtId(debtId);
+                return detail;
         }
 }

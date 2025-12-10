@@ -9,6 +9,7 @@ import fpt.edu.vn.gms.dto.response.EmployeeListResponse;
 import fpt.edu.vn.gms.dto.response.EmployeeResponse;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface EmployeeService {
@@ -24,4 +25,6 @@ public interface EmployeeService {
     EmployeeDetailResponse getEmployeeDetail(Long id);
 
     EmployeeDetailResponse updateEmployee(Long id, EmployeeUpdateRequest request);
+
+    void updateEmployeeActiveStatus(Long id, boolean isActive);
 }

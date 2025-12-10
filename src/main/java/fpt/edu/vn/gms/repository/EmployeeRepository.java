@@ -16,7 +16,7 @@ import java.util.Set;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    @Query("SELECT e FROM Employee e WHERE e.status = 'Active' and  e.account IS NULL")
+    @Query("SELECT e FROM Employee e WHERE e.isActive = true and  e.account IS NULL")
     List<EmployeeDto> findAllEmployeeIsTechniciansActive();
 
     EmployeeInfoResponseDto findEmployeeInfoByPhone(String phone);
@@ -28,6 +28,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Optional<Employee> findByAccount(Account account);
 
-    @Query("SELECT e FROM Employee e LEFT JOIN Attendance a ON e.employeeId = a.employee.id WHERE a.isPresent IS NOT NULL AND a.date = :date")
+    @Query("SELECT e FROM Employee e LEFT JOIN Attendance a ON e.employeeId = a.employee.employeeId WHERE a.isPresent IS NOT NULL AND a.date = :date")
     Set<Employee> findEmployeesWithAttendances(@Param("date") LocalDate date);
 }

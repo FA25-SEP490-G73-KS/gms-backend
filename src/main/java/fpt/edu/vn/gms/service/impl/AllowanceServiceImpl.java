@@ -26,28 +26,51 @@ public class AllowanceServiceImpl implements AllowanceService {
 
         @Override
         public AllowanceDto createAllowance(AllowanceRequestDto dto, Employee accountance) {
+// <<<
+
+//                 Employee employee = employeeRepository.findById(dto.getEmployeeId())
+//                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+
+
+//         Allowance allowance = Allowance.builder()
+//                 .employee(employee)
+//                 .type(dto.getType())
+//                 .amount(dto.getAmount())
+//                 .createdAt(LocalDateTime.now())
+//                 .month(LocalDate.now().getMonthValue())
+//                 .year(LocalDate.now().getYear())
+//                 .createdBy(accountance.getFullName())
+//                 .build();
+//                 allowanceRepository.save(allowance);
+
+// =======
 
                 Employee employee = employeeRepository.findById(dto.getEmployeeId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
 
+                Allowance allowance = Allowance.builder()
+                                .employee(employee)
+                                .type(dto.getType())
+                                .amount(dto.getAmount())
+                                .createdAt(LocalDateTime.now())
+                                .month(LocalDate.now().getMonthValue())
+                                .year(LocalDate.now().getYear())
+                                .createdBy(accountance.getFullName())
+                                .build();
 
-        Allowance allowance = Allowance.builder()
-                .employee(employee)
-                .type(dto.getType())
-                .amount(dto.getAmount())
-                .createdAt(LocalDateTime.now())
-                .month(LocalDate.now().getMonthValue())
-                .year(LocalDate.now().getYear())
-                .createdBy(accountance.getFullName())
-                .build();
                 allowanceRepository.save(allowance);
-
                 return AllowanceDto
                                 .builder()
                                 .type(allowance.getType().getVietnamese())
                                 .amount(allowance.getAmount())
                                 .createdAt(allowance.getCreatedAt())
                                 .build();
+        }
+        @Override
+        public void deleteAllowance(Long id) {
+                Allowance allowance = allowanceRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phụ cấp"));
+                allowanceRepository.delete(allowance);
         }
 
 }

@@ -26,24 +26,23 @@ public class LedgerVoucherController {
     private final LedgerVoucherService ledgerVoucherService;
 
     @PostMapping("/manual")
-    public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> createManualVoucher(@RequestBody CreateVoucherRequest request) {
+    public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> createManualVoucher(
+            @RequestBody CreateVoucherRequest request) {
         LedgerVoucherDetailResponse response = ledgerVoucherService.createManualVoucher(request);
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu thu/chi thủ công thành công", response));
     }
 
-    @PostMapping(value = "/receipt-payment/{receiptHistoryId}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/receipt-payment/{receiptHistoryId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> createPaymentVoucherFromReceiptHistory(
             @PathVariable Long receiptHistoryId,
             @RequestPart("data") String data,
-            @RequestPart(value = "file", required = false) MultipartFile file
-    ) throws JsonProcessingException {
+            @RequestPart(value = "file", required = false) MultipartFile file) throws JsonProcessingException {
 
         ObjectMapper mapper = new ObjectMapper();
         CreateVoucherRequest request = mapper.readValue(data, CreateVoucherRequest.class);
 
-        LedgerVoucherDetailResponse response =
-                ledgerVoucherService.createPaymentVoucherFromReceiptHistory(receiptHistoryId, request, file);
+        LedgerVoucherDetailResponse response = ledgerVoucherService
+                .createPaymentVoucherFromReceiptHistory(receiptHistoryId, request, file);
 
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu chi thanh toán nhập kho thành công", response));
     }
@@ -99,5 +98,11 @@ public class LedgerVoucherController {
     public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> getVoucherDetail(@PathVariable Long id) {
         LedgerVoucherDetailResponse response = ledgerVoucherService.getVoucherDetail(id);
         return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết phiếu thu/chi thành công", response));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteVoucher(@PathVariable Long id) {
+        ledgerVoucherService.deleteVoucher(id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa phiếu thu/chi thành công", null));
     }
 }

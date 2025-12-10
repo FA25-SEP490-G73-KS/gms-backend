@@ -38,6 +38,8 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
 
         Optional<Debt> findByIdAndCustomerCustomerId(Long debtId, Long customerId);
 
+        Optional<Debt> findByServiceTicket_ServiceTicketId(Long serviceTicketId);
+
         @Query(value = """
                     SELECT 
                         d.customer.customerId,

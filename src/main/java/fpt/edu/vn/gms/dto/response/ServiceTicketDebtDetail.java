@@ -16,4 +16,6 @@ public class ServiceTicketDebtDetail {
     private ServiceTicketResponseDto serviceTicketResponseDto;
 
     private List<TransactionResponseDto> transactionResponseDto;
+
+    private Long debtId;
 }

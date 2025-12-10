@@ -7,4 +7,6 @@ import fpt.edu.vn.gms.entity.Employee;
 public interface DeductionService {
 
     DeductionDto createDeduction(DeductionRequestDto dto, Employee employee);
+
+    void deleteDeduction(Long id);
 }

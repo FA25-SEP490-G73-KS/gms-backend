@@ -149,14 +149,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         // Create Employee entity
         Employee employee = Employee.builder()
                 .fullName(request.getFullName())
-                .gender(request.getGender())
                 .dateOfBirth(request.getDateOfBirth())
                 .phone(request.getPhone())
                 .address(address)
                 .hireDate(request.getStartDate())
                 .terminationDate(request.getEndDate())
                 .dailySalary(request.getDailySalary())
-                .status("Active")
+                .isActive(true)
                 .account(account)
                 .build();
 
@@ -172,7 +171,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return EmployeeResponse.builder()
                 .id(saved.getEmployeeId())
                 .fullName(saved.getFullName())
-                .gender(saved.getGender())
                 .dateOfBirth(saved.getDateOfBirth())
                 .phone(saved.getPhone())
                 .address(saved.getAddress())
@@ -180,7 +178,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .dailySalary(saved.getDailySalary())
                 .hireDate(saved.getHireDate())
                 .terminationDate(saved.getTerminationDate())
-                .status(saved.getStatus())
+                .status(saved.isActive() ? "Active" : "Inactive")
                 .build();
     }
 
@@ -221,7 +219,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .dailySalary(employee.getDailySalary())
                 .hireDate(employee.getHireDate())
                 .terminationDate(employee.getTerminationDate())
-                .status(employee.getStatus())
+                .status(employee.isActive() ? "Active" : "Inactive")
                 .build();
     }
 
@@ -242,7 +240,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setDailySalary(request.getDailySalary());
         employee.setHireDate(request.getHireDate());
         employee.setTerminationDate(request.getTerminationDate());
-        employee.setStatus(request.getStatus());
 
         // Cập nhật role nếu position thay đổi
         if (employee.getAccount() != null) {
@@ -260,7 +257,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private Role mapPositionToRole(String position) {
-        if (position == null) return null;
+        if (position == null)
+            return null;
         String normalized = position.trim().toLowerCase();
         for (Role role : Role.values()) {
             if (role.getValue().toLowerCase().equals(normalized) || role.name().toLowerCase().equals(normalized)) {
@@ -268,5 +266,14 @@ public class EmployeeServiceImpl implements EmployeeService {
             }
         }
         throw new IllegalArgumentException("Vị trí không hợp lệ: " + position);
+    }
+
+    @Override
+    @Transactional
+    public void updateEmployeeActiveStatus(Long id, boolean isActive) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên"));
+        employee.setActive(isActive);
+        employeeRepository.save(employee);
     }
 }

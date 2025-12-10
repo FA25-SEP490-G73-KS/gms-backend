@@ -221,4 +221,18 @@ public class CustomerServiceImpl implements CustomerService {
         Customer saved = customerRepository.save(customer);
         return customerMapper.toDto(saved);
     }
+
+    @Override
+    public CustomerDetailDto getCustomerIfHasServiceHistory(String phone) {
+        Customer customer = customerRepository.findByPhone(phone)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
+
+        CustomerDetailDto dto = getCustomerServiceHistoryByPhone(customer.getPhone());
+
+        if (dto.getHistory() == null || dto.getHistory().isEmpty()) {
+            throw new ResourceNotFoundException("Khách hàng chưa từng sử dụng dịch vụ");
+        }
+
+        return dto;
+    }
 }

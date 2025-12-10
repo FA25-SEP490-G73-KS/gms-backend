@@ -234,6 +234,20 @@ public class PartServiceImpl implements PartService {
         return parts.map(partMapper::toDto);
     }
 
+    @Override
+    @Transactional
+    public void deletePart(Long id) {
+        Part part = partRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + id));
+
+        Double qty = part.getQuantityInStock();
+        if (qty != null && qty > 0) {
+            throw new IllegalStateException("Linh kiện còn tồn kho, không thể xóa");
+        }
+
+        partRepository.delete(part);
+    }
+
     /**
      * Cập nhật trường status (StockLevelStatus) của linh kiện dựa trên quantityInStock và reorderLevel.
      * Quy tắc:

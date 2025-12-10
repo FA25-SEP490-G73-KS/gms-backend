@@ -45,8 +45,8 @@ public class Employee {
     @Column(name = "daily_salary", precision = 18, scale = 2)
     private BigDecimal dailySalary;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    @Column(name = "is_active", columnDefinition = "boolean default true")
+    private boolean isActive;
 
     @OneToOne
     @JoinColumn(name = "account_id")
