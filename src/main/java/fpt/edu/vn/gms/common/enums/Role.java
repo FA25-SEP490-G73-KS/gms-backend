@@ -13,7 +13,8 @@ public enum Role {
     MANAGER("Quản lý"),
     SERVICE_ADVISOR("Cố vấn dịch vụ"),
     ACCOUNTANT("Kế toán"),
-    WAREHOUSE("Nhân viên kho");
+    WAREHOUSE("Nhân viên kho"),
+    TECHNICIAN("Kỹ thuật viên");
 
     String value;
 

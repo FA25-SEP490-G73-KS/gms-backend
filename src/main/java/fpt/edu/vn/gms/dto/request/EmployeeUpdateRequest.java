@@ -41,5 +41,7 @@ public class EmployeeUpdateRequest {
     private LocalDateTime hireDate;
 
     private LocalDateTime terminationDate;
+
+    private boolean isActive;
 }
 

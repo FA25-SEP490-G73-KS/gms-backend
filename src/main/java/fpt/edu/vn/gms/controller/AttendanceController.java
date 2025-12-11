@@ -33,7 +33,7 @@ public class AttendanceController {
   AttendanceService attendanceService;
 
   // Lưu điểm danh hàng loạt
-  @PostMapping("/mark")
+  @PutMapping("/mark")
   @Operation(
           summary = "Điểm danh hàng loạt cho nhân viên",
           description = "MANAGER thực hiện điểm danh trong ngày, trả về danh sách điểm danh mới nhất."

@@ -21,4 +21,10 @@ public class AllowanceRequestDto {
     @NotNull
     @DecimalMin("0.0")
     private BigDecimal amount;
+
+    @NotNull
+    private Integer month;
+
+    @NotNull
+    private Integer year;
 }
