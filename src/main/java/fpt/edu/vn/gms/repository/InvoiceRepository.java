@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
@@ -21,4 +23,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
             """)
     Page<Invoice> findAllWithRelations(Pageable pageable);
 
+    // Tìm hóa đơn theo serviceTicketId (mỗi service ticket thường chỉ có 1 invoice)
+    Optional<Invoice> findByServiceTicket_ServiceTicketId(Long serviceTicketId);
 }

@@ -136,7 +136,17 @@ public class InvoiceServiceImpl implements InvoiceService {
                                         return new ResourceNotFoundException("Không tìm thấy phiếu thanh toán!");
                                 });
 
-                return mapper.toDetailDto(payment);
+                InvoiceDetailResDto dto = mapper.toDetailDto(payment);
+
+                BigDecimal paidAmount = transactionRepo.findByInvoiceAndIsActiveTrue(payment).stream()
+                                .map(Transaction::getAmount)
+                                .filter(Objects::nonNull)
+                                .map(BigDecimal::valueOf)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                dto.setPaidAmount(paidAmount);
+
+                return dto;
         }
 
         @Override
@@ -161,22 +171,12 @@ public class InvoiceServiceImpl implements InvoiceService {
                                 ? payment.getFinalAmount()
                                 : BigDecimal.ZERO;
 
-                // Lấy các transaction đã tạo (PayOS callback thành công)
-                // Nếu repo đã có findByPaymentAndStatus thì dùng trực tiếp cho nhẹ DB:
-                var transactions = transactionRepo.findByInvoiceAndIsActiveTrue(payment);
-
-                BigDecimal collectedAmount = transactions.stream()
-                                .map(Transaction::getAmount)
-                                .filter(Objects::nonNull)
-                                .map(BigDecimal::valueOf)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
                 // Công nợ mới = tổng phải thu - số tiền đã thu
-                BigDecimal newDebtAmount = totalAmount.subtract(collectedAmount);
+                BigDecimal newDebtAmount = totalAmount;
                 if (newDebtAmount.compareTo(BigDecimal.ZERO) < 0) {
                         // không cho âm, log để dễ debug
-                        log.warn("Computed newDebtAmount < 0 for paymentId={} (total={}, collected={}), force to 0",
-                                        paymentId, totalAmount, collectedAmount);
+                        log.warn("Computed newDebtAmount < 0 for paymentId={} (total={}), force to 0",
+                                        paymentId, totalAmount);
                         newDebtAmount = BigDecimal.ZERO;
                 }
 
@@ -237,7 +237,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
                 if (transaction.getType() == PaymentTransactionType.DEPOSIT.getValue()) {
                         invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
-                        invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
+                        invoice.setFinalAmount(invoice.getFinalAmount().subtract(amount));
                         customerService.updateTotalSpending(customerId, amount);
                 } else {
                         BigDecimal finalAmount = invoice.getFinalAmount().subtract(amount);

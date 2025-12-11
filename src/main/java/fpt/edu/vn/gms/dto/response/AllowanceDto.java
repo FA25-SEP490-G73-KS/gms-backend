@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AllowanceDto {
 
+    private Long id;
+
     private String type;
     private BigDecimal amount;
 

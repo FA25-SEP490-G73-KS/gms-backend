@@ -610,7 +610,7 @@ CREATE TABLE deduction (
 CREATE TABLE ledger_voucher (
                                 ledger_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                 code VARCHAR(50) NOT NULL UNIQUE,
-                                type VARCHAR(20) NOT NULL,
+                                type VARCHAR(100) NOT NULL,
                                 amount DECIMAL(18,2) NOT NULL,
                                 related_employee_id BIGINT,
                                 related_supplier_id BIGINT,

@@ -14,6 +14,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class DeductionDto {
 
+    private Long id;
+
     private String type;
     private BigDecimal amount;
     private LocalDate date;

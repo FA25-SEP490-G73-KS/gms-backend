@@ -20,5 +20,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   List<Transaction> findAllByCustomerPhone(String phone);
 
+  // Thêm method: tìm transaction theo customerPhone và debtId
+  List<Transaction> findAllByCustomerPhoneAndDebt_Id(String phone, Long debtId);
+
   List<Transaction> findByInvoiceId(Long invoiceId);
 }
