@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PayrollStatus {
 
+    PENDING("Đang làm lương"),
     PENDING_MANAGER_APPROVAL("Chờ quản lý duyệt"),
     APPROVED("Duyệt"),
     PAID("Đã thanh toán");

@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 public class CustomerDebtResponseDto {
 
     private Long id;
+    private Long serviceTicketId;
     private String serviceTicketCode;
     private String createdAt;
     private BigDecimal totalAmount;

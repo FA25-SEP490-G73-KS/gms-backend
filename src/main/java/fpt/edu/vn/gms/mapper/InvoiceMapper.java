@@ -18,6 +18,7 @@ public interface InvoiceMapper {
     InvoiceListResDto toListDto(Invoice payment);
 
     @Mapping(target = "serviceTicket", source = "serviceTicket", qualifiedByName = "toServiceTicketResponseDto")
+    @Mapping(target = "paidAmount", ignore = true)
 
     // Amount in words (nếu bạn tự thêm sau)
     @Mapping(target = "amountInWords", ignore = true)

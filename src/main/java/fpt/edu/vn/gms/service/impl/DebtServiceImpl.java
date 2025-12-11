@@ -3,14 +3,10 @@ package fpt.edu.vn.gms.service.impl;
 import fpt.edu.vn.gms.common.enums.DebtStatus;
 import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
 import fpt.edu.vn.gms.dto.request.CreateDebtDto;
-import fpt.edu.vn.gms.dto.response.CustomerDebtSummaryDto;
+import fpt.edu.vn.gms.dto.response.*;
 import fpt.edu.vn.gms.dto.request.PayDebtRequestDto;
 import fpt.edu.vn.gms.common.enums.TransactionMethod;
-import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
-import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
-import fpt.edu.vn.gms.dto.response.DebtDetailResponseDto;
-import fpt.edu.vn.gms.dto.response.ServiceTicketDebtDetail;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.ServiceTicket;
@@ -21,11 +17,9 @@ import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.exception.ServiceTicketNotFoundException;
 import fpt.edu.vn.gms.mapper.CustomerDebtMapper;
 import fpt.edu.vn.gms.mapper.DebtMapper;
+import fpt.edu.vn.gms.mapper.InvoiceMapper;
 import fpt.edu.vn.gms.mapper.ServiceTicketDebtDetailMapper;
-import fpt.edu.vn.gms.repository.CustomerRepository;
-import fpt.edu.vn.gms.repository.DebtRepository;
-import fpt.edu.vn.gms.repository.ServiceTicketRepository;
-import fpt.edu.vn.gms.repository.TransactionRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.CustomerService;
 import fpt.edu.vn.gms.service.DebtService;
 import fpt.edu.vn.gms.service.TransactionService;
@@ -60,6 +54,8 @@ public class DebtServiceImpl implements DebtService {
         TransactionRepository transactionRepository;
         CustomerService customerService;
         ServiceTicketRepository serviceTicketRepository;
+        InvoiceRepository invoiceRepository;
+        InvoiceMapper invoiceMapper;
         DebtMapper debtMapper;
         CustomerDebtMapper customerDebtMapper;
         ServiceTicketDebtDetailMapper serviceTicketDebtDetailMapper;
@@ -270,18 +266,28 @@ public class DebtServiceImpl implements DebtService {
 
                 String customerPhone = serviceTicket.getCustomer().getPhone();
 
-                // 2. Lấy lịch sử theo SỐ ĐIỆN THOẠI
-                List<Transaction> transactions = transactionRepository.findAllByCustomerPhone(customerPhone);
-
-                // 3. Lấy debtId từ ServiceTicket
-                Long debtId = debtRepository.findByServiceTicket_ServiceTicketId(serviceTicketId)
-                                .map(Debt::getId)
+                // 2. Lấy debt theo ServiceTicket (nếu có)
+                Debt debt = debtRepository.findByServiceTicket_ServiceTicketId(serviceTicketId)
                                 .orElse(null);
 
-                // 4. Map về DTO detail
+                Long debtId = debt != null ? debt.getId() : null;
+
+                // 3. Lấy lịch sử theo SỐ ĐIỆN THOẠI và debtId tương ứng
+                List<Transaction> transactions = (debtId == null)
+                                ? List.of()
+                                : transactionRepository.findAllByCustomerPhoneAndDebt_Id(customerPhone, debtId);
+
+                // 4. Map về DTO detail (transactions)
                 ServiceTicketDebtDetail detail = serviceTicketDebtDetailMapper.toDebtDetail(serviceTicket,
                                 transactions);
-                detail.setDebtId(debtId);
+
+                // 5.1. Gắn thêm thông tin chi tiết công nợ nếu có
+                if (debt != null) {
+                        CustomerDebtResponseDto customerDebtDto = customerDebtMapper.toDto(debt);
+                        detail.setCustomerDebt(customerDebtDto);
+                }
+
+
                 return detail;
         }
 }

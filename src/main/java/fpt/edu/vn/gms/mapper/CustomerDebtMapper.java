@@ -10,6 +10,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = { ServiceTicketMapper.class })
 public interface CustomerDebtMapper {
 
+    @Mapping(source = "serviceTicket.serviceTicketId", target = "serviceTicketId")
     @Mapping(source = "serviceTicket.serviceTicketCode", target = "serviceTicketCode")
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "amount", target = "totalAmount")

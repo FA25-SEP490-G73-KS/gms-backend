@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -11,11 +12,11 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class ServiceTicketDebtDetail {
 
-    private ServiceTicketResponseDto serviceTicketResponseDto;
-
+    private CustomerDebtResponseDto customerDebt;
+    private InvoiceDetailResDto invoice;
     private List<TransactionResponseDto> transactionResponseDto;
 
-    private Long debtId;
 }

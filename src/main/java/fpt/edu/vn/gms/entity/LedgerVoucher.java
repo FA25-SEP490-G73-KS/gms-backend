@@ -27,7 +27,7 @@ public class LedgerVoucher {
     private String code;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 20)
+    @Column(name = "type", nullable = false)
     private LedgerVoucherType type;
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)

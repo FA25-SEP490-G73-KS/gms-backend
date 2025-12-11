@@ -46,7 +46,8 @@ public class TransactionServiceImpl implements TransactionService {
   private final CustomerService customerService;
 
   /**
-   * Dùng chung core logic xử lý thanh toán thành công/failed dựa trên paymentLinkId.
+   * Dùng chung core logic xử lý thanh toán thành công/failed dựa trên
+   * paymentLinkId.
    * Trả về Transaction đã cập nhật để tái sử dụng.
    */
   private Transaction processPaymentByPaymentLinkId(String paymentLinkId) {
@@ -67,7 +68,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (transaction.getType() == PaymentTransactionType.DEPOSIT) {
           invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
-          invoice.setFinalAmount(invoice.getFinalAmount().subtract(invoice.getDepositReceived()));
+          invoice.setFinalAmount(invoice.getFinalAmount().subtract(amount));
           customerService.updateTotalSpending(customerId, amount);
         } else {
           BigDecimal finalAmount = invoice.getFinalAmount();
@@ -132,7 +133,28 @@ public class TransactionServiceImpl implements TransactionService {
         .build();
 
     if (request.getMethod() == TransactionMethod.BANK_TRANSFER) {
-      String description = getDescriptionOfTransaction(type, invoice);
+      // Phân biệt: nếu có invoice thì mô tả theo hóa đơn, nếu không thì theo công nợ
+      String description;
+      if (invoice != null) {
+        description = getDescriptionOfTransaction(type, invoice);
+      } else if (debt != null) {
+        String typeName = switch (type) {
+          case PaymentTransactionType.DEPOSIT -> "Dat coc";
+          case PaymentTransactionType.PAYMENT -> "Thanh toan cong no";
+        };
+        String ticketCode = (debt.getServiceTicket() != null)
+            ? debt.getServiceTicket().getServiceTicketCode()
+            : "";
+        description = "%s-%s".formatted(typeName, ticketCode);
+      } else {
+        description = "Thanh toan";
+      }
+
+      // PayOS giới hạn mô tả tối đa 25 ký tự
+      if (description.length() > 25) {
+        description = description.substring(0, 25);
+      }
+
       long orderCode = System.currentTimeMillis() / 1000;
 
       CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
@@ -169,7 +191,9 @@ public class TransactionServiceImpl implements TransactionService {
 
   @Override
   public List<TransactionResponseDto> getTransactionsByInvoiceId(Long invoiceId) {
-    List<Transaction> transactions = transactionRepository.findByInvoiceId(invoiceId);
+    List<Transaction> transactions = transactionRepository.findByInvoiceId(invoiceId).stream()
+        .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
+        .toList();
     return transactions.stream()
         .map(transactionMapper::toResponseDto)
         .toList();

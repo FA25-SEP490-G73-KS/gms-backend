@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.dto.response;
 
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class InvoiceListResDto {
 
     private Long id;

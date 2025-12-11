@@ -76,7 +76,7 @@ public class PayrollServiceImpl implements PayrollService {
                     .orElse(null);
 
             PayrollStatus status = payroll == null
-                    ? PayrollStatus.PENDING_MANAGER_APPROVAL
+                    ? PayrollStatus.PENDING
                     : payroll.getStatus();
 
             PayrollListItemDto
@@ -88,7 +88,6 @@ public class PayrollServiceImpl implements PayrollService {
                     .baseSalary(baseSalary)
                     .allowance(allowance)
                     .deduction(deduction)
-//                    .advanceSalary(advanceSalary)
                     .netSalary(netSalary)
                     .status(status)
                     .build();
@@ -183,8 +182,7 @@ public class PayrollServiceImpl implements PayrollService {
         Integer workingDays = attendanceRepository.countPresentDays(employeeId, month, year);
         Integer leaveDays = attendanceRepository.countAbsentDays(employeeId, month, year);
 
-        BigDecimal baseSalary = emp.getDailySalary()
-                .multiply(BigDecimal.valueOf(workingDays));
+        BigDecimal baseSalary = emp.getDailySalary();
 
 
         BigDecimal totalAllowance = allowanceRepository.sumForMonth(employeeId, month, year);
@@ -192,7 +190,7 @@ public class PayrollServiceImpl implements PayrollService {
                 allowanceRepository.findByEmployeeEmployeeIdAndMonthAndYear(employeeId, month, year);
 
         List<AllowanceDto> allowanceDTOs = allowanceList.stream()
-                .map(a -> new AllowanceDto(a.getType().getVietnamese(), a.getAmount(), a.getCreatedAt(), a.getCreatedBy()))
+                .map(a -> new AllowanceDto(a.getId(), a.getType().getVietnamese(), a.getAmount(), a.getCreatedAt(), a.getCreatedBy()))
                 .toList();
 
 
@@ -204,7 +202,7 @@ public class PayrollServiceImpl implements PayrollService {
         );
 
         List<DeductionDto> deductionDTOs = deductionList.stream()
-                .map(d -> new DeductionDto(d.getType().getVietnamese(), d.getAmount(), d.getDate(), d.getCreatedBy()))
+                .map(d -> new DeductionDto(d.getId(), d.getType().getVietnamese(), d.getAmount(), d.getDate(), d.getCreatedBy()))
                 .toList();
 
 
