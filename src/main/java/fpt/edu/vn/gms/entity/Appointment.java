@@ -1,9 +1,10 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
+import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,7 +57,7 @@ public class Appointment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AppointmentStatus status = AppointmentStatus.CONFIRMED;
+    private AppointmentStatus status = AppointmentStatus.PENDING;
 
     // đánh dấu field trong entity là kiểu dữ liệu lớn
     @Lob
@@ -68,4 +69,9 @@ public class Appointment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+
+    @Column(name = "is_reminder_sent")
+    private boolean isReminderSent;
 }

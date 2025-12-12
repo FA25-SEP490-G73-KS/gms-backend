@@ -11,5 +11,6 @@ public class ZnsSendSurveyDTO {
     private String customerName;
     private String carModel;
     private String licensePlate;
-    private Long serviceCode;
+    private Long serviceId;
+    private String serviceCode;
 }

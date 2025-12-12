@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.ServiceTicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +7,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 
 @Getter
 @Setter
@@ -25,7 +26,7 @@ public class ServiceTicket {
     @Column(name = "service_ticket_code", unique = true, nullable = false, length = 20)
     private String serviceTicketCode;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "appointment_id", referencedColumnName = "appointmentId", unique = true)
     private Appointment appointment;
 
@@ -50,6 +51,8 @@ public class ServiceTicket {
     @ManyToOne
     @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id")
     private Vehicle vehicle;
+
+    private String vehicleLicensePlate;
 
     @ManyToMany
     @JoinTable(
@@ -82,7 +85,7 @@ public class ServiceTicket {
     @Column(name = "delivery_at")
     private LocalDate deliveryAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by_employee_id")
     private Employee createdBy;
 
@@ -96,4 +99,8 @@ public class ServiceTicket {
         updatedAt = LocalDateTime.now();
     }
 
+    @Override
+    public String toString() {
+        return vehicle.getVehicleModel() + " " + vehicle.getVehicleModel().getVehicleModelId();
+    }
 }

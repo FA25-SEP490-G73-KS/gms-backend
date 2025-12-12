@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,41 +22,48 @@ public class PurchaseRequest {
     @Column(name = "purchase_request_id")
     private Long id;
 
-    @Column(name = "code", nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private PurchaseRequestStatus status = PurchaseRequestStatus.PENDING;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
-    // Ai tạo PR (nhân viên hoặc hệ thống)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private Employee createdBy;
-
-    // Liên kết đến phiếu dịch vụ
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_ticket_id")
-    private ServiceTicket relatedServiceTicket;
-
-    // Liên kết đến báo giá
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "quotation_id")
     private PriceQuotation relatedQuotation;
 
-    // Tổng dự kiến chi phí
+    @OneToOne(mappedBy = "purchaseRequest")
+    private StockReceipt stockReceipt;
+
     @Column(nullable = true)
     private BigDecimal totalEstimatedAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_status", length = 30)
+    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
 
     @Column(nullable = true, length = 255)
     private String reason;
 
     @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseRequestItem> items = new ArrayList<>();
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

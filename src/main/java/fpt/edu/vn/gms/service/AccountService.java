@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.service;
 
-import com.google.firebase.auth.FirebaseAuthException;
 import fpt.edu.vn.gms.dto.request.ChangePasswordRequest;
 import fpt.edu.vn.gms.dto.request.ResetPasswordRequestDto;
 import fpt.edu.vn.gms.dto.response.AccountResponseDto;

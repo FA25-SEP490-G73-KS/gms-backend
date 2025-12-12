@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.service;
 
-import fpt.edu.vn.gms.common.NotificationType;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
 import fpt.edu.vn.gms.entity.Notification;
 
@@ -8,14 +8,17 @@ import java.util.List;
 
 public interface NotificationService {
 
-    NotificationResponseDto createNotification(String recipientPhone,
-                                    String title,
-                                    String message,
-                                    NotificationType type);
-
-//    void notifyQuotationRejectedByCustomer(PriceQuotation quotation, String reason);
-//
-//    void notifyQuotationConfirmedByCustomer(PriceQuotation quotation);
+    NotificationResponseDto createNotification(Long receiver,
+                                               String title,
+                                               String message,
+                                               NotificationType type,
+                                               String referenceId,
+                                               String actionPath);
 
     List<NotificationResponseDto> getNotificationsForUser(String recipientPhone);
+
+    void markAsRead(Long notificationId, String recipientPhone);
+
+    // Lấy chi tiết 1 notification theo id (dùng cho API get by id)
+    NotificationResponseDto getNotificationById(Long id, String recipientPhone);
 }

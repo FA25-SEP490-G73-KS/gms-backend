@@ -1,15 +1,15 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PriceQuotationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 
 @Getter
 @Setter
@@ -24,15 +24,33 @@ public class PriceQuotation {
     @Column(name = "price_quotation_id")
     private Long priceQuotationId;
 
-    @OneToOne(mappedBy = "priceQuotation", fetch = FetchType.LAZY)
+    @Column(unique = true, length = 50)
+    private String code;
+
+    @OneToOne(mappedBy = "priceQuotation")
     private ServiceTicket serviceTicket;
+
+    @Column(name = "discount", precision = 18, scale = 2)
+    private BigDecimal discount;
 
     @Column(name = "estimate_amount", precision = 18, scale = 2)
     private BigDecimal estimateAmount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_policy_id")
-    private DiscountPolicy discountPolicy;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
+
+    @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceQuotationItem> items = new ArrayList<>();
+
+    @OneToOne(mappedBy = "quotation")
+    private StockExport stockExport;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -40,22 +58,13 @@ public class PriceQuotation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PriceQuotationStatus status = PriceQuotationStatus.DRAFT;
-
-    @Column(name = "reject_reason")
-    private String rejectReason;
-
-    @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PriceQuotationItem> items = new ArrayList<>();
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {updatedAt = LocalDateTime.now();}
-
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

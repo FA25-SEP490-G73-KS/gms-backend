@@ -1,13 +1,16 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PriceQuotationItemStatus;
-import fpt.edu.vn.gms.common.PriceQuotationItemType;
-import fpt.edu.vn.gms.common.WarehouseReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
+import fpt.edu.vn.gms.common.enums.ExportStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.WarehouseReviewStatus;
 
 @Entity
 @Table(name = "price_quotation_item")
@@ -22,11 +25,11 @@ public class PriceQuotationItem {
     @Column(name = "price_quotation_item_id")
     private Long priceQuotationItemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "quotation_id", referencedColumnName = "price_quotation_id")
     private PriceQuotation priceQuotation;
 
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "part_id", referencedColumnName = "part_id")
     private Part part;
 
@@ -42,14 +45,11 @@ public class PriceQuotationItem {
     @Column(name = "unit", length = 20)
     private String unit;
 
-    @Column(name = "specification", length = 255)
-    private String specification;
-
-    @Column(name = "discount_rate", precision = 5, scale = 2)
-    private BigDecimal discountRate;
-
     @Column(name = "total_price", precision = 18, scale = 2)
     private BigDecimal totalPrice;
+
+    @Column(name = "exported_quantity")
+    private Double exportedQuantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)
@@ -67,4 +67,24 @@ public class PriceQuotationItem {
 
     @Column(name = "warehouse_note", length = 255)
     private String warehouseNote;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

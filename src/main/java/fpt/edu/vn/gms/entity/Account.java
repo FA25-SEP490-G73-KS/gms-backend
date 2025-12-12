@@ -3,13 +3,15 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import fpt.edu.vn.gms.common.enums.Role;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Account")
+@Table(name = "account")
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,15 +21,14 @@ public class Account {
     @Column(name = "phone", length = 20, unique = true)
     private String phone;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "role_id", referencedColumnName = "role_id")
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(name = "password", length = 100)
     private String password;
 
-    @OneToOne
-    @JoinColumn(name = "employee_id")
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
     private Employee employee;
 
     @Column(name = "is_active")

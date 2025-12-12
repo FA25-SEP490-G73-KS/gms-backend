@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class VehicleResponseDto {
 
@@ -11,8 +13,8 @@ public class VehicleResponseDto {
     private String licensePlate;
     private String vin;
     private Integer year;
-    private Long customerId;
+    private Long brandId;
+    private String brandName;
     private Long vehicleModelId;
     private String vehicleModelName;
-    private String brandName;
 }

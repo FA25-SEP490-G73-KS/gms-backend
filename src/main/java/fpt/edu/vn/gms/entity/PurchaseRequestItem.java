@@ -1,11 +1,12 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.PurchaseReqItemStatus;
-import fpt.edu.vn.gms.common.PurchaseRequestStatus;
+import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
+import fpt.edu.vn.gms.common.enums.PurchaseReqItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "purchase_request_item")
@@ -20,11 +21,15 @@ public class PurchaseRequestItem {
     @Column(name = "purchase_request_item_id")
     private Long itemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "purchase_request_id")
     private PurchaseRequest purchaseRequest;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "quotation_item_id", referencedColumnName = "price_quotation_item_id")
+    private PriceQuotationItem quotationItem;
+
+    @ManyToOne
     @JoinColumn(name = "part_id")
     private Part part;
 
@@ -40,10 +45,35 @@ public class PurchaseRequestItem {
     @Column(nullable = false)
     private BigDecimal estimatedPurchasePrice;
 
+    @Column(name = "quantity_received")
+    private Double quantityReceived = 0.0;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30)
-    private PurchaseReqItemStatus status = PurchaseReqItemStatus.PENDING;
+    @Column(name = "review_status", length = 30)
+    private ManagerReviewStatus reviewStatus = ManagerReviewStatus.PENDING;
 
     @Column(name = "note", length = 255)
     private String note;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

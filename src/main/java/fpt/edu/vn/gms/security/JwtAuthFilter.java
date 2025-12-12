@@ -1,19 +1,47 @@
 package fpt.edu.vn.gms.security;
 
-import fpt.edu.vn.gms.service.AccountDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fpt.edu.vn.gms.common.annotations.AllowRoles;
+import fpt.edu.vn.gms.common.annotations.OptionalAuth;
+import fpt.edu.vn.gms.common.annotations.Public;
+import fpt.edu.vn.gms.common.enums.Role;
+import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.entity.Employee;
+import fpt.edu.vn.gms.exception.InvalidCredentialsException;
+import fpt.edu.vn.gms.exception.TokenInvalidatedException;
+import fpt.edu.vn.gms.repository.EmployeeRepository;
+import fpt.edu.vn.gms.service.auth.JwtService;
+import fpt.edu.vn.gms.utils.AppRoutes;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,48 +49,144 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    // Đọc và kiểm tra Jwt cho từng request
-    private final JwtUtils jwtUtils;
+    private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
+    private final RequestMappingHandlerMapping handlerMapping;
+    private final EmployeeRepository employeeRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+        final String currentRoute = request.getServletPath();
+        final SecurityContext securityContext = SecurityContextHolder.getContext();
+        final boolean isCurrentRoutePublic = isPublicAnnotatedRoute(request);
+        final boolean isCurrentRouteOptionalAuth = isOptionalAuthAnnotatedRoute(request);
 
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            // Không có token thì bỏ qua, cho phép tiếp tục filter chain
-            filterChain.doFilter(request, response);
+        if (AppRoutes.isWhitelistedRoute(currentRoute) || isCurrentRoutePublic) {
+            bypassAuthentication(request, response, filterChain, securityContext);
             return;
         }
 
-        String token = authHeader.substring(7);
-        if (!jwtUtils.validateJwtToken(token)) {
-            filterChain.doFilter(request, response);
+        final String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            if (isCurrentRouteOptionalAuth) {
+                bypassAuthentication(request, response, filterChain, securityContext);
+                return;
+            }
+
+            sendUnauthorizedResponse(response, objectMapper, "Bearer token is missing");
             return;
         }
 
-        // Lấy username & roles từ JWT (không cần query DB)
-        String username = jwtUtils.extractUsername(token);
-        List<String> roles = jwtUtils.extractRoles(token);
+        try {
+            final Jws<Claims> decodedToken = jwtService.verifyAccessToken(
+                    authorizationHeader.substring("Bearer ".length()));
+            final Date tokenIssuedAt = decodedToken.getBody().getIssuedAt();
+            final Long employeeId = Long.parseLong(decodedToken.getBody().getSubject());
 
-        // SecurityContextHolder lưu trữ thông tin xác thực cho request
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Convert roles -> GrantedAuthorities
-            var authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
+            if (jwtService.isTokenInvalidated(employeeId, tokenIssuedAt)) {
+                throw new TokenInvalidatedException();
+            }
+
+            final String currentRole = decodedToken.getBody().get("role", String.class);
+            Employee employee = employeeRepository
+                    .findById(employeeId)
+                    .orElseThrow(InvalidCredentialsException::new);
+
+            final List<String> allowRoles = getAllowRolesOfCurrentRoute(request)
+                    .stream()
+                    .map(Role::getValue)
                     .collect(Collectors.toList());
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(username, null, authorities);
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            if (!allowRoles.isEmpty() && !allowRoles.contains(currentRole)) {
+                sendUnauthorizedResponse(response, objectMapper,
+                        "Current employee role is not in the following: %s".formatted(allowRoles.toString()));
+                return;
+            }
 
-            // Gắn thông tin authentication vào SecurityContext
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            securityContext.setAuthentication(
+                    new UsernamePasswordAuthenticationToken(
+                            employee,
+                            null,
+                            List.of(new SimpleGrantedAuthority(currentRole))));
+            response.setContentType(MimeTypeUtils.APPLICATION_JSON_VALUE);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            if (isCurrentRouteOptionalAuth) {
+                bypassAuthentication(request, response, filterChain, securityContext);
+                return;
+            }
+
+            if (e instanceof ResponseStatusException) {
+                sendUnauthorizedResponse(response, objectMapper, ((ResponseStatusException) e).getReason());
+            }
+
+            sendUnauthorizedResponse(response, objectMapper, e.getMessage());
         }
+    }
 
+    private boolean isPublicAnnotatedRoute(HttpServletRequest request) {
+        try {
+            final HandlerExecutionChain handlerChain = handlerMapping.getHandler(request);
+            if (handlerChain != null && handlerChain.getHandler() instanceof HandlerMethod) {
+                HandlerMethod handlerMethod = (HandlerMethod) handlerChain.getHandler();
+                Method method = handlerMethod.getMethod();
+                return method.isAnnotationPresent(Public.class);
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
+
+    private boolean isOptionalAuthAnnotatedRoute(HttpServletRequest request) {
+        try {
+            final HandlerExecutionChain handlerChain = handlerMapping.getHandler(request);
+            if (handlerChain != null && handlerChain.getHandler() instanceof HandlerMethod) {
+                HandlerMethod handlerMethod = (HandlerMethod) handlerChain.getHandler();
+                Method method = handlerMethod.getMethod();
+                return method.isAnnotationPresent(OptionalAuth.class);
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
+
+    private List<Role> getAllowRolesOfCurrentRoute(HttpServletRequest request) {
+        try {
+            final HandlerExecutionChain handlerChain = handlerMapping.getHandler(request);
+            if (handlerChain != null && handlerChain.getHandler() instanceof HandlerMethod) {
+                final HandlerMethod handlerMethod = (HandlerMethod) handlerChain.getHandler();
+                final Method method = handlerMethod.getMethod();
+                if (method.isAnnotationPresent(AllowRoles.class)) {
+                    final AllowRoles publicAnnotation = method.getAnnotation(AllowRoles.class);
+                    return List.of(publicAnnotation.value());
+                }
+            }
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+        return Collections.emptyList();
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, ObjectMapper objectMapper, String message)
+            throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MimeTypeUtils.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                ApiResponse.error(401, message));
+    }
+
+    private void bypassAuthentication(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain,
+            @NonNull SecurityContext securityContext) throws IOException, ServletException {
+        securityContext.setAuthentication(new UsernamePasswordAuthenticationToken(null, null));
         filterChain.doFilter(request, response);
     }
 }

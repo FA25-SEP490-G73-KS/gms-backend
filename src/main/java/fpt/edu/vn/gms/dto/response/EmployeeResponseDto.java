@@ -1,11 +1,12 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.EmployeeRole;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import fpt.edu.vn.gms.common.enums.Role;
 
 @Data
 @Builder
@@ -22,7 +23,7 @@ public class EmployeeResponseDto {
     private String address;
 
     // --- Thông tin công việc ---
-    private EmployeeRole position;      // TECHNICIAN, MANAGER, ...
+    private Role position;      // TECHNICIAN, MANAGER, ...
     private LocalDateTime hireDate;
     private String status;          // Active, Nghỉ việc, Tạm ngưng
 

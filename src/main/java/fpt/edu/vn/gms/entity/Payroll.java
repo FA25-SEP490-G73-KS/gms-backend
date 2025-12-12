@@ -1,26 +1,30 @@
 package fpt.edu.vn.gms.entity;
 
+import fpt.edu.vn.gms.common.enums.PayrollStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "payroll", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "employee_id", "month", "year" })
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "Payroll")
 public class Payroll {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payroll_id")
-    private Long payrollId;
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")
+    @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
     @Column(name = "month")
@@ -29,24 +33,44 @@ public class Payroll {
     @Column(name = "year")
     private Integer year;
 
-    @Column(name = "total_salary", precision = 18, scale = 2)
-    private BigDecimal totalSalary;
+    @Column(name = "base_salary", precision = 18, scale = 2)
+    private BigDecimal baseSalary;
 
-    @Column(name = "advance_deduction", precision = 18, scale = 2)
-    private BigDecimal advanceDeduction;
+    @Column(name = "total_allowance", precision = 18, scale = 2)
+    private BigDecimal totalAllowance;
 
-    @Column(name = "warranty_deduction", precision = 18, scale = 2)
-    private BigDecimal warrantyDeduction;
+    @Column(name = "total_deduction", precision = 18, scale = 2)
+    private BigDecimal totalDeduction;
 
-    @Column(name = "salary_bonus", precision = 18, scale = 2)
-    private BigDecimal salaryBonus;
+    @Column(name = "total_advance", precision = 18, scale = 2)
+    private BigDecimal totalAdvanceSalary;
+
+    @Column(name = "working_days")
+    private Integer workingDays;
 
     @Column(name = "net_salary", precision = 18, scale = 2)
-    private BigDecimal netSalary;
+    private BigDecimal netSalary;  // base + allowance - deduction - advance
 
-    @Column(name = "create_at")
-    private LocalDateTime createAt;
+    @Enumerated(EnumType.STRING)
+    private PayrollStatus status;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    private Employee approvedBy;
+
+    private LocalDateTime approvedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paid_by")
+    private Employee paidBy;
+
+    private LocalDateTime paidAt;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

@@ -1,9 +1,9 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.EmployeeRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -21,7 +21,6 @@ public class Employee {
     @Column(name = "employee_id")
     private Long employeeId;
 
-    // --- Thông tin cá nhân ---
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
@@ -37,19 +36,19 @@ public class Employee {
     @Column(name = "address", length = 200)
     private String address;
 
-    // --- Thông tin công việc ---
-    @Enumerated(EnumType.STRING)
-    @Column(length = 50)
-    private EmployeeRole employeeRole;
-
     @Column(name = "hire_date")
     private LocalDateTime hireDate;
 
-    // Active, Nghỉ việc, Tạm ngưng
-    @Column(name = "status", length = 50)
-    private String status;
+    @Column(name = "termination_date")
+    private LocalDateTime terminationDate;
+    
+    @Column(name = "daily_salary", precision = 18, scale = 2)
+    private BigDecimal dailySalary;
 
-    // nullable với TECHNICIANS
-    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+    @Column(name = "is_active", columnDefinition = "boolean default true")
+    private boolean isActive;
+
+    @OneToOne
+    @JoinColumn(name = "account_id")
     private Account account;
 }

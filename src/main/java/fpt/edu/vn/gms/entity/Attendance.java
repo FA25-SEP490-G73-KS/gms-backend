@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -12,7 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Attendance")
+@Table(name = "attendance", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "employee_id", "date" })
+})
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,17 +29,14 @@ public class Attendance {
     @Column(name = "date")
     private LocalDate date;
 
-    @Column(name = "is_present_am")
-    private Boolean isPresentAm;
-
-    @Column(name = "is_present_pm")
-    private Boolean isPresentPm;
+    @Column(name = "is_present")
+    private Boolean isPresent;
 
     @Column(name = "note", length = 200)
     private String note;
 
     @Column(name = "recorded_by")
-    private Integer recordedBy;
+    private Long recordedBy;
 
     @Column(name = "recorded_at")
     private LocalDateTime recordedAt;

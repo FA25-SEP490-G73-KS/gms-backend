@@ -1,9 +1,11 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+
+import fpt.edu.vn.gms.common.enums.NotificationStatus;
+import fpt.edu.vn.gms.common.enums.NotificationType;
 
 @Entity
 @Table(name = "notification")
@@ -18,16 +20,25 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String message;
-
-    @Column(name = "recipient_phone")
-    private String recipientPhone;
-
-    private boolean isRead = false;
-
-    private LocalDateTime createdAt;
+    @ManyToOne
+    @JoinColumn(name = "receiver_id")
+    private Employee receiver;
 
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+
+    private String title;
+
+    @Column(length = 500)
+    private String message;
+
+    private Long referenceId;
+    private String referenceType;
+
+    private String actionPath;
+
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
+
+    private LocalDateTime createdAt;
 }

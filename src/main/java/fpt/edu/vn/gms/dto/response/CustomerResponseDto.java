@@ -1,10 +1,11 @@
 package fpt.edu.vn.gms.dto.response;
 
-import fpt.edu.vn.gms.common.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.CustomerType;
 import lombok.*;
 
-import java.util.List;
+import java.math.BigDecimal;
+
+import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
+import fpt.edu.vn.gms.common.enums.CustomerType;
 
 @Getter
 @Setter
@@ -18,6 +19,12 @@ public class CustomerResponseDto {
     private String phone;
     private String address;
     private CustomerType customerType;
-    private List<String> licensePlates;
+    private BigDecimal totalSpending;
     private CustomerLoyaltyLevel loyaltyLevel;
+
+    public CustomerResponseDto(Long customerId, String fullName, String phone) {
+        this.customerId = customerId;
+        this.fullName = fullName;
+        this.phone = phone;
+    }
 }

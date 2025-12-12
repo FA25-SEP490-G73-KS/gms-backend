@@ -80,8 +80,7 @@ public class AuthService {
   public AccountResponseDto changePassword(String phoneNumber, ChangePasswordRequest req) {
 
     Account acc = accountRepository.findByPhone(phoneNumber)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
-
+        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
     if (!passwordEncoder.matches(req.getCurrentPassword(), acc.getPassword())) {
       throw new RuntimeException("Mật khẩu hiện tại không đúng!");
@@ -102,19 +101,31 @@ public class AuthService {
     acc.setPassword(passwordEncoder.encode(req.getNewPassword()));
     accountRepository.save(acc);
 
-    invalidateTokens(acc.getEmployee().getEmployeeId());
+    // Invalidate tokens nếu có employee và Redis available
+    // Lazy loading có thể trả về null nếu employee chưa được fetch
+    Employee employee = acc.getEmployee();
+    if (employee != null && employee.getEmployeeId() != null) {
+      try {
+        invalidateTokens(employee.getEmployeeId());
+      } catch (Exception e) {
+        log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", phoneNumber, e.getMessage());
+        // Không throw exception để không làm fail việc đổi mật khẩu
+        // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+      }
+    } else {
+      log.warn("Account {} không có employee để invalidate tokens", phoneNumber);
+    }
 
     log.info("User {} đã đổi mật khẩu thành công!", acc.getPhone());
 
     return accountMapper.toDTO(acc);
   }
 
-
   @Transactional
   public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto dto) {
 
     Account account = accountRepository.findByPhone(dto.getPhone())
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
     if (dto.getNewPassword() == null || dto.getNewPassword().length() < 8) {
       throw new RuntimeException("Mật khẩu phải có ít nhất 8 ký tự");
@@ -127,19 +138,35 @@ public class AuthService {
     account.setPassword(passwordEncoder.encode(dto.getNewPassword()));
     accountRepository.save(account);
 
-    invalidateTokens(account.getEmployee().getEmployeeId());
+    // Invalidate tokens nếu có employee và Redis available
+    Employee employee = account.getEmployee();
+    if (employee != null && employee.getEmployeeId() != null) {
+      try {
+        invalidateTokens(employee.getEmployeeId());
+      } catch (Exception e) {
+        log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", dto.getPhone(), e.getMessage());
+        // Không throw exception để không làm fail việc đổi mật khẩu
+        // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+      }
+    } else {
+      log.warn("Account {} không có employee để invalidate tokens", dto.getPhone());
+    }
 
     log.info("User {} đã đổi mật khẩu thành công", account.getPhone());
 
     return ResetPasswordResponseDto.builder()
-            .phone(account.getPhone())
-            .message("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")
-            .build();
+        .phone(account.getPhone())
+        .message("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")
+        .build();
   }
 
-
   public void logout(Employee employee) {
-    invalidateTokens(employee.getEmployeeId());
+    try {
+      invalidateTokens(employee.getEmployeeId());
+    } catch (Exception e) {
+      log.warn("Không thể invalidate tokens trong Redis khi logout: {}", e.getMessage());
+      // Không throw exception để không làm fail việc logout
+    }
   }
 
   private AuthTokenDto getTokens(Employee employee) {

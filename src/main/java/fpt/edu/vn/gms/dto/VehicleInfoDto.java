@@ -1,11 +1,14 @@
 package fpt.edu.vn.gms.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class VehicleInfoDto {
+
     private Long vehicleId;
     private String licensePlate;
     private String brandName;

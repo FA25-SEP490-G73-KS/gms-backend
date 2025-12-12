@@ -1,6 +1,6 @@
 package fpt.edu.vn.gms.entity;
 
-import fpt.edu.vn.gms.common.Market;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,27 +22,23 @@ public class Part {
     @Column(name = "part_id")
     private Long partId;
 
+    @Column(unique = true, length = 50)
+    private String sku;
+
     @Column(name = "part_name", length = 100, nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private PartCategory category;
 
-    @ManyToMany
-    @JoinTable(
-            name = "part_vehicle_model",
-            joinColumns = @JoinColumn(name = "part_id"),
-            inverseJoinColumns = @JoinColumn(name = "vehicle_model_id")
-    )
-    private Set<VehicleModel> compatibleVehicles = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "vehicle_model")
+    private VehicleModel vehicleModel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "market", length = 20)
+    @ManyToOne
+    @JoinColumn(name = "market")
     private Market market;
-
-    @Column(name = "is_universal", nullable = false)
-    private boolean isUniversal = false;
 
     @Column(name = "purchase_price", precision = 12, scale = 2)
     private BigDecimal purchasePrice;
@@ -53,21 +49,40 @@ public class Part {
     @Column(name = "discount_rate", precision = 5, scale = 2)
     private BigDecimal discountRate;
 
-    @Column(name = "quantity_in_stock")
-    private Double quantityInStock;
+    @Column(name = "quantity_in_stock", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double quantityInStock = 0.0;
 
-    @Column(name = "unit", length = 20)
-    private String unit; // đơn vị đo, ví dụ: "chai", "bộ", "lít", "cái"
+    @ManyToOne
+    @JoinColumn(name = "unit")
+    private Unit unit;
 
-    @Column(name = "reserved_quantity")
-    private Double reservedQuantity;
+    @Column(name = "reserved_quantity", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double reservedQuantity = 0.0;
 
-    @Column(name = "reorder_level")
-    private Double reorderLevel;
+    @Column(name = "reorder_level", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double reorderLevel = 0.0;
+
+    @ManyToOne
+    @JoinColumn(name = "supplier")
+    private Supplier supplier;
+
+    @Column(name = "is_universal", nullable = false)
+    private boolean isUniversal = false;
 
     @Column(nullable = false)
     private boolean specialPart = false;
 
-    @OneToMany(mappedBy = "part", fetch = FetchType.LAZY)
+    @Column(length = 100)
+    private String note;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private StockLevelStatus status = StockLevelStatus.LOW_STOCK;
+
+    @OneToMany(mappedBy = "part")
     private Set<PurchaseRequestItem> purchaseRequestItems = new HashSet<>();
 }
