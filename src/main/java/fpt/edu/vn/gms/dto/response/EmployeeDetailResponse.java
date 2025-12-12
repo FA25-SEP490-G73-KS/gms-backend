@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,6 +18,8 @@ public class EmployeeDetailResponse {
     private Long employeeId;
     private String fullName;
     private String phone;
+    private String gender;
+    private LocalDate dateOfBirth;
     private String province;
     private String ward;
     private String addressDetail;
