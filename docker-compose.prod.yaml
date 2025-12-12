@@ -1,0 +1,86 @@
+services:
+  app:
+    image: taehuyn/gms-backend:latest
+    container_name: gms_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  mysql:
+    image: mysql:8.0.41
+    container_name: gms_mysql
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE_NAME:-gms}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?}
+      - TZ=Asia/Ho_Chi_Minh
+    command: --default-time-zone=+07:00
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - app-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-uroot",
+          "-p${DB_PASSWORD:?}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: gms_redis
+    image: redis:7.0-alpine
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "${REDIS_PASSWORD}" ]; then
+          redis-server --requirepass "${REDIS_PASSWORD}" --appendonly yes
+        else
+          redis-server --appendonly yes
+        fi
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - app-net
+    healthcheck:
+      test:
+        - CMD
+        - sh
+        - -c
+        - |
+          if [ -n "${REDIS_PASSWORD}" ]; then
+            redis-cli -a "${REDIS_PASSWORD}" ping
+          else
+            redis-cli ping
+          fi
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  app-net:
+    driver: bridge

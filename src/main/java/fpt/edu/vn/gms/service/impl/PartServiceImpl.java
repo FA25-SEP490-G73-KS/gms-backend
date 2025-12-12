@@ -1,93 +1,281 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.dto.request.PartReqDto;
-import fpt.edu.vn.gms.dto.response.PartResDto;
-import fpt.edu.vn.gms.entity.Part;
-import fpt.edu.vn.gms.entity.PartCategory;
-import fpt.edu.vn.gms.entity.VehicleModel;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
+import fpt.edu.vn.gms.dto.request.PartUpdateReqDto;
+import fpt.edu.vn.gms.dto.response.PartReqDto;
+import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PartMapper;
-import fpt.edu.vn.gms.repository.CategoryRepository;
-import fpt.edu.vn.gms.repository.PartRepository;
-import fpt.edu.vn.gms.repository.VehicleModelRepository;
+import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.PartService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PartServiceImpl implements PartService {
 
-    private final PartRepository partRepository;
-    private final VehicleModelRepository modelRepo;
-    private final CategoryRepository categoryRepo;
-    private final PartMapper partMapper;
+    SkuGenerator skuGenerator;
+    PartRepository partRepository;
+    CategoryRepository categoryRepo;
+    MarketRepository marketRepo;
+    UnitRepository unitRepo;
+    VehicleModelRepository vehicleModelRepo;
+    SupplierRepository supplierRepo;
+    PartMapper partMapper;
 
     @Override
-    public Page<PartResDto> getAllPart(int page, int size) {
+    public Page<PartReqDto> getAllPart(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Part> parts = partRepository.findAll(pageable);
+
+        parts.forEach(this::updateStockLevelStatusIfNeeded);
 
         // map entity -> dto
         return parts.map(partMapper::toDto);
     }
 
     @Override
-    public PartResDto createPart(PartReqDto dto) {
+    public Page<PartReqDto> getAllPart(int page, int size, Long categoryId, StockLevelStatus status) {
+        Pageable pageable = PageRequest.of(page, size);
 
-        // --- Kiểm tra danh mục (nếu có) ---
+        Page<Part> parts;
+
+        // Determine which repository method to use based on provided filters
+        if (categoryId != null && status != null) {
+            parts = partRepository.findByCategory_IdAndStatus(categoryId, status, pageable);
+        } else if (categoryId != null) {
+            parts = partRepository.findByCategory_Id(categoryId, pageable);
+        } else if (status != null) {
+            parts = partRepository.findByStatus(status, pageable);
+        } else {
+            parts = partRepository.findAll(pageable);
+        }
+
+        parts.forEach(this::updateStockLevelStatusIfNeeded);
+
+        return parts.map(partMapper::toDto);
+    }
+
+    @Override
+    public PartReqDto getPartById(Long id) {
+
+        Part part = partRepository.findById(id).orElse(null);
+
+        if (part != null) {
+            updateStockLevelStatusIfNeeded(part);
+        }
+
+        return partMapper.toDto(part);
+    }
+
+    @Override
+    @Transactional
+    public PartReqDto createPart(PartUpdateReqDto dto) {
+
+        log.info("Creating new part with name={}", dto.getName());
+
+        // --- Category ---
         PartCategory category = null;
         if (dto.getCategoryId() != null) {
             category = categoryRepo.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục linh kiện ID: " + dto.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy danh mục với ID: " + dto.getCategoryId()));
         }
 
-        // --- Lấy các model xe tương thích (nếu có) ---
-        Set<VehicleModel> compatibleModels = new HashSet<>();
-        if (dto.getCompatibleVehicleModelIds() != null && !dto.getCompatibleVehicleModelIds().isEmpty()) {
-            compatibleModels.addAll(modelRepo.findAllById(dto.getCompatibleVehicleModelIds()));
+        // --- Market ---
+        Market market = marketRepo.findById(dto.getMarketId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường!"));
+
+        // --- Unit ---
+        Unit unit = unitRepo.findById(dto.getUnitId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính!"));
+
+        VehicleModel vehicleModel = null;
+
+        // --- Vehicle Model ---
+        if (!dto.isUniversal()) {
+
+             vehicleModel = vehicleModelRepo.findById(dto.getVehicleModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe!"));
         }
 
-        // --- Tạo đối tượng Part ---
-        Part newPart = Part.builder()
+        // --- Supplier ---
+        Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp " + dto.getSupplierId()));
+
+        // --- Tính giá bán ---
+        BigDecimal purchase = dto.getPurchasePrice();
+        BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10));
+
+        // --- Build entity ---
+        Part part = Part.builder()
                 .name(dto.getName())
                 .category(category)
-                .compatibleVehicles(compatibleModels)
-                .market(dto.getMarket())
+                .vehicleModel(vehicleModel)
+                .market(market)
+                .purchasePrice(purchase)
+                .sellingPrice(selling)
+                .discountRate(BigDecimal.valueOf(10.0))
+                .supplier(supplier)
+                .unit(unit)
                 .isUniversal(dto.isUniversal())
-                .purchasePrice(dto.getPurchasePrice())
-                .sellingPrice(dto.getSellingPrice())
-                .discountRate(dto.getDiscountRate())
-                .unit(dto.getUnit())
-                .reorderLevel(dto.getReorderLevel() != null ? dto.getReorderLevel() : 0.0)
-                .quantityInStock(0.0) // chưa nhập, để 0
-                .reservedQuantity(0.0) // chưa giữ, để 0
-                .specialPart(dto.isSpecialPart()) // vì là linh kiện unknown
+                .specialPart(dto.isSpecialPart())
                 .build();
 
-        Part saved = partRepository.save(newPart);
+        part.setSku(skuGenerator.generateSku(part));
+
+        Part saved = partRepository.save(part);
+
+        log.info("Created part id={} name={}", saved.getPartId(), saved.getName());
 
         return partMapper.toDto(saved);
     }
 
+    @Transactional
     @Override
-    public Page<PartResDto> getPartByCategory(String categoryName, int page, int size) {
+    public PartReqDto updatePart(Long id, PartUpdateReqDto dto) {
+
+        log.info("Updating part id={}", id);
+
+        Part part = partRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + id));
+
+        log.debug("Part BEFORE update: {}", part);
+
+        if (dto.getName() != null) {
+            part.setName(dto.getName());
+        }
+
+        if (dto.getNote() != null) {
+            part.setNote(dto.getNote());
+        }
+
+        if (dto.getReorderLevel() != null) {
+            part.setReorderLevel(dto.getReorderLevel());
+        }
+
+        if (dto.getCategoryId() != null) {
+            PartCategory category = categoryRepo.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+            part.setCategory(category);
+        }
+
+        if (dto.getMarketId() != null) {
+            Market market = marketRepo.findById(dto.getMarketId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thị trường"));
+            part.setMarket(market);
+        }
+
+        if (dto.getUnitId() != null) {
+            Unit unit = unitRepo.findById(dto.getUnitId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn vị tính"));
+            part.setUnit(unit);
+        }
+
+        if (dto.getVehicleModelId() != null) {
+            VehicleModel model = vehicleModelRepo.findById(dto.getVehicleModelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy mẫu xe"));
+            part.setVehicleModel(model);
+        }
+
+        if (dto.getPurchasePrice() != null) {
+            BigDecimal purchase = dto.getPurchasePrice();
+            BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10)); // auto tính giá bán
+            part.setPurchasePrice(purchase);
+            part.setSellingPrice(selling);
+        }
+
+        if (dto.getSellingPrice() != null) {
+            part.setSellingPrice(dto.getSellingPrice()); // nếu muốn override giá bán
+        }
+
+        if (dto.getSupplierId() != null) {
+            Supplier supplier = supplierRepo.findById(dto.getSupplierId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
+            part.setSupplier(supplier);
+        }
+
+        part.setUniversal(dto.isUniversal());
+        part.setSpecialPart(dto.isSpecialPart());
+
+        part.setSku(skuGenerator.generateSku(part));
+
+        Part saved = partRepository.save(part);
+
+        log.info("Updated part id={} successfully", id);
+        log.debug("Part AFTER update: {}", saved);
+
+        return partMapper.toDto(saved);
+    }
+
+
+    @Override
+    public Page<PartReqDto> getPartByCategory(Long categoryId, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Part> parts = partRepository.findByCategory(categoryName, pageable);
+        Page<Part> parts = partRepository.findByCategory_Id(categoryId, pageable);
 
         // Dùng Page.map để giữ thông tin phân trang
         return parts.map(partMapper::toDto);
+    }
+
+    @Override
+    @Transactional
+    public void deletePart(Long id) {
+        Part part = partRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy linh kiện ID: " + id));
+
+        Double qty = part.getQuantityInStock();
+        if (qty != null && qty > 0) {
+            throw new IllegalStateException("Linh kiện còn tồn kho, không thể xóa");
+        }
+
+        partRepository.delete(part);
+    }
+
+    /**
+     * Cập nhật trường status (StockLevelStatus) của linh kiện dựa trên quantityInStock và reorderLevel.
+     * Quy tắc:
+     * - quantityInStock <= 0          -> OUT_OF_STOCK
+     * - 0 < quantityInStock <= reorderLevel -> LOW_STOCK
+     * - quantityInStock > reorderLevel -> IN_STOCK
+     */
+    private void updateStockLevelStatusIfNeeded(Part part) {
+        if (part == null) {
+            return;
+        }
+
+        Double qty = part.getQuantityInStock() != null ? part.getQuantityInStock() : 0.0;
+        Double threshold = part.getReorderLevel() != null ? part.getReorderLevel() : 0.0;
+
+        StockLevelStatus newStatus;
+        if (qty <= 0) {
+            newStatus = StockLevelStatus.OUT_OF_STOCK;
+        } else if (qty <= threshold) {
+            newStatus = StockLevelStatus.LOW_STOCK;
+        } else {
+            newStatus = StockLevelStatus.IN_STOCK;
+        }
+
+        // Chỉ save khi trạng thái thay đổi để tránh ghi DB không cần thiết
+        if (part.getStatus() != newStatus) {
+            part.setStatus(newStatus);
+            partRepository.save(part);
+        }
     }
 }

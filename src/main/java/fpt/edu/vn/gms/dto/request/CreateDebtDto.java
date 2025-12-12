@@ -1,0 +1,23 @@
+package fpt.edu.vn.gms.dto.request;
+
+import java.math.BigDecimal;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class CreateDebtDto {
+
+  @NotNull
+  private Long customerId;
+
+  @NotNull
+  private Long serviceTicketId;
+
+  @NotNull
+  @Min(value = 0)
+  private BigDecimal amount;
+}

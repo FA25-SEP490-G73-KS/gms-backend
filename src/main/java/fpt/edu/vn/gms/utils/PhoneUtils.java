@@ -37,5 +37,19 @@ public class PhoneUtils {
 
         return "Số điện thoại không hợp lệ.";
     }
+
+    public static String normalize(String phone) {
+        if (phone == null || phone.isBlank()) return phone;
+
+        if (phone.startsWith("0")) {
+            return "84" + phone.substring(1);
+        }
+
+        if (phone.startsWith("84")) {
+            return phone;
+        }
+
+        throw new IllegalArgumentException("Số điện thoại không hợp lệ!");
+    }
 }
 
