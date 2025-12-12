@@ -9,5 +9,5 @@ public interface SupplierService {
     SupplierResponseDto getSupplierById(Long id);
     SupplierResponseDto createSupplier(SupplierRequestDto supplierRequestDto);
     SupplierResponseDto updateSupplier(Long id, SupplierRequestDto supplierRequestDto);
-    void softDeleteSupplier(Long id);
+    SupplierResponseDto toggleSupplierActiveStatus(Long id);
 }

@@ -9,7 +9,6 @@ import fpt.edu.vn.gms.dto.response.EmployeeListResponse;
 import fpt.edu.vn.gms.dto.response.EmployeeResponse;
 import org.springframework.data.domain.Page;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface EmployeeService {
@@ -18,7 +17,7 @@ public interface EmployeeService {
 
     EmployeeInfoResponseDto findEmployeeInfoByPhone(String phone);
 
-    Page<EmployeeListResponse> findAll(int page, int size, String statusFilter);
+    Page<EmployeeListResponse> findAll(int page, int size, Boolean statusFilter);
 
     EmployeeResponse createEmployee(EmployeeCreateRequest request);
 

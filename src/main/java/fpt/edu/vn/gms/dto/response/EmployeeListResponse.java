@@ -22,5 +22,5 @@ public class EmployeeListResponse {
     private LocalDateTime hireDate;
     private BigDecimal dailySalary;
 
-    private String status;
+    private boolean status;
 }

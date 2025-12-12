@@ -77,7 +77,7 @@ public class PriceQuotationController {
                                 .body(ApiResponse.success("Tạo phiếu báo giá thành công!!!", responseDto));
         }
 
-        @PatchMapping("/{id}")
+        @PutMapping("/{id}")
         @Operation(summary = "Cập nhật các mục trong báo giá", description = "Cập nhật các mục trong một phiếu báo giá đã có.")
         @ApiResponses(value = {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật báo giá thành công"),

@@ -52,7 +52,7 @@ public class EmployeeController {
     public ResponseEntity<ApiResponse<Page<EmployeeListResponse>>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) Boolean status) {
         Page<EmployeeListResponse> result = employeeService.findAll(page, size, status);
         return ResponseEntity.ok(
                 ApiResponse.success("Lấy danh sách nhân viên thành công", result));

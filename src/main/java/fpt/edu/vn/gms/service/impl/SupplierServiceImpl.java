@@ -59,11 +59,12 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
-    public void softDeleteSupplier(Long id) {
-        log.info("Xóa mềm nhà cung cấp id={}", id);
+    public SupplierResponseDto toggleSupplierActiveStatus(Long id) {
+        log.info("Toggle trạng thái nhà cung cấp id={}", id);
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
-        supplier.setIsActive(false);
-        supplierRepository.save(supplier);
+        supplier.setIsActive(!supplier.getIsActive());
+        Supplier updated = supplierRepository.save(supplier);
+        return supplierMapper.toResponseDto(updated);
     }
 }

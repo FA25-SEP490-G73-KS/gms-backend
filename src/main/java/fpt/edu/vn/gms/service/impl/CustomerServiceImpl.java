@@ -107,15 +107,18 @@ public class CustomerServiceImpl implements CustomerService {
             throw new RuntimeException("Số điện thoại đã tồn tại trong hệ thống!");
         }
 
-        DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
+        // Chỉ update discountPolicy nếu discountPolicyId được cung cấp
+        if (dto.getDiscountPolicyId() != null) {
+            DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
+            existing.setDiscountPolicy(discountPolicy);
+        }
 
         existing.setFullName(dto.getFullName());
         existing.setPhone(dto.getPhone());
         existing.setAddress(dto.getAddress());
         existing.setCustomerType(dto.getCustomerType());
-        existing.setDiscountPolicy(discountPolicy);
 
         Customer updated = customerRepository.save(existing);
 

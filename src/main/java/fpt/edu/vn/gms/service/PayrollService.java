@@ -1,8 +1,12 @@
 package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.response.PayrollDetailDto;
+import fpt.edu.vn.gms.dto.response.PayrollExistsResponse;
+import fpt.edu.vn.gms.dto.response.PayrollListItemDto;
 import fpt.edu.vn.gms.dto.response.PayrollMonthlySummaryDto;
 import fpt.edu.vn.gms.dto.response.PayrollSummaryDto;
+
+import java.util.List;
 
 public interface PayrollService {
 
@@ -17,4 +21,8 @@ public interface PayrollService {
     PayrollDetailDto getPayrollDetail(Long employeeId, Integer month, Integer year);
 
     PayrollSummaryDto getPayrollSummaryByMonthYear(Integer month, Integer year);
+
+    List<PayrollListItemDto> getPayrollList(Integer month, Integer year);
+
+    PayrollExistsResponse checkPayrollExists(Integer month, Integer year);
 }

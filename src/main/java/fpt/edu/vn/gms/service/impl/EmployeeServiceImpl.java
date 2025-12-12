@@ -9,11 +9,8 @@ import fpt.edu.vn.gms.dto.response.EmployeeInfoResponseDto;
 import fpt.edu.vn.gms.dto.response.EmployeeListResponse;
 import fpt.edu.vn.gms.dto.response.EmployeeResponse;
 import fpt.edu.vn.gms.entity.Account;
-import fpt.edu.vn.gms.entity.Attendance;
 import fpt.edu.vn.gms.entity.Employee;
-import fpt.edu.vn.gms.mapper.EmployeeMapper;
 import fpt.edu.vn.gms.repository.AccountRepository;
-import fpt.edu.vn.gms.repository.AttendanceRepository;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
 import fpt.edu.vn.gms.service.EmployeeService;
 import lombok.AccessLevel;
@@ -26,11 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -38,10 +31,8 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl implements EmployeeService {
 
     EmployeeRepository employeeRepository;
-    EmployeeMapper employeeMapper;
     AccountRepository accountRepository;
     PasswordEncoder passwordEncoder;
-    AttendanceRepository attendanceRepository;
 
     @Override
     public List<EmployeeDto> findAllEmployeeIsTechniciansActive() {
@@ -56,69 +47,55 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeListResponse> findAll(int page, int size, String statusFilter) {
+    public Page<EmployeeListResponse> findAll(int page, int size, Boolean statusFilter) {
 
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<Employee> employeesPage = employeeRepository.findAll(pageable);
 
         List<Employee> employees = employeesPage.getContent();
-        List<Long> employeeIds = employees.stream()
-                .map(Employee::getEmployeeId)
-                .toList();
-
-        LocalDate today = LocalDate.now();
-        Map<Long, Attendance> todayAttendanceMap = attendanceRepository.findTodayAttendance(today, employeeIds)
-                .stream()
-                .collect(Collectors.toMap(a -> a.getEmployee().getEmployeeId(), Function.identity()));
 
         List<EmployeeListResponse> computedList = employees.stream()
                 .map(emp -> {
-                    Attendance att = todayAttendanceMap.get(emp.getEmployeeId());
-                    String computedStatus = computeStatus(att);
                     return EmployeeListResponse.builder()
                             .employeeId(emp.getEmployeeId())
                             .fullName(emp.getFullName())
                             .phone(emp.getPhone())
-                            .role(emp.getAccount() != null ? emp.getAccount().getRole() : Role.WAREHOUSE)
+                            .role(emp.getAccount() != null ? emp.getAccount().getRole() : Role.TECHNICIAN)
                             .hireDate(emp.getHireDate())
                             .dailySalary(emp.getDailySalary())
-                            .status(computedStatus)
+                            .status(emp.isActive())
                             .build();
                 })
                 .toList();
 
-        // Apply status filter on computed status if provided
-        List<EmployeeListResponse> filtered;
-        if (statusFilter != null && !statusFilter.isBlank()) {
-            filtered = computedList.stream()
-                    .filter(e -> statusFilter.equalsIgnoreCase(e.getStatus()))
-                    .toList();
-        } else {
-            filtered = computedList;
-        }
+        List<EmployeeListResponse> filtered = statusFilter == null
+                ? computedList
+                : computedList.stream()
+                        .filter(e -> e.isStatus() == statusFilter)
+                        .toList();
 
         return new PageImpl<>(filtered, pageable, employeesPage.getTotalElements());
     }
 
-    private String computeStatus(Attendance attendance) {
-        if (attendance == null) {
-            return "Nghỉ làm";
-        }
-
-        Boolean present = attendance.getIsPresent();
-        String note = attendance.getNote();
-
-        if (Boolean.TRUE.equals(present)) {
-            return "Đang hoạt động";
-        }
-
-        if (Boolean.FALSE.equals(present) && "leave".equalsIgnoreCase(note)) {
-            return "Nghỉ phép";
-        }
-
-        // isPresent = false hoặc các trường hợp còn lại
-        return "Nghỉ làm";
-    }
+    // private String computeStatus(Attendance attendance) {
+    // if (attendance == null) {
+    // return "Nghỉ làm";
+    // }
+    //
+    // Boolean present = attendance.getIsPresent();
+    // String note = attendance.getNote();
+    //
+    // if (Boolean.TRUE.equals(present)) {
+    // return "Đang hoạt động";
+    // }
+    //
+    // if (Boolean.FALSE.equals(present) && "leave".equalsIgnoreCase(note)) {
+    // return "Nghỉ phép";
+    // }
+    //
+    // // isPresent = false hoặc các trường hợp còn lại
+    // return "Nghỉ làm";
+    // }
 
     @Override
     @Transactional
@@ -226,6 +203,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDetailResponse updateEmployee(Long id, EmployeeUpdateRequest request) {
+
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên"));
 
@@ -249,6 +227,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employee.getAccount().setRole(newRole);
             }
         }
+
+        employee.setActive(request.isActive());
 
         Employee saved = employeeRepository.save(employee);
 

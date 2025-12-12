@@ -108,4 +108,31 @@ public class QuotationItemController {
         return ResponseEntity.ok(ApiResponse.success("Tạo Part mới thành công", result));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Xóa mục báo giá",
+            description = "Xóa một mục trong báo giá theo ID. Sau khi xóa, hệ thống sẽ tự động tính toán lại tổng tiền dự kiến của báo giá."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Xóa mục báo giá thành công"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Không tìm thấy mục báo giá",
+                    content = @Content(schema = @Schema(hidden = true))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "Lỗi máy chủ nội bộ",
+                    content = @Content(schema = @Schema(hidden = true))
+            )
+    })
+    public ResponseEntity<ApiResponse<Void>> deleteQuotationItem(
+            @PathVariable Long id) {
+        quotaitonItemService.deleteQuotationItem(id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa mục báo giá thành công", null));
+    }
+
 }

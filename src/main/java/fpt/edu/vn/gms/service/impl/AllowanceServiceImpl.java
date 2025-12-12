@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -53,8 +52,8 @@ public class AllowanceServiceImpl implements AllowanceService {
                                 .type(dto.getType())
                                 .amount(dto.getAmount())
                                 .createdAt(LocalDateTime.now())
-                                .month(LocalDate.now().getMonthValue())
-                                .year(LocalDate.now().getYear())
+                                .month(dto.getMonth())
+                                .year(dto.getYear())
                                 .createdBy(accountance.getFullName())
                                 .build();
 

@@ -37,7 +37,7 @@ public class DeductionServiceImpl implements DeductionService {
                                 .type(dto.getType())
                                 .reason(dto.getContent())
                                 .amount(dto.getAmount())
-                                .date(LocalDate.now())
+                                .date(LocalDate.of(dto.getYear(), dto.getMonth(), 1))
                                 .createdBy(createdBy.getFullName())
                                 .build();
 
