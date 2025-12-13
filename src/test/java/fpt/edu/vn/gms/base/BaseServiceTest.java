@@ -42,7 +42,7 @@ public class BaseServiceTest {
         .address("123 Street")
         .hireDate(LocalDateTime.now())
         .dailySalary(new BigDecimal(10000))
-        .status("Active")
+        .isActive(true)
         .build();
   }
 
@@ -57,7 +57,7 @@ public class BaseServiceTest {
         .address("123 Street")
         .hireDate(LocalDateTime.now())
         .dailySalary(new BigDecimal(10000))
-        .status("Active")
+        .isActive(true)
         .build();
 
   }

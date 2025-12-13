@@ -1,0 +1,953 @@
+
+MATRIX 1
+Function Code: PQ-001
+Function Name: createQuotation
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 5 | A: 6 | B: 1 | Total: 12
+
+Condition Precondition	UTCID01 [N]	UTCID02 [N]	UTCID03 [N]	UTCID04 [N]	UTCID05 [N]	UTCID06 [N]	UTCID07 [N]	UTCID08 [N]	UTCID09 [N]	UTCID10 [N]	UTCID11 [N]	UTCID12 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+ServiceTicket (Pre-existing data)
+Existing {ticketId: 1L, status: CREATED, priceQuotation: null}	O	-	-	O	O	O	O	O	O	O	O	-
+Does not exist {ticketId: 999L}	-	O	-	-	-	-	-	-	-	-	-	-
+Existing {ticketId: 1L, status: CREATED, priceQuotation: existing}	-	-	-	O	-	-	-	-	-	-	-	-
+Existing {ticketId: 1L, status: COMPLETED}	-	-	-	-	-	-	-	-	O	-	-	-
+Existing {ticketId: 1L, status: CANCELLED}	-	-	-	-	-	-	-	-	-	O	-	-
+Customer (Pre-existing data)
+Existing {customerId: 1L, discountPolicy: 10%}	O	-	-	O	O	-	O	O	O	O	O	-
+Existing {customerId: 1L, discountPolicy: null}	-	-	-	-	-	O	-	-	-	-	-	-
+CodeSequenceService (Pre-existing data)
+Can generate code	O	-	-	O	O	O	O	-	O	O	O	-
+Throws exception	-	-	-	-	-	-	-	O	-	-	-	-
+**Input**
+ticketId
+1L	O	-	-	O	O	O	O	O	O	O	O	-
+999L	-	O	-	-	-	-	-	-	-	-	-	-
+null	-	-	O	-	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	-	O
+**Confirm (Expected Result)**
+Return
+Successfully creates quotation	O	-	-	-	O	-	O	-	O	O	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-	-	O
+NullPointerException/ValidationException	-	-	O	-	-	O	-	-	-	-	-	-
+BusinessException	-	-	-	O	-	-	-	-	O	O	-	-
+ServiceException	-	-	-	-	-	-	-	O	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	N	N	N	A	A	A	A	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 2
+Function Code: PQ-002
+Function Name: updateQuotationItems
+Summary: Passed: 0 | Failed: 0 | Untested: 15 | N: 9 | A: 4 | B: 2 | Total: 15
+
+Condition Precondition	UTCID13 [N]	UTCID14 [N]	UTCID15 [N]	UTCID16 [N]	UTCID17 [N]	UTCID18 [N]	UTCID19 [N]	UTCID20 [N]	UTCID21 [N]	UTCID22 [N]	UTCID23 [N]	UTCID24 [N]	UTCID25 [N]	UTCID26 [N]	UTCID27 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, status: DRAFT, items: [item1]}	O	O	-	-	O	O	O	O	O	O	O	O	O	O	O
+Existing {quotationId: 1L, status: CUSTOMER_CONFIRMED}	-	-	-	O	-	-	-	-	-	-	-	-	-	-	-
+Does not exist {quotationId: 999L}	-	-	O	-	-	-	-	-	-	-	-	-	-	-	-
+Part (Pre-existing data)
+Existing {partId: 1L, quantityInStock: 100, reservedQuantity: 10}	O	O	-	-	O	O	-	-	O	O	O	O	O	O	-
+Existing {partId: 1L, quantityInStock: 5, reservedQuantity: 0}	-	-	-	-	-	O	-	-	-	O	-	-	-	-	-
+Does not exist {partId: null}	-	-	-	-	-	-	O	-	-	-	-	-	-	-	-
+**Input**
+quotationId
+1L	O	O	-	O	O	O	O	O	O	O	O	O	O	O	O
+999L	-	-	O	-	-	-	-	-	-	-	-	-	-	-	-
+dto.items
+Item with existing ID	O	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Item without ID (new)	-	O	-	-	-	-	-	-	-	-	-	-	-	-	-
+Empty list []	-	-	-	-	-	-	-	-	-	-	-	-	-	-	O
+item.itemType
+PART	O	O	-	-	O	O	O	-	O	O	O	O	O	O	-
+SERVICE	-	-	-	-	-	-	-	O	-	-	-	-	-	-	-
+item.partId
+1L	O	O	-	-	O	O	-	-	O	O	O	O	O	O	-
+null	-	-	-	-	-	-	O	-	-	-	-	-	-	-	-
+item.quantity
+10.0	O	O	-	-	O	O	O	O	O	O	-	-	O	O	-
+0.0	-	-	-	-	-	-	-	-	-	-	O	-	-	-	-
+Double.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	-	O	-	-	-
+5.0	-	-	-	-	-	-	-	-	-	-	-	-	-	O	-
+item.unitPrice
+1000.0	O	O	-	-	O	O	O	O	O	O	O	O	-	O	-
+null	-	-	-	-	-	-	-	-	-	-	-	-	O	-	-
+**Confirm (Expected Result)**
+Return
+Successfully updates items	O	O	-	-	O	O	O	O	O	O	-	-	O	O	O
+Exception
+ResourceNotFoundException	-	-	O	-	-	-	-	-	-	-	-	-	-	-	-
+BusinessException	-	-	-	O	-	-	-	-	-	-	-	-	-	-	-
+ValidationException	-	-	-	-	-	-	-	-	-	-	O	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	A	A	N	N	N	N	N	N	B	B	N	N	N
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 3
+Function Code: PQ-003
+Function Name: confirmQuotationByCustomer
+Summary: Passed: 0 | Failed: 0 | Untested: 15 | N: 8 | A: 5 | B: 2 | Total: 15
+
+Condition Precondition	UTCID28 [N]	UTCID29 [N]	UTCID30 [N]	UTCID31 [N]	UTCID32 [N]	UTCID33 [N]	UTCID34 [N]	UTCID35 [N]	UTCID36 [N]	UTCID37 [N]	UTCID38 [N]	UTCID39 [N]	UTCID40 [N]	UTCID41 [N]	UTCID42 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, status: WAITING_CUSTOMER_CONFIRM, items: [item1, item2]}	O	-	-	O	O	O	O	O	O	O	O	O	O	O	-
+Existing {quotationId: 1L, status: DRAFT}	-	-	O	-	-	-	-	-	-	-	-	-	-	-	-
+Does not exist {quotationId: 999L}	-	O	-	-	-	-	-	-	-	-	-	-	-	-	-
+Existing {quotationId: 1L, items: []}	-	-	-	-	-	-	-	-	-	-	-	-	O	-	-
+Part (Pre-existing data)
+Existing {partId: 1L, quantityInStock: 100, reservedQuantity: 0}	O	-	-	O	O	O	O	-	O	O	O	O	-	O	-
+Existing {partId: 1L, quantityInStock: 5, reservedQuantity: 10}	-	-	-	-	O	-	-	O	-	-	-	-	-	-	-
+Existing {partId: 1L, quantityInStock: null}	-	-	-	-	-	O	-	-	-	-	-	-	-	-	-
+Employee (Pre-existing data)
+"Existing {employeeId: 1L, fullName: ""Advisor""}"	O	-	-	O	O	O	O	O	O	O	O	-	O	O	-
+Does not exist {employeeId: null}	-	-	-	-	-	-	-	-	-	-	-	O	-	-	-
+StockExportService (Pre-existing data)
+Can create export	O	-	-	O	O	O	O	O	O	-	O	O	O	O	-
+Throws exception	-	-	-	-	-	-	-	-	-	O	-	-	-	-	-
+**Input**
+quotationId
+1L	O	-	O	O	O	O	O	O	O	O	O	O	O	O	-
+999L	-	O	-	-	-	-	-	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	-	-	-	-	O
+**Confirm (Expected Result)**
+Return
+Successfully confirms quotation	O	-	-	O	O	O	O	O	O	-	O	-	O	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-	-	-	-	-	-
+RuntimeException	-	-	O	-	-	-	-	-	-	-	-	-	-	-	-
+NullPointerException	-	-	-	-	-	-	-	-	-	-	-	O	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	N	N	N	N	N	N	A	N	A	N	B	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 4
+Function Code: DEBT-001
+Function Name: payDebt
+Summary: Passed: 6 | Failed: 0 | Untested: 6 | N: 4 | A: 6 | B: 2 | Total: 12
+
+Condition Precondition	UTCID43 [E]	UTCID44 [E]	UTCID45 [E]	UTCID46 [E]	UTCID47 [E]	UTCID48 [N]	UTCID49 [N]	UTCID50 [N]	UTCID51 [N]	UTCID52 [N]	UTCID53 [N]	UTCID54 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Debt (Pre-existing data)
+Existing {debtId: 1L, amount: 1000000, paidAmount: 0, status: OUTSTANDING}	O	O	O	O	-	O	O	O	O	O	O	-
+Existing {debtId: 1L, amount: 1000000, paidAmount: 0, status: PAID_IN_FULL}	-	-	-	-	-	-	-	-	-	-	-	O
+Does not exist {debtId: 999L}	-	-	-	-	O	-	-	-	-	-	-	-
+Customer (Pre-existing data)
+Existing {customerId: 1L}	O	O	O	O	-	O	O	O	O	O	O	O
+TransactionService (Pre-existing data)
+Can create transaction	O	O	O	O	-	O	O	O	O	-	O	O
+Throws exception	-	-	-	-	-	-	-	-	-	O	-	-
+CustomerService (Pre-existing data)
+Can update spending	O	O	O	O	-	O	O	O	O	O	-	O
+Throws exception	-	-	-	-	-	-	-	-	-	-	O	-
+**Input**
+debtId
+1L	O	O	O	O	-	O	O	O	O	O	O	O
+999L	-	-	-	-	O	-	-	-	-	-	-	-
+request.method
+BANK_TRANSFER	O	-	-	-	-	-	-	-	-	-	-	-
+CASH	-	O	O	O	-	O	O	O	O	O	O	O
+request.price
+500000L	-	O	-	-	-	-	-	-	-	-	-	-
+1000000L	-	-	O	-	-	-	-	-	-	-	-	-
+1500000L	-	-	-	O	-	-	-	-	-	-	-	-
+0L	-	-	-	-	-	O	-	-	-	-	-	-
+-100L	-	-	-	-	-	-	O	-	-	-	-	-
+Long.MAX_VALUE + 1	-	-	-	-	-	-	-	O	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully processes payment	O	O	O	O	-	-	-	-	-	-	-	-
+Exception
+DebtNotFoundException	-	-	-	-	O	-	-	-	-	-	-	-
+ValidationException	-	-	-	-	-	-	O	O	-	-	-	-
+Exception	-	-	-	-	-	-	-	-	-	O	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	N	N	A	B	A	B	A	A	A	A
+Passed/Failed	P	P	P	P	P	-	-	-	-	-	-	-
+Executed Date	1/1	1/1	1/1	1/1	1/1	-	-	-	-	-	-	-
+Defect ID	0	0	0	0	0	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 5
+Function Code: ST-001
+Function Name: createServiceTicket
+Summary: Passed: 0 | Failed: 0 | Untested: 15 | N: 10 | A: 4 | B: 1 | Total: 15
+
+Condition Precondition	UTCID55 [N]	UTCID56 [N]	UTCID57 [N]	UTCID58 [N]	UTCID59 [N]	UTCID60 [N]	UTCID61 [N]	UTCID62 [N]	UTCID63 [N]	UTCID64 [N]	UTCID65 [N]	UTCID66 [N]	UTCID67 [N]	UTCID68 [N]	UTCID69 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O	O	O	O
+Customer (Pre-existing data)
+Existing {customerId: 1L}	-	O	O	-	-	O	-	-	-	O	O	O	O	O	-
+Does not exist {customerId: null}	O	-	-	O	-	-	O	O	O	-	O	O	O	O	O
+Does not exist {customerId: 999L}	-	-	-	-	O	-	-	-	-	-	-	-	-	-	-
+Vehicle (Pre-existing data)
+Existing {vehicleId: 1L}	-	O	-	O	O	-	-	-	-	O	O	O	O	O	-
+Does not exist {vehicleId: null}	O	-	O	-	-	-	O	O	O	-	O	O	O	O	O
+Does not exist {vehicleId: 999L}	-	-	-	-	-	O	-	-	-	-	-	-	-	-	-
+DiscountPolicy (Pre-existing data)
+Existing {loyaltyLevel: BRONZE}	O	-	-	O	-	-	O	-	O	-	O	O	O	O	O
+Does not exist	-	-	-	-	-	-	-	O	-	-	-	-	-	-	-
+Brand (Pre-existing data)
+"Existing {brandName: ""Toyota""}"	-	-	O	-	-	-	-	-	-	-	-	O	O	-	-
+Does not exist	O	-	-	-	-	-	O	O	O	-	O	-	-	O	O
+VehicleModel (Pre-existing data)
+"Existing {modelName: ""Camry"", brandId: 1L}"	-	-	O	-	-	-	-	-	-	-	-	-	O	-	-
+Does not exist	O	-	-	-	-	-	O	O	O	-	O	O	-	O	O
+Employee (Pre-existing data)
+Existing {employeeId: 1L}	O	O	O	O	O	O	O	O	O	O	O	O	O	O	O
+CodeSequenceService (Pre-existing data)
+Can generate code	O	O	O	O	O	O	O	O	O	O	O	O	O	O	-
+Throws exception	-	-	-	-	-	-	-	-	-	-	-	-	-	-	O
+**Input**
+dto.customer.customerId
+null	O	-	-	O	-	-	O	O	O	-	O	O	O	O	O
+1L	-	O	O	-	-	O	-	-	-	O	O	O	O	O	-
+999L	-	-	-	-	O	-	-	-	-	-	-	-	-	-	-
+dto.customer.fullName
+"""Nguyễn Văn B"""	O	-	-	O	-	-	O	O	O	-	O	O	O	O	O
+dto.customer.phone
+"""0909876543"""	O	-	-	O	-	-	O	O	"""0901 234 567"""	-	O	O	O	O	O
+dto.vehicle.vehicleId
+null	O	-	O	-	-	-	O	O	O	-	O	O	O	O	O
+1L	-	O	-	O	O	-	-	-	-	O	O	O	O	O	-
+999L	-	-	-	-	-	O	-	-	-	-	-	-	-	-	-
+dto.vehicle.licensePlate
+"""51G-67890"""	O	-	O	-	-	-	O	O	O	-	O	O	O	O	O
+dto.vehicle.brandName
+"""Honda"""	O	-	-	-	-	-	O	O	O	-	O	-	-	O	O
+"""Toyota"""	-	-	O	-	-	-	-	-	-	-	-	O	O	-	-
+dto.vehicle.modelName
+"""Civic"""	O	-	-	-	-	-	O	O	O	-	O	-	-	O	O
+"""Vios"""	-	-	O	-	-	-	-	-	-	-	-	-	O	-	-
+dto.appointmentId
+1L	-	-	-	-	-	-	-	-	-	O	-	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully creates ticket	O	O	O	O	-	-	O	-	O	O	O	O	O	O	-
+Exception
+ResourceNotFoundException	-	-	-	-	O	O	-	-	-	-	-	-	-	-	-
+RuntimeException	-	-	-	-	-	-	-	O	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	-	-	-	-	O
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	N	N	A	A	N	A	N	N	N	N	N	N	A
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 6
+Function Code: TXN-001
+Function Name: createTransaction
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 7 | A: 4 | B: 1 | Total: 12
+
+Condition Precondition	UTCID70 [N]	UTCID71 [N]	UTCID72 [N]	UTCID73 [N]	UTCID74 [A]	UTCID75 [N]	UTCID76 [N]	UTCID77 [N]	UTCID78 [N]	UTCID79 [A]	UTCID80 [N]	UTCID81 [A]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Invoice (Pre-existing data)
+Existing {invoiceId: 1L}	O	O	-	-	O	O	-	-	O	O	O	O
+Debt (Pre-existing data)
+Existing {debtId: 1L}	-	-	O	-	-	-	O	-	-	-	-	-
+PayOS API (Pre-existing data)
+Can create payment link	-	O	O	O	-	O	O	O	-	-	O	-
+Throws exception	-	-	-	-	O	-	-	-	-	-	-	-
+Returns payment link	-	-	-	O	-	-	-	-	-	-	-	-
+**Input**
+request.invoice
+exists	O	O	-	-	O	O	-	-	O	O	O	O
+null	-	-	-	-	-	-	O	O	-	-	-	-
+request.debt
+exists	-	-	O	-	-	-	O	-	-	-	-	-
+null	O	O	-	O	O	O	-	O	O	O	O	O
+request.method
+CASH	O	-	-	-	-	-	-	-	O	O	-	O
+BANK_TRANSFER	-	O	O	O	O	O	O	O	-	-	O	-
+request.price
+500000L	O	O	O	O	O	O	O	O	-	-	O	O
+0L	-	-	-	-	-	-	-	-	O	-	-	-
+-100L	-	-	-	-	-	-	-	-	-	O	-	-
+request.type
+PAYMENT	O	O	O	-	O	-	O	O	O	O	O	O
+DEPOSIT	-	-	-	-	-	O	-	-	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully creates transaction	O	O	O	O	-	O	O	O	O	-	O	-
+Returns payment link	-	O	O	O	-	O	O	O	-	-	O	-
+Exception
+Exception	-	-	-	-	O	-	-	-	-	-	-	-
+ValidationException	-	-	-	-	-	-	-	-	-	O	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	-	O
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	N	N	A	N	N	N	N	A	N	A
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 7
+Function Code: SE-001
+Function Name: createExportFromQuotation
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 8 | A: 3 | B: 1 | Total: 12
+
+Condition Precondition	UTCID82 [N]	UTCID83 [A]	UTCID84 [A]	UTCID85 [N]	UTCID86 [N]	UTCID87 [N]	UTCID88 [N]	UTCID89 [N]	UTCID90 [N]	UTCID91 [N]	UTCID92 [A]	UTCID93 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, items: [item1, item2]}	O	-	O	O	O	O	O	O	O	O	O	O
+Does not exist {quotationId: 999L}	-	O	-	-	-	-	-	-	-	-	-	-
+StockExport (Pre-existing data)
+Does not exist	O	-	-	O	O	O	O	O	O	O	O	O
+Existing {quotationId: 1L}	-	-	O	-	-	-	-	-	-	-	-	-
+Part (Pre-existing data)
+Existing {partId: 1L, inventoryStatus: AVAILABLE}	O	-	-	O	-	O	O	O	O	O	O	-
+Existing {partId: 1L, inventoryStatus: OUT_OF_STOCK}	-	-	-	-	O	-	-	-	-	-	-	-
+CodeSequenceService (Pre-existing data)
+Can generate code	O	-	-	O	O	O	O	O	O	O	O	O
+Employee (Pre-existing data)
+Existing {employeeId: 1L}	O	-	-	O	O	O	O	O	-	O	O	O
+Does not exist {employeeId: null}	-	-	-	-	-	-	-	-	O	-	-	-
+**Input**
+quotationId
+1L	O	-	O	O	O	O	O	O	O	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-	-	-
+note
+"""Test reason"""	O	-	O	O	O	O	O	O	O	O	O	O
+createdBy
+employee	O	-	O	O	O	O	O	O	-	O	O	O
+null	-	-	-	-	-	-	-	-	O	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully creates export	O	-	-	O	O	O	O	O	O	O	-	O
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-	-	-
+RuntimeException	-	-	O	-	-	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	N	N	N	N	N	N	N	A	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 8
+Function Code: PR-001
+Function Name: createPurchaseRequestFromQuotation
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 7 | A: 4 | B: 1 | Total: 12
+
+Condition Precondition	UTCID94 [N]	UTCID95 [N]	UTCID96 [N]	UTCID97 [N]	UTCID98 [N]	UTCID99 [N]	UTCID100 [N]	UTCID101 [A]	UTCID102 [N]	UTCID103 [A]	UTCID104 [A]	UTCID105 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, items: [item1, item2]}	O	O	O	-	O	O	O	-	O	O	O	O
+Existing {quotationId: 1L, items: []}	-	-	-	O	-	-	-	-	-	-	-	-
+Does not exist {quotationId: 999L}	-	-	-	-	-	-	-	O	-	-	-	-
+PriceQuotationItem (Pre-existing data)
+Items list not empty	O	O	O	-	O	O	O	-	O	O	O	O
+Items list empty []	-	-	-	O	-	-	-	-	-	-	-	-
+Item with quantity = 0.0	-	-	-	-	O	-	-	-	-	-	-	-
+Item with unitPrice = null	-	-	-	-	-	O	-	-	-	-	-	-
+Item without part (part = null)	-	-	-	-	-	-	-	-	O	-	-	-
+Item with itemType = PART	O	O	O	-	O	O	O	-	O	O	O	O
+Part (Pre-existing data)
+Existing {partId: 1L, supplier: exists, purchasePrice: 1000}	O	O	O	-	O	O	O	-	-	O	O	O
+Existing {partId: 1L, purchasePrice: Long.MAX_VALUE}	-	-	-	-	-	-	-	-	-	-	-	O
+Does not exist {part: null}	-	-	-	-	-	-	-	-	O	-	-	-
+InventoryService (Pre-existing data)
+Can get available quantity	O	O	O	O	O	O	O	-	O	O	O	O
+Can get reserved quantity	O	O	O	O	O	O	O	-	O	O	O	O
+availableQuantity = 10.0, reservedQuantity = 5.0	O	-	-	-	-	-	-	-	-	-	-	-
+availableQuantity = 0.0, reservedQuantity = 0.0	-	O	O	-	-	O	O	-	-	O	O	-
+availableQuantity = 100.0, reservedQuantity = 0.0	-	-	-	-	O	-	-	-	-	-	-	-
+CodeSequenceService (Pre-existing data)
+"Can generate code ""YC"""	O	O	O	O	O	O	O	-	O	O	O	O
+PurchaseRequestRepository (Pre-existing data)
+Can save purchase request	O	O	O	O	O	O	O	-	O	O	-	O
+Throws DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+PurchaseRequestItemRepository (Pre-existing data)
+Can saveAll items	O	O	O	O	O	O	O	-	O	O	-	O
+**Input**
+quotationId
+1L	O	O	O	O	O	O	O	-	O	O	O	O
+999L	-	-	-	-	-	-	-	O	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully creates purchase request	O	O	O	O	O	O	O	-	O	O	O	O
+"Purchase request code = ""YC-000001"""	-	O	-	-	-	-	-	-	-	-	-	-
+Total estimated amount > 0	-	-	O	-	-	-	-	-	-	-	-	-
+Items linked to supplier	-	-	-	-	-	-	O	-	-	-	-	-
+Items list is empty (skipped items)	-	-	-	-	-	-	-	-	O	-	-	-
+Exception
+ResourceNotFoundException	-	-	-	-	-	-	-	O	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	N	N	N	N	N	A	N	A	A	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 10
+Function Code: CUST-001
+Function Name: updateTotalSpending
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 5 | A: 3 | B: 2 | Total: 10
+
+Condition Precondition	UTCID118 [N]	UTCID119 [A]	UTCID120 [B]	UTCID121 [A]	UTCID122 [N]	UTCID123 [N]	UTCID124 [N]	UTCID125 [A]	UTCID126 [B]	UTCID127 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+Customer (Pre-existing data)
+Existing {customerId: 1L, totalSpending: 0}	O	-	-	-	-	-	O	O	O	-
+Existing {customerId: 1L, totalSpending: 100000}	-	-	O	-	-	-	-	-	-	-
+Existing {customerId: 1L, totalSpending: 200000}	-	-	-	O	-	-	-	-	-	-
+Existing {customerId: 1L, totalSpending: 900000, discountPolicy: BRONZE}	-	-	-	-	O	-	-	-	-	-
+Existing {customerId: 1L, totalSpending: 2000000, discountPolicy: SILVER}	-	-	-	-	-	O	-	-	-	-
+Existing {customerId: 1L, totalSpending: Long.MAX_VALUE}	-	-	-	-	-	-	-	-	-	O
+Does not exist {customerId: 999L}	-	O	-	-	-	-	-	-	-	-
+DiscountPolicy (Pre-existing data)
+Policies exist {BRONZE, SILVER, GOLD}	O	-	O	O	O	O	O	O	O	O
+CustomerRepository (Pre-existing data)
+Can save customer	O	-	O	O	O	O	O	-	O	O
+Throws DataAccessException	-	-	-	-	-	-	-	O	-	-
+**Input**
+customerId
+1L	O	-	O	O	O	O	O	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-
+amount
+100000	O	-	-	-	-	-	O	O	-	-
+0	-	-	O	-	-	-	-	-	-	-
+-100000	-	-	-	O	-	-	-	-	-	-
+200000	-	-	-	-	O	-	-	-	-	-
+-1500000	-	-	-	-	-	O	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	O	-
+**Confirm (Expected Result)**
+Return
+Successfully updates totalSpending	O	-	O	O	O	O	O	-	O	O
+Updates discount policy (upgrade)	-	-	-	-	O	-	-	-	-	-
+Updates discount policy (downgrade)	-	-	-	-	-	O	-	-	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	O	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	B	A	N	N	N	A	B	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 11
+Function Code: PART-001
+Function Name: updateInventory
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 6 | A: 4 | B: 2 | Total: 12
+
+Condition Precondition	UTCID128 [N]	UTCID129 [N]	UTCID130 [A]	UTCID131 [A]	UTCID132 [B]	UTCID133 [N]	UTCID134 [N]	UTCID135 [A]	UTCID136 [N]	UTCID137 [A]	UTCID138 [B]	UTCID139 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Part (Pre-existing data)
+Existing {partId: 1L, quantityInStock: 100.0}	O	O	-	-	O	O	O	O	O	O	O	O
+Existing {partId: 1L, quantityInStock: 10.0}	-	-	-	-	O	-	-	-	-	-	-	-
+Does not exist {partId: 999L}	-	-	O	-	-	-	-	-	-	-	-	-
+PartRepository (Pre-existing data)
+Can save part	O	O	-	-	O	O	O	-	O	O	O	O
+Throws DataAccessException	-	-	-	O	-	-	-	O	-	O	-	-
+**Input**
+partId
+1L	O	O	-	-	O	O	O	O	O	O	O	O
+999L	-	-	O	-	-	-	-	-	-	-	-	-
+quantityChange
+10.0 (positive)	O	-	-	-	-	O	-	-	O	-	-	-
+-5.0 (negative)	-	O	-	-	-	-	O	-	-	-	-	-
+-10.0 (results in 0)	-	-	-	-	O	-	-	-	-	-	-	-
+Double.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	O	-
+0.0	-	-	-	-	-	-	-	-	-	-	-	O
+note
+"""Import stock"""	O	O	-	-	O	O	O	O	O	O	O	O
+null	-	-	-	-	-	-	-	-	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully updates inventory	O	O	-	-	O	O	O	-	O	O	O	O
+Updates status to OUT_OF_STOCK when quantity = 0	-	-	-	-	O	-	-	-	-	-	-	-
+Updates status to AVAILABLE when quantity > 0	O	O	-	-	-	O	O	-	O	O	O	O
+Exception
+ResourceNotFoundException	-	-	O	-	-	-	-	-	-	-	-	-
+DataAccessException	-	-	-	O	-	-	-	O	-	O	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	A	A	B	N	N	A	N	A	B	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 12
+Function Code: DE-002
+Function Name: getDebtsByCustomer
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 9 | A: 1 | B: 2 | Total: 12
+
+Condition Precondition	UTCID140 [N]	UTCID141 [N]	UTCID142 [A]	UTCID143 [N]	UTCID144 [N]	UTCID145 [N]	UTCID146 [N]	UTCID147 [N]	UTCID148 [N]	UTCID149 [N]	UTCID150 [B]	UTCID151 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Customer (Pre-existing data)
+Existing {customerId: 1L, vehicles: [vehicle1]}	-	-	-	O	O	O	O	O	-	O	O	-
+Existing {customerId: 1L, vehicles: []}	-	-	-	O	O	O	O	-	O	O	O	-
+Does not exist {customerId: 999L}	-	-	O	-	-	-	-	-	-	-	-	-
+Existing {customerId: Long.MAX_VALUE}	-	-	-	-	-	-	-	-	-	-	-	O
+Debt (Pre-existing data)
+Existing debts {status: OUTSTANDING, count: 2}	O	-	-	-	-	-	-	-	-	-	-	-
+"Existing debts {status: null, keyword: ""PDV""}"	-	O	-	-	-	-	-	-	-	-	-	-
+Empty debts list []	-	-	-	O	-	-	-	-	-	-	-	-
+Multiple debts {amounts: [1000000, 500000, 200000]}	-	-	-	-	-	-	-	-	-	O	-	-
+DebtRepository (Pre-existing data)
+Can find by customer and filter	O	O	-	O	O	O	O	O	O	O	O	O
+Returns Page with debts	O	-	-	-	-	-	-	-	-	O	-	-
+Returns empty Page	-	O	-	O	O	O	O	O	O	-	O	-
+Pagination (Pre-existing data)
+page=0, size=10	O	O	O	O	-	O	O	O	O	O	-	O
+page=1, size=5	-	-	-	-	O	-	-	-	-	-	-	-
+page=Integer.MAX_VALUE, size=10	-	-	-	-	-	-	-	-	-	-	O	-
+Sort (Pre-existing data)
+"sort=""amount,asc"""	-	-	-	-	-	O	-	-	-	-	-	-
+"sort=null (default: ""createdAt,desc"")"	O	O	O	O	O	-	O	O	O	O	O	O
+**Input**
+customerId
+1L	O	O	-	O	O	O	O	O	O	O	O	-
+999L	-	-	O	-	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	-	O
+status
+OUTSTANDING	O	-	-	-	-	-	-	-	-	-	-	-
+null	-	O	O	O	O	O	O	O	O	O	O	O
+keyword
+null	O	-	O	O	O	O	O	O	O	O	O	O
+""" PDV "" (trimmed to ""PDV"")"	-	O	-	-	-	-	-	-	-	-	-	-
+page
+0	O	O	O	O	-	O	O	O	O	O	-	O
+1	-	-	-	-	O	-	-	-	-	-	-	-
+Integer.MAX_VALUE	-	-	-	-	-	-	-	-	-	-	O	-
+size
+10	O	O	O	O	-	O	O	O	O	O	O	O
+5	-	-	-	-	O	-	-	-	-	-	-	-
+sort
+null	O	O	O	O	O	-	O	O	O	O	O	O
+"""amount,asc"""	-	-	-	-	-	O	-	-	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully returns debts list	O	O	-	O	O	O	O	O	O	O	O	O
+Returns empty list	-	O	-	O	O	O	O	O	O	-	O	-
+totalRemainingAmount = sum of amounts	O	-	-	-	-	-	-	-	-	O	-	-
+totalRemainingAmount = 0	-	O	-	O	O	O	O	O	O	-	O	-
+licensePlate = first vehicle's licensePlate	-	-	-	-	-	-	-	O	-	-	-	-
+licensePlate = null	-	-	-	-	-	-	-	-	O	-	-	-
+Pagination applied correctly	-	-	-	-	O	-	-	-	-	-	-	-
+Sort applied correctly	-	-	-	-	-	O	-	-	-	-	-	-
+Default sort applied	O	O	-	O	O	-	O	O	O	O	O	O
+Exception
+ResourceNotFoundException	-	-	O	-	-	-	-	-	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	A	N	N	N	N	N	N	N	B	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 13
+Function Code: PQ-004
+Function Name: rejectQuotationByCustomer
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 3 | A: 6 | B: 1 | Total: 10
+
+Condition Precondition	UTCID152 [N]	UTCID153 [A]	UTCID154 [A]	UTCID155 [A]	UTCID156 [A]	UTCID157 [B]	UTCID158 [N]	UTCID159 [A]	UTCID160 [A]	UTCID161 [B]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, status: WAITING_CUSTOMER_CONFIRM}	O	-	-	O	O	O	O	O	O	-
+Existing {quotationId: 1L, status: DRAFT}	-	-	O	-	-	-	-	-	-	-
+Does not exist {quotationId: 999L}	-	O	-	-	-	-	-	-	-	-
+Existing {quotationId: Long.MAX_VALUE}	-	-	-	-	-	-	-	-	-	O
+Employee (Pre-existing data)
+Existing {advisor: employeeId: 1L}	O	-	-	O	O	O	O	-	O	-
+Does not exist {advisor: null}	-	-	-	-	-	-	-	O	-	-
+NotificationService (Pre-existing data)
+Can create notification	O	-	-	O	O	O	O	-	O	-
+PriceQuotationRepository (Pre-existing data)
+Can save quotation	O	-	-	O	O	O	O	O	-	-
+Throws DataAccessException	-	-	-	-	-	-	-	-	O	-
+**Input**
+quotationId
+1L	O	-	O	O	O	O	O	O	O	-
+999L	-	O	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	-	O
+reason
+"""Too expensive"""	O	-	-	-	-	-	O	O	O	-
+null	-	-	-	O	-	-	-	-	-	-
+""""" (empty)"	-	-	-	-	O	-	-	-	-	-
+"""A"" * 1000 (very long)"	-	-	-	-	-	O	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully rejects quotation	O	-	-	O	O	O	O	O	-	-
+Status → CUSTOMER_REJECTED	O	-	-	O	O	O	O	O	-	-
+Sends notification to advisor	O	-	-	O	O	O	O	-	O	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	O
+RuntimeException	-	-	O	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	O	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	A	B	N	A	A	B
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 14
+Function Code: PQ-005
+Function Name: sendQuotationToCustomer
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 3 | A: 6 | B: 1 | Total: 10
+
+Condition Precondition	UTCID162 [N]	UTCID163 [A]	UTCID164 [A]	UTCID165 [A]	UTCID166 [A]	UTCID167 [A]	UTCID168 [N]	UTCID169 [B]	UTCID170 [A]	UTCID171 [A]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, status: WAREHOUSE_CONFIRMED}	O	-	-	-	-	O	O	-	O	O
+Existing {quotationId: 1L, status: WAITING_WAREHOUSE_CONFIRM}	-	-	O	-	-	-	-	-	-	-
+Existing {quotationId: 1L, status: DRAFT}	-	-	-	O	-	-	-	-	-	-
+Existing {quotationId: 1L, status: CUSTOMER_CONFIRMED}	-	-	-	-	O	-	-	-	-	-
+Existing {quotationId: 1L, items: []}	-	-	-	-	-	-	-	-	O	-
+Existing {quotationId: 1L, estimateAmount: 0}	-	-	-	-	-	-	-	-	-	O
+Does not exist {quotationId: 999L}	-	O	-	-	-	-	-	-	-	-
+Existing {quotationId: Long.MAX_VALUE}	-	-	-	-	-	-	-	O	-	-
+PriceQuotationRepository (Pre-existing data)
+Can save quotation	O	-	-	-	-	-	O	-	O	O
+Throws DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Input**
+quotationId
+1L	O	-	O	O	O	O	O	-	O	O
+999L	-	O	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	O	-	-
+**Confirm (Expected Result)**
+Return
+Successfully sends quotation	O	-	-	-	-	-	O	-	O	O
+Status → WAITING_CUSTOMER_CONFIRM	O	-	-	-	-	-	O	-	O	O
+Updates timestamp	-	-	-	-	-	-	O	-	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-
+RuntimeException	-	-	O	O	O	-	-	-	O	O
+DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	A	A	N	B	A	A
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 15
+Function Code: PQ-006
+Function Name: updateQuotationToDraft
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 4 | A: 5 | B: 1 | Total: 10
+
+Condition Precondition	UTCID172 [N]	UTCID173 [A]	UTCID174 [A]	UTCID175 [A]	UTCID176 [N]	UTCID177 [A]	UTCID178 [N]	UTCID179 [B]	UTCID180 [A]	UTCID181 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+PriceQuotation (Pre-existing data)
+Existing {quotationId: 1L, serviceTicket.status: WAITING_FOR_DELIVERY}	O	-	-	-	-	O	O	-	-	O
+Existing {quotationId: 1L, serviceTicket.status: WAITING_FOR_QUOTATION}	-	-	-	-	O	-	-	-	-	-
+Existing {quotationId: 1L, serviceTicket.status: COMPLETED}	-	-	-	O	-	-	-	-	-	-
+Existing {quotationId: 1L, status: CUSTOMER_CONFIRMED}	-	-	-	-	-	-	-	-	O	-
+Existing {quotationId: 1L, serviceTicket: null}	-	-	O	-	-	-	-	-	-	-
+Does not exist {quotationId: 999L}	-	O	-	-	-	-	-	-	-	-
+Existing {quotationId: Long.MAX_VALUE}	-	-	-	-	-	-	-	O	-	-
+ServiceTicketRepository (Pre-existing data)
+Can save ticket	O	-	-	-	O	-	O	-	O	O
+PriceQuotationRepository (Pre-existing data)
+Can save quotation	O	-	-	-	O	-	O	-	O	O
+Throws DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Input**
+quotationId
+1L	O	-	O	O	O	O	O	-	O	O
+999L	-	O	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	O	-	-
+**Confirm (Expected Result)**
+Return
+Successfully updates to draft	O	-	-	-	O	-	O	-	O	O
+Status → DRAFT	O	-	-	-	O	-	O	-	O	O
+Updates serviceTicket status	O	-	-	-	O	-	O	-	O	O
+Updates timestamp	-	-	-	-	-	-	O	-	-	-
+Saves both quotation and ticket	-	-	-	-	-	-	-	-	-	O
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	-	-
+RuntimeException	-	-	O	O	-	-	-	-	O	-
+DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	N	A	N	B	A	N
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 16
+Function Code: DE-003
+Function Name: createDebt
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 7 | A: 3 | B: 2 | Total: 12
+
+Condition Precondition	UTCID182 [N]	UTCID183 [A]	UTCID184 [A]	UTCID185 [B]	UTCID186 [B]	UTCID187 [A]	UTCID188 [N]	UTCID189 [N]	UTCID190 [N]	UTCID191 [B]	UTCID192 [B]	UTCID193 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Customer (Pre-existing data)
+Existing {customerId: 1L}	O	-	O	O	O	O	O	O	O	O	O	O
+Does not exist {customerId: 999L}	-	O	-	-	-	-	-	-	-	-	-	-
+ServiceTicket (Pre-existing data)
+Existing {serviceTicketId: 1L}	O	-	-	O	O	O	O	O	O	O	O	O
+Does not exist {serviceTicketId: 999L}	-	-	O	-	-	-	-	-	-	-	-	-
+DebtRepository (Pre-existing data)
+Can save debt	O	-	-	O	O	-	O	O	O	O	O	O
+Throws DataAccessException	-	-	-	-	-	O	-	-	-	-	-	-
+**Input**
+dto.customerId
+1L	O	-	O	O	O	O	O	O	O	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-	-	-
+dto.serviceTicketId
+1L	O	-	-	O	O	O	O	O	O	O	O	O
+999L	-	-	O	-	-	-	-	-	-	-	-	-
+dto.amount
+1000000	O	-	-	-	-	O	O	O	O	-	-	O
+0	-	-	-	O	-	-	-	-	-	-	-	-
+BigDecimal.MAX_VALUE	-	-	-	-	O	-	-	-	-	-	-	-
+dto.dueDate
+null (default: today + 14 days)	O	-	-	O	O	O	O	O	O	O	O	O
+**Confirm (Expected Result)**
+Return
+Successfully creates debt	O	-	-	O	O	-	O	O	O	O	O	O
+dueDate = today + 14 days	-	-	-	-	-	-	O	-	-	-	-	-
+status = OUTSTANDING	O	-	-	O	O	-	O	O	O	O	O	O
+paidAmount = 0	O	-	-	O	O	-	O	O	O	O	O	O
+Exception
+CustomerNotFoundException	-	O	-	-	-	-	-	-	-	-	-	-
+ServiceTicketNotFoundException	-	-	O	-	-	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	O	-	-	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	B	B	A	N	N	N	B	B	N
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 17
+Function Code: DE-004
+Function Name: updateDueDate
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 3 | A: 5 | B: 2 | Total: 10
+
+Condition Precondition	UTCID194 [N]	UTCID195 [A]	UTCID196 [A]	UTCID197 [A]	UTCID198 [A]	UTCID199 [B]	UTCID200 [N]	UTCID201 [A]	UTCID202 [B]	UTCID203 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+Debt (Pre-existing data)
+Existing {debtId: 1L, dueDate: today + 7 days}	O	-	-	-	-	-	O	O	-	O
+Existing {debtId: 1L, dueDate: today + 14 days}	-	-	-	-	-	-	-	-	-	O
+Does not exist {debtId: 999L}	-	O	-	-	-	-	-	-	-	-
+DebtRepository (Pre-existing data)
+Can save debt	O	-	-	-	-	-	O	-	O	O
+Throws DataAccessException	-	-	-	-	-	-	-	O	-	-
+**Input**
+debtId
+1L	O	-	-	-	-	-	O	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-
+dueDate
+today + 30 days	O	-	-	-	-	-	O	O	-	-
+today + 14 days	-	-	-	-	-	-	-	-	-	O
+null	-	-	O	-	-	-	-	-	-	-
+today	-	-	-	O	-	-	-	-	-	-
+today - 1 day	-	-	-	-	O	-	-	-	-	-
+today + 365 days	-	-	-	-	-	O	-	-	-	-
+LocalDate.MAX	-	-	-	-	-	-	-	-	O	-
+**Confirm (Expected Result)**
+Return
+Successfully updates due date	O	-	-	-	-	-	O	-	O	O
+Exception
+DebtNotFoundException	-	O	-	-	-	-	-	-	-	-
+IllegalArgumentException	-	-	O	O	O	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	O	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	A	B	N	A	B	N
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 18
+Function Code: ST-002
+Function Name: updateServiceTicket
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 6 | A: 5 | B: 1 | Total: 12
+
+Condition Precondition	UTCID204 [N]	UTCID205 [A]	UTCID206 [N]	UTCID207 [A]	UTCID208 [N]	UTCID209 [N]	UTCID210 [N]	UTCID211 [A]	UTCID212 [B]	UTCID213 [N]	UTCID214 [N]	UTCID215 [N]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+ServiceTicket (Pre-existing data)
+Existing {ticketId: 1L, status: CREATED}	O	-	O	-	O	O	O	O	O	O	O	O
+Existing {ticketId: 1L, status: COMPLETED}	-	-	-	O	-	-	-	-	-	-	-	-
+Does not exist {ticketId: 999L}	-	O	-	-	-	-	-	-	-	-	-	-
+Existing {ticketId: Long.MAX_VALUE}	-	-	-	-	-	-	-	-	O	-	-	-
+ServiceTicketRepository (Pre-existing data)
+Can save ticket	O	-	O	-	O	O	O	-	-	O	O	O
+Throws DataAccessException	-	-	-	-	-	-	-	O	-	-	-	-
+**Input**
+ticketId
+1L	O	-	O	O	O	O	O	O	-	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	-	-	O	-	-	-
+dto
+Empty dto {}	O	-	O	-	O	O	O	O	-	O	O	O
+**Confirm (Expected Result)**
+Return
+Successfully updates ticket	O	-	O	-	O	O	O	-	-	O	O	O
+Updates timestamp	-	-	-	-	-	-	O	-	-	-	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	-	-	O	-	-	-
+DataAccessException	-	-	-	-	-	-	-	O	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	N	A	N	N	N	A	B	N	N	N
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 19
+Function Code: TXN-002
+Function Name: processPaymentByPaymentLinkId
+Summary: Passed: 0 | Failed: 0 | Untested: 12 | N: 7 | A: 4 | B: 0 | Total: 12
+
+Condition Precondition	UTCID216 [N]	UTCID217 [N]	UTCID218 [A]	UTCID219 [A]	UTCID220 [N]	UTCID221 [N]	UTCID222 [N]	UTCID223 [N]	UTCID224 [N]	UTCID225 [N]	UTCID226 [A]	UTCID227 [A]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O	O	O
+Transaction (Pre-existing data)
+"Existing {paymentLinkId: ""link1"", invoice: exists, type: PAYMENT}"	O	-	-	-	-	-	-	-	-	-	O	-
+"Existing {paymentLinkId: ""link1"", debt: exists, type: PAYMENT}"	-	O	-	-	-	-	-	-	-	-	-	-
+"Existing {paymentLinkId: ""link1"", invoice: exists, type: DEPOSIT}"	-	-	-	-	-	-	-	O	-	-	-	-
+"Existing {paymentLinkId: ""link1"", amount: 1000000, invoice.finalAmount: 1000000}"	-	-	-	-	-	-	-	-	O	-	-	-
+"Existing {paymentLinkId: ""link1"", amount: 500000, invoice.finalAmount: 1000000}"	-	-	-	-	-	-	-	-	-	O	-	-
+"Does not exist {paymentLinkId: ""invalid""}"	-	-	O	-	-	-	-	-	-	-	-	-
+"Does not exist {paymentLinkId: ""link1"", transaction: null}"	-	-	-	O	-	-	-	-	-	-	-	-
+PayOS (Pre-existing data)
+Payment link status: PAID	O	O	-	-	-	-	-	O	O	O	O	-
+Payment link status: CANCELLED	-	-	-	-	O	-	-	-	-	-	-	-
+Payment link status: EXPIRED	-	-	-	-	-	O	-	-	-	-	-	-
+Payment link status: FAILED	-	-	-	-	-	-	O	-	-	-	-	-
+Throws exception	-	-	O	-	-	-	-	-	-	-	-	-
+InvoiceRepository (Pre-existing data)
+Can save invoice	O	-	-	-	-	-	-	O	O	O	O	-
+Throws DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+DebtRepository (Pre-existing data)
+Can save debt	-	O	-	-	-	-	-	-	-	-	-	-
+TransactionRepository (Pre-existing data)
+Can find by paymentLinkId	O	O	-	O	O	O	O	O	O	O	O	O
+Can save transaction	O	O	-	-	O	O	O	O	O	O	O	O
+Can delete transaction	-	-	-	-	O	O	O	-	-	-	-	-
+**Input**
+paymentLinkId
+"""payment-link-123"""	O	O	-	-	O	O	O	O	O	O	O	-
+"""invalid-link"""	-	-	O	-	-	-	-	-	-	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully processes payment	O	O	-	-	-	-	-	O	O	O	-	-
+Updates invoice status to PAID_IN_FULL	O	-	-	-	-	-	-	-	O	-	-	-
+Updates invoice status to UNDERPAID	-	-	-	-	-	-	-	-	-	O	-	-
+Updates debt status to PAID_IN_FULL	-	O	-	-	-	-	-	-	-	-	-	-
+Updates deposit received	-	-	-	-	-	-	-	O	-	-	-	-
+Updates customer spending	O	O	-	-	-	-	-	O	O	O	-	-
+Deletes transaction (CANCELLED/EXPIRED/FAILED)	-	-	-	-	O	O	O	-	-	-	-	-
+Exception
+TransactionNotFoundException	-	-	-	O	-	-	-	-	-	-	-	-
+RuntimeException	-	-	O	-	-	-	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	-	-	-	-	-	O	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	N	A	A	N	N	N	N	N	N	A	A
+Passed/Failed	-	-	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-	-	-
+
+---
+
+
+MATRIX 20
+Function Code: PR-002
+Function Name: approvePurchaseRequest
+Summary: Passed: 0 | Failed: 0 | Untested: 10 | N: 4 | A: 5 | B: 1 | Total: 10
+
+Condition Precondition	UTCID228 [N]	UTCID229 [A]	UTCID230 [A]	UTCID231 [A]	UTCID232 [N]	UTCID233 [A]	UTCID234 [B]	UTCID235 [A]	UTCID236 [N]	UTCID237 [A]
+**Preconditions**
+Can connect with database	O	O	O	O	O	O	O	O	O	O
+PurchaseRequest (Pre-existing data)
+Existing {prId: 1L, status: PENDING, items: [item1]}	O	-	-	-	O	O	-	O	O	O
+Existing {prId: 1L, status: PENDING, items: []}	-	-	O	-	-	-	-	-	-	-
+Existing {prId: 1L, status: APPROVED}	-	-	-	O	-	-	-	-	-	-
+Existing {prId: 1L, totalEstimatedAmount: 0}	-	-	-	-	-	-	-	-	-	O
+Does not exist {prId: 999L}	-	O	-	-	-	-	-	-	-	-
+Existing {prId: Long.MAX_VALUE}	-	-	-	-	-	-	O	-	-	-
+StockReceiptService (Pre-existing data)
+Can create receipt	O	-	-	-	O	-	-	O	O	O
+PurchaseRequestRepository (Pre-existing data)
+Can save purchase request	O	-	-	-	O	-	-	O	O	O
+Throws DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Input**
+prId
+1L	O	-	O	O	O	O	-	O	O	O
+999L	-	O	-	-	-	-	-	-	-	-
+Long.MAX_VALUE	-	-	-	-	-	-	O	-	-	-
+**Confirm (Expected Result)**
+Return
+Successfully approves purchase request	O	-	-	-	O	-	-	O	O	O
+Status → APPROVED	O	-	-	-	O	-	-	O	O	O
+Creates stock receipt	O	-	-	-	O	-	-	O	O	O
+Updates timestamp	-	-	-	-	O	-	-	-	-	-
+Exception
+ResourceNotFoundException	-	O	-	-	-	-	O	-	-	-
+RuntimeException	-	-	O	O	-	-	-	-	-	-
+DataAccessException	-	-	-	-	-	O	-	-	-	-
+**Result**
+Type (N: Normal, A: Abnormal, B: Boundary)	N	A	A	A	N	A	B	A	N	A
+Passed/Failed	-	-	-	-	-	-	-	-	-	-
+Executed Date	-	-	-	-	-	-	-	-	-	-
+Defect ID	-	-	-	-	-	-	-	-	-	-
+
+---
+

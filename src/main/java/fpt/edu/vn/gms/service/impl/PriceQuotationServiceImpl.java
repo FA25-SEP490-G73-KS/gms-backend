@@ -277,7 +277,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             partRepository.save(part);
         }
 
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         try {
             stockExportService.createExportFromQuotation(quotation.getPriceQuotationId(),
@@ -473,7 +473,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
 
     @Override
     public PriceQuotationResponseDto updateQuotationToDraft(Long quotationId) {
-        PriceQuotation quotation = quotationRepository.findById(quotationId)
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
         ServiceTicket ticket = quotation.getServiceTicket();
@@ -496,7 +496,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         }
 
         serviceTicketRepository.save(ticket);
-        quotationRepository.save(quotation);
+        priceQuotationRepository.save(quotation);
 
         return priceQuotationMapper.toResponseDto(quotation);
     }
