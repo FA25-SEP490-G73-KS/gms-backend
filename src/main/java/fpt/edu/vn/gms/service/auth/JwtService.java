@@ -33,7 +33,7 @@ public class JwtService {
     private Long REFRESH_EXPIRATION;
 
     // Thời gian sống refresh token khi bật remember me (giây)
-    @Value("${jwt.refresh.remember-expiration:${jwt.refresh.expiration}}")
+    @Value("${jwt.refresh.remember-expiration:${jwt.refresh.remember.expiration}}")
     private Long REFRESH_REMEMBER_EXPIRATION;
 
     private final RedisService redisService;

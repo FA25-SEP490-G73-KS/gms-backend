@@ -194,7 +194,7 @@ public class PartServiceImpl implements PartService {
 
         if (dto.getPurchasePrice() != null) {
             BigDecimal purchase = dto.getPurchasePrice();
-            BigDecimal selling = purchase.multiply(BigDecimal.valueOf(1.10)); // auto tính giá bán
+            BigDecimal selling = dto.getSellingPrice();
             part.setPurchasePrice(purchase);
             part.setSellingPrice(selling);
         }

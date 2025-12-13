@@ -46,14 +46,8 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     PartRepository partRepository;
     PriceQuotationRepository quotationRepository;
     PriceQuotationItemRepository priceQuotationItemRepo;
-    PartCategoryRepository partCategoryRepo;
-    MarketRepository marketRepo;
-    UnitRepository unitRepo;
-    VehicleModelRepository vehicleModelRepo;
-    SupplierRepository supplierRepo;
     PriceQuotationItemMapper priceQuotationItemMapper;
     PriceQuotationMapper priceQuotationMapper;
-    PartMapper partMapper;
 
 
     @Override
@@ -64,7 +58,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
 
         Page<PriceQuotation> quotations = quotationRepository
-                .findAll(pageable);
+                .findByStatus(PriceQuotationStatus.WAITING_WAREHOUSE_CONFIRM, pageable);
 
         log.info("Found {} quotations waiting for warehouse approval", quotations.getTotalElements());
 
