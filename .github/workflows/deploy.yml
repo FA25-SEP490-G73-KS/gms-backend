@@ -31,15 +31,6 @@ jobs:
           push: true
           tags: taehuyn/gms-backend:latest, taehuyn/gms-backend:${{ github.sha }}
 
-      - name: Copy docker-compose to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.prod.yaml,cert/fullchain.pem,cert/privkey.pem"
-          target: "~/gms-backend"
-
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
