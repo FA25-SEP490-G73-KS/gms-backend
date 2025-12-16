@@ -51,9 +51,16 @@ public class StockExportServiceImpl implements StockExportService {
         PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
-        stockExportRepository.findByQuotationId(quotationId).ifPresent(se -> {
-            throw new RuntimeException("Đã tồn tại phiếu xuất kho cho báo giá này");
-        });
+        // Nếu đã có phiếu xuất kho cho báo giá này, trả về luôn, không tạo mới để tránh rollback
+        Optional<StockExport> existingExport = stockExportRepository.findByQuotationId(quotationId);
+        if (existingExport.isPresent()) {
+            StockExportDetailResponse existingDetail = stockExportMapper.toDetailDto(existingExport.get());
+            List<StockExportItemResponse> existingItems = existingExport.get().getExportItems().stream()
+                    .map(stockExportMapper::toItemDto)
+                    .toList();
+            existingDetail.setItems(existingItems);
+            return existingDetail;
+        }
 
         StockExport export = StockExport.builder()
                 .code(codeSequenceService.generateCode("XK"))

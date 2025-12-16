@@ -3,30 +3,44 @@ package fpt.edu.vn.gms.service.impl;
 import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.dto.response.DashboardResponse;
+import fpt.edu.vn.gms.dto.response.dashboard.DashboardOverviewResponse;
+import fpt.edu.vn.gms.dto.response.dashboard.DashboardSeriesPoint;
 import fpt.edu.vn.gms.entity.Customer;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.DashboardService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class DashboardServiceImpl implements DashboardService {
 
+    // Existing dependencies for service-advisor dashboard
     ServiceTicketRepository serviceTicketRepository;
     PriceQuotationRepository priceQuotationRepository;
     AppointmentRepository appointmentRepository;
     ServiceRatingRepository serviceRatingRepository;
     CustomerRepository customerRepository;
+
+    // New dependencies for financial overview
+    TransactionRepository transactionRepository;
+    StockReceiptRepository stockReceiptRepository;
+    DebtRepository debtRepository;
 
     @Override
     public DashboardResponse getDashboardOverview() {
@@ -34,11 +48,9 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate today = LocalDate.now();
         YearMonth currentMonth = YearMonth.from(today);
 
-        // 1) Summary
-        long totalTickets = serviceTicketRepository.countServiceTicketsInMonth(currentMonth.getYear(), currentMonth.getMonthValue());
-        // "báo giá chờ duyệt" giả định là WAITING_CUSTOMER_CONFIRM
+        long totalTickets = serviceTicketRepository.countServiceTicketsInMonth(currentMonth.getYear(),
+                currentMonth.getMonthValue());
         long pendingQuotations = priceQuotationRepository.countByStatus(PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
-        // "xe đang sửa" giả định là trạng thái WAITING_FOR_DELIVERY (đang trong quá trình sửa/bàn giao)
         long vehiclesInService = serviceTicketRepository.countByStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
         long appointmentsToday = appointmentRepository.countByAppointmentDate(today);
 
@@ -49,7 +61,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .appointmentsToday(appointmentsToday)
                 .build();
 
-        // 2) Tickets by month
         List<Object[]> ticketsByMonthRaw = serviceTicketRepository.getTicketsByMonth();
         List<DashboardResponse.TicketsByMonthDto> ticketsByMonth = new ArrayList<>();
         for (Object[] row : ticketsByMonthRaw) {
@@ -63,9 +74,8 @@ public class DashboardServiceImpl implements DashboardService {
                     .build());
         }
 
-        // 3) Service type distribution
-        // Dùng query countTicketsByTypeForMonth cho tháng hiện tại
-        List<Object[]> typeDistRaw = serviceTicketRepository.countTicketsByTypeForMonth(currentMonth.getYear(), currentMonth.getMonthValue());
+        List<Object[]> typeDistRaw = serviceTicketRepository.countTicketsByTypeForMonth(currentMonth.getYear(),
+                currentMonth.getMonthValue());
         long totalTypeTickets = 0L;
         for (Object[] row : typeDistRaw) {
             totalTypeTickets += ((Number) row[1]).longValue();
@@ -82,7 +92,6 @@ public class DashboardServiceImpl implements DashboardService {
                     .build());
         }
 
-        // 4) Rating summary
         long totalRatings = serviceRatingRepository.countAllRatings();
         long star1 = serviceRatingRepository.countByStars(1);
         long star2 = serviceRatingRepository.countByStars(2);
@@ -99,7 +108,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .star5(star5)
                 .build();
 
-        // 5) Top customers
         List<Customer> topCustomersEntities = customerRepository.findTop5ByIsActiveTrueOrderByTotalSpendingDesc();
         List<DashboardResponse.TopCustomerDto> topCustomers = new ArrayList<>();
         for (Customer c : topCustomersEntities) {
@@ -118,5 +126,54 @@ public class DashboardServiceImpl implements DashboardService {
                 .rating(ratingSummary)
                 .topCustomers(topCustomers)
                 .build();
+    }
+
+    @Override
+    public DashboardOverviewResponse getFinancialOverview(Integer year) {
+        int targetYear = (year == null || year <= 0) ? Year.now().getValue() : year;
+
+        BigDecimal totalRevenue = nvl(transactionRepository.sumRevenueByYear(targetYear));
+        BigDecimal totalExpense = nvl(stockReceiptRepository.sumExpenseByYear(targetYear));
+        BigDecimal totalDebt = nvl(debtRepository.sumOutstandingDebt());
+        BigDecimal profit = totalRevenue.subtract(totalExpense);
+
+        Map<Integer, BigDecimal> revenueByMonth = toMonthMap(transactionRepository.sumRevenueByMonth(targetYear));
+        Map<Integer, BigDecimal> expenseByMonth = toMonthMap(stockReceiptRepository.sumExpenseByMonth(targetYear));
+
+        List<DashboardSeriesPoint> series = new ArrayList<>();
+        for (int m = 1; m <= 12; m++) {
+            series.add(DashboardSeriesPoint.builder()
+                    .month(m)
+                    .revenue(revenueByMonth.getOrDefault(m, BigDecimal.ZERO))
+                    .expense(expenseByMonth.getOrDefault(m, BigDecimal.ZERO))
+                    .build());
+        }
+
+        series = series.stream()
+                .sorted(Comparator.comparingInt(DashboardSeriesPoint::getMonth))
+                .toList();
+
+        return DashboardOverviewResponse.builder()
+                .year(targetYear)
+                .totalRevenue(totalRevenue)
+                .totalExpense(totalExpense)
+                .profit(profit)
+                .totalDebt(totalDebt)
+                .series(series)
+                .build();
+    }
+
+    private Map<Integer, BigDecimal> toMonthMap(List<Object[]> rows) {
+        if (rows == null)
+            return Map.of();
+        return rows.stream()
+                .collect(Collectors.toMap(
+                        r -> ((Number) r[0]).intValue(),
+                        r -> nvl((BigDecimal) r[1]),
+                        BigDecimal::add));
+    }
+
+    private BigDecimal nvl(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

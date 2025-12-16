@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.controller;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.DashboardResponse;
 import fpt.edu.vn.gms.dto.response.WarehouseDashboardResponse;
+import fpt.edu.vn.gms.dto.response.dashboard.DashboardOverviewResponse;
 import fpt.edu.vn.gms.service.DashboardService;
 import fpt.edu.vn.gms.service.WarehouseDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,5 +40,14 @@ public class DashboardController {
 
         WarehouseDashboardResponse response = warehouseDashboardService.getDashboard(year, month);
         return ResponseEntity.ok(ApiResponse.success("Warehouse dashboard", response));
+    }
+
+    @GetMapping("/financial/overview")
+    @Operation(summary = "Thống kê tài chính", description = "Tổng doanh thu, chi phí, lợi nhuận, công nợ và chuỗi doanh thu/chi phí theo tháng")
+    public ResponseEntity<ApiResponse<DashboardOverviewResponse>> getFinancialOverview(
+            @RequestParam(value = "year", required = false) Integer year) {
+
+        DashboardOverviewResponse overview = dashboardService.getFinancialOverview(year);
+        return ResponseEntity.ok(ApiResponse.success("Financial dashboard", overview));
     }
 }

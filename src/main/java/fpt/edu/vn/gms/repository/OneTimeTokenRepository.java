@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface OneTimeTokenRepository extends JpaRepository<OneTimeToken, Long> {
+import java.util.UUID;
+
+public interface OneTimeTokenRepository extends JpaRepository<OneTimeToken, UUID> {
     @Transactional
     @Modifying
     @Query("DELETE FROM OneTimeToken o WHERE o.token = :token")

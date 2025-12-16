@@ -109,9 +109,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Chỉ update discountPolicy nếu discountPolicyId được cung cấp
         if (dto.getDiscountPolicyId() != null) {
-            DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
+        DiscountPolicy discountPolicy = discountPolicyRepository.findById(dto.getDiscountPolicyId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy chính sách giảm giá với ID: " + dto.getDiscountPolicyId()));
             existing.setDiscountPolicy(discountPolicy);
         }
 

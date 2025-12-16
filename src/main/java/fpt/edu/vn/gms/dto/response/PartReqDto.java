@@ -2,13 +2,15 @@ package fpt.edu.vn.gms.dto.response;
 
 import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PartReqDto {
 
     @Schema(description = "ID linh kiện", example = "12")
@@ -20,17 +22,35 @@ public class PartReqDto {
     @Schema(description = "Tên linh kiện")
     private String name;
 
+    @Schema(description = "ID danh mục")
+    private Long categoryId;
+
     @Schema(description = "Danh mục")
     private String categoryName;
 
+    @Schema(description = "ID hãng xe")
+    private Long brandId;
+
+    @Schema(description = "Hãng xe")
+    private String brandName;
+
+    @Schema(description = "ID mẫu xe")
+    private Long modelId;
+
     @Schema(description = "Mẫu xe")
     private String modelName;
+
+    @Schema(description = "ID thị trường")
+    private Long marketId;
 
     @Schema(description = "Thị trường")
     private String marketName;
 
     @Schema(description = "Có dùng chung không")
     private boolean universal;
+
+    @Schema(description = "ID nhà cung cấp")
+    private Long supplierId;
 
     @Schema(description = "Nhà cung cấp")
     private String supplierName;
@@ -43,6 +63,9 @@ public class PartReqDto {
 
     @Schema(description = "Số lượng")
     private Double quantity;
+
+    @Schema(description = "ID đơn vị tính")
+    private Long unitId;
 
     @Schema(description = "Đơn vị tính")
     private String unitName;

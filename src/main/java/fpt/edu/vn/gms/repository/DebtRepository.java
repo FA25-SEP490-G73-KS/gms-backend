@@ -70,4 +70,11 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
                                                       @Param("fromDate") LocalDate fromDate,
                                                       @Param("toDate") LocalDate toDate,
                                                       Pageable pageable);
+
+        @Query("""
+                        SELECT COALESCE(SUM(d.amount - d.paidAmount), 0)
+                        FROM Debt d
+                        WHERE d.status = fpt.edu.vn.gms.common.enums.DebtStatus.OUTSTANDING
+                        """)
+        BigDecimal sumOutstandingDebt();
 }
