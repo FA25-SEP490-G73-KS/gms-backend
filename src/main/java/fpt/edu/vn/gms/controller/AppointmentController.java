@@ -5,6 +5,7 @@ import fpt.edu.vn.gms.common.enums.AppointmentStatus;
 import fpt.edu.vn.gms.dto.ZnsAppointmentInfo;
 import fpt.edu.vn.gms.dto.request.AppointmentRequestDto;
 import fpt.edu.vn.gms.dto.response.*;
+import fpt.edu.vn.gms.entity.OneTimeToken;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
 import fpt.edu.vn.gms.service.AppointmentService;
@@ -30,6 +31,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.APPOINTMENTS_PREFIX;
 
@@ -205,11 +208,19 @@ public class AppointmentController {
                 @PathVariable("one_time_token") String oneTimeToken) {
 
                 try {
+
+                        Optional<OneTimeToken> ott = this.oneTimeTokenService.getToken(UUID.fromString(oneTimeToken));
+
+                        if(ott.isPresent()) {
+                                oneTimeToken = ott.get().getToken();
+                        }else{
+                                throw new Exception("Invalid one time token");
+                        }
+
                         ZnsAppointmentInfo info = jwtService.parseZnsToken(oneTimeToken);
 
                         // Xử lý business
                         String status = "PENDING";
-
 
                         boolean result = service.confirmByCode(info.getAppointmentCode());
 

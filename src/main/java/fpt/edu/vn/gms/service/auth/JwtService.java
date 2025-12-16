@@ -56,14 +56,14 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateOneTimeToken( Map<String, Object> claims, Long accessTokenExpiration) {
+    public String generateOneTimeToken( Map<String, Object> claims, Long accessTokenExpiration, UUID ottId) {
         Instant currentInstant = Instant.now();
         Date issuedAt = Date.from(currentInstant);
         Date expiration = Date.from(currentInstant.plusSeconds(accessTokenExpiration));
 
         return Jwts.builder()
-                .setSubject(UUID.randomUUID().toString())
-                .setClaims(claims)
+                .setSubject(ottId.toString())
+                .addClaims(claims)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(getSigningKey(ACCESS_SECRET))

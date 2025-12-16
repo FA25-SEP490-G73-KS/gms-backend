@@ -98,15 +98,21 @@ public class AuthController {
                 .body(ApiResponse.success("Làm mới mật khẩu thành công", res));
     }
 
-    @Operation(summary = "Đăng xuất", description = "Đăng xuất khỏi hệ thống và vô hiệu hóa token", responses = {
+    @Public
+    @Operation(summary = "Đăng xuất", description = "Đăng xuất khỏi hệ thống và vô hiệu hóa token. Có thể gọi ngay cả khi token đã hết hạn hoặc không có token.", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Đăng xuất thành công", content = @Content(schema = @Schema(hidden = true))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Người dùng chưa đăng nhập", content = @Content(schema = @Schema(hidden = true))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(hidden = true)))
     })
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@CurrentUser Employee employee) {
-        authService.logout(employee);
+        // Cho phép logout ngay cả khi không có employee (token đã hết hạn hoặc không có token)
+        // CurrentUserArgumentResolver sẽ trả về null nếu không có authentication
+        if (employee != null && employee.getEmployeeId() != null) {
+            authService.logout(employee);
+        }
+        // Nếu không có employee, vẫn trả về 204 (success) vì mục đích logout đã đạt được
+        // Frontend có thể gọi logout để clear local storage/token ngay cả khi đã hết hạn
     }
 
 }

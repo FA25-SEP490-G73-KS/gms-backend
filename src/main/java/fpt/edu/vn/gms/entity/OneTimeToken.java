@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -18,8 +19,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 public class OneTimeToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "token", columnDefinition = "TEXT")
     @SerializedName("token")
@@ -28,9 +29,4 @@ public class OneTimeToken {
     @Column(name = "expires_at")
     @SerializedName("expires_at")
     public String expiresAt;
-
-    public OneTimeToken(String token, String expiresAt) {
-        this.token = token;
-        this.expiresAt = expiresAt;
-    }
 }

@@ -102,18 +102,23 @@ public class AuthService {
     accountRepository.save(acc);
 
     // Invalidate tokens nếu có employee và Redis available
-    // Lazy loading có thể trả về null nếu employee chưa được fetch
-    Employee employee = acc.getEmployee();
-    if (employee != null && employee.getEmployeeId() != null) {
-      try {
-        invalidateTokens(employee.getEmployeeId());
-      } catch (Exception e) {
-        log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", phoneNumber, e.getMessage());
-        // Không throw exception để không làm fail việc đổi mật khẩu
-        // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+    // Tìm employee trực tiếp từ repository để tránh lazy loading exception
+    try {
+      Employee employee = employeeRepository.findByAccount(acc).orElse(null);
+      if (employee != null && employee.getEmployeeId() != null) {
+        try {
+          invalidateTokens(employee.getEmployeeId());
+        } catch (Exception e) {
+          log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", phoneNumber, e.getMessage());
+          // Không throw exception để không làm fail việc đổi mật khẩu
+          // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+        }
+      } else {
+        log.warn("Account {} không có employee để invalidate tokens", phoneNumber);
       }
-    } else {
-      log.warn("Account {} không có employee để invalidate tokens", phoneNumber);
+    } catch (Exception e) {
+      log.warn("Không thể lấy employee cho account {}: {}", phoneNumber, e.getMessage());
+      // Không throw exception để không làm fail việc đổi mật khẩu
     }
 
     log.info("User {} đã đổi mật khẩu thành công!", acc.getPhone());
@@ -139,17 +144,23 @@ public class AuthService {
     accountRepository.save(account);
 
     // Invalidate tokens nếu có employee và Redis available
-    Employee employee = account.getEmployee();
-    if (employee != null && employee.getEmployeeId() != null) {
-      try {
-        invalidateTokens(employee.getEmployeeId());
-      } catch (Exception e) {
-        log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", dto.getPhone(), e.getMessage());
-        // Không throw exception để không làm fail việc đổi mật khẩu
-        // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+    // Tìm employee trực tiếp từ repository để tránh lazy loading exception
+    try {
+      Employee employee = employeeRepository.findByAccount(account).orElse(null);
+      if (employee != null && employee.getEmployeeId() != null) {
+        try {
+          invalidateTokens(employee.getEmployeeId());
+        } catch (Exception e) {
+          log.warn("Không thể invalidate tokens trong Redis cho user {}: {}", dto.getPhone(), e.getMessage());
+          // Không throw exception để không làm fail việc đổi mật khẩu
+          // Mật khẩu đã được đổi thành công, chỉ là không thể invalidate token cũ
+        }
+      } else {
+        log.warn("Account {} không có employee để invalidate tokens", dto.getPhone());
       }
-    } else {
-      log.warn("Account {} không có employee để invalidate tokens", dto.getPhone());
+    } catch (Exception e) {
+      log.warn("Không thể lấy employee cho account {}: {}", dto.getPhone(), e.getMessage());
+      // Không throw exception để không làm fail việc đổi mật khẩu
     }
 
     log.info("User {} đã đổi mật khẩu thành công", account.getPhone());

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 public class CreateVoucherRequest {
-    private LedgerVoucherType type;
+
     private BigDecimal amount;
     private Long relatedEmployeeId;
     private Long relatedSupplierId;

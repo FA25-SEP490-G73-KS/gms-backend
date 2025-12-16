@@ -46,6 +46,7 @@ public class StockReceiptItemHistory {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
+    @Builder.Default
     private ReceiptPaymentStatus paymentStatus = ReceiptPaymentStatus.UNPAID;
 
     @Column(name = "amount_paid", precision = 18, scale = 2)

@@ -5,17 +5,12 @@ import fpt.edu.vn.gms.dto.zalo.SendZnsPayload;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.ServiceTicket;
-import fpt.edu.vn.gms.service.auth.JwtService;
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -26,7 +21,6 @@ import java.util.UUID;
 public class ZnsNotificationService {
 
     private final ZnsService znsService;
-    private final JwtService jwtService;
     private final OneTimeTokenService oneTimeTokenService;
     private Long SECONS_OF_ONE_WEEK = 604800L;
     private Long SECONS_OF_ONE_DAY = 86400L;
@@ -76,33 +70,31 @@ public class ZnsNotificationService {
         Map<String, Object> templateData = new HashMap<>();
 
         templateData.put("full_name", appointment.getCustomer().getFullName() != null
-                ? appointment.getCustomer().getFullName() : "Quý khách");
+                ? appointment.getCustomer().getFullName()
+                : "Quý khách");
 
         templateData.put("appointment_code", appointment.getAppointmentCode());
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
 
         templateData.put("license_plate", appointment.getVehicle().getLicensePlate());
-
         templateData.put("appointment_date", appointment.getAppointmentDate()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
         templateData.put("schedule_time", appointment.getTimeSlot().getLabel());
 
-        //Tạo OT token và đưa vào templateData để gửi
-        String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
 
-        Date expirationFromOTToken = jwtService.extractClaim(onTimeToken, Claims::getExpiration);
-
-        //Build payload
+        // Build payload
         SendZnsPayload payload = buildPayload(phone, templateData, appointmentConfirmationTemplateId);
 
         boolean success = znsService.sendZns(payload);
 
         if (!success) {
             throw new Exception("Failed to send appointment confirmation");
-        }else{
-            this.oneTimeTokenService.saveToken(onTimeToken, expirationFromOTToken.toString());
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }
     }
 
@@ -118,27 +110,26 @@ public class ZnsNotificationService {
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
         templateData.put("full_name", appointment.getCustomer().getFullName() != null
-                ? appointment.getCustomer().getFullName() : "Quý khách");
+                ? appointment.getCustomer().getFullName()
+                : "Quý khách");
 
         templateData.put("address", "110 đường Hoàng Nghiêu, phố Đông, phường Đông Tiến");
 
         templateData.put("appointment_code", appointment.getAppointmentCode());
 
-        //Tạo OT token và đưa vào templateData để gửi (với OT token reminder thì chỉ có hạn là 24 tiếng)
-        String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_DAY);
+        // Tạo OT token và đưa vào templateData để gửi (với OT token reminder thì chỉ có
+        // hạn là 24 tiếng)
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_DAY);
 
-        Date expirationFromOTToken = jwtService.extractClaim(onTimeToken, Claims::getExpiration);
-
-        //Build payload
+        // Build payload
         SendZnsPayload payload = buildPayload(phone, templateData, appointmentReminderTemplateId);
 
         boolean success = znsService.sendZns(payload);
 
         if (!success) {
             throw new Exception("Failed to send appointment reminder");
-        }
-        else{
-            this.oneTimeTokenService.saveToken(onTimeToken, expirationFromOTToken.toString());
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }
     }
 
@@ -149,13 +140,13 @@ public class ZnsNotificationService {
         ServiceTicket ticket = quotation.getServiceTicket();
 
         String phone = ticket.getCustomer().getPhone();
-
         Map<String, Object> templateData = new HashMap<>();
 
         templateData.put("license_plate", ticket.getVehicle().getLicensePlate());
 
         templateData.put("full_name", ticket.getCustomer().getFullName() != null
-                ? ticket.getCustomer().getFullName() : "Quý khách");
+                ? ticket.getCustomer().getFullName()
+                : "Quý khách");
 
         templateData.put("service_ticket_code", ticket.getServiceTicketCode().toString());
 
@@ -167,20 +158,18 @@ public class ZnsNotificationService {
 
         templateData.put("phone", phone);
 
-        //Tạo OT token và đưa vào templateData để gửi
-        String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
 
-        Date expirationFromOTToken = jwtService.extractClaim(onTimeToken, Claims::getExpiration);
-
-        //Build payload
+        // Build payload
         SendZnsPayload payload = buildPayload(phone, templateData, quotationTemplateId);
 
         boolean success = znsService.sendZns(payload);
 
         if (!success) {
             throw new Exception("Failed to send quotation notification");
-        }else{
-            this.oneTimeTokenService.saveToken(onTimeToken, expirationFromOTToken.toString());
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }
     }
 
@@ -193,7 +182,8 @@ public class ZnsNotificationService {
         Map<String, Object> templateData = new HashMap<>();
 
         templateData.put("full_name", ticket.getCustomer().getFullName() != null
-                ? ticket.getCustomer().getFullName() : "Quý khách");
+                ? ticket.getCustomer().getFullName()
+                : "Quý khách");
 
         templateData.put("contract_number", "contract_num_test");
 
@@ -201,14 +191,12 @@ public class ZnsNotificationService {
 
         templateData.put("transfer_amount", ticket.getPriceQuotation().getEstimateAmount().toString());
 
-        templateData.put("service_ticket_id",  ticket.getServiceTicketId().toString());
+        templateData.put("service_ticket_id", ticket.getServiceTicketId().toString());
 
         templateData.put("license_plate", ticket.getVehicle().getLicensePlate());
 
-        //Tạo OT token và đưa vào templateData để gửi
-        String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
-
-        Date expirationFromOTToken = jwtService.extractClaim(onTimeToken, Claims::getExpiration);
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
 
         SendZnsPayload payload = buildPayload(phone, templateData, paymentTemplateId);
 
@@ -216,9 +204,8 @@ public class ZnsNotificationService {
 
         if (!success) {
             throw new Exception("Failed to send payment invoice");
-        }
-        else{
-            this.oneTimeTokenService.saveToken(onTimeToken, expirationFromOTToken.toString());
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }
     }
 
@@ -230,7 +217,8 @@ public class ZnsNotificationService {
         Map<String, Object> templateData = new HashMap<>();
 
         templateData.put("full_name", znsSendSurveyDTO.getCustomerName() != null
-                ? znsSendSurveyDTO.getCustomerName() : "Quý khách");
+                ? znsSendSurveyDTO.getCustomerName()
+                : "Quý khách");
 
         templateData.put("car_model", znsSendSurveyDTO.getCarModel());
 
@@ -238,10 +226,8 @@ public class ZnsNotificationService {
 
         templateData.put("service_code", znsSendSurveyDTO.getServiceCode().toString());
 
-        //Tạo OT token và đưa vào templateData để gửi
-        String onTimeToken = createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
-
-        Date expirationFromOTToken = jwtService.extractClaim(onTimeToken, Claims::getExpiration);
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
 
         SendZnsPayload payload = buildPayload(phone, templateData, surveyTemplateId);
 
@@ -249,13 +235,12 @@ public class ZnsNotificationService {
 
         if (!success) {
             throw new Exception("Failed to send survey link");
-        } else{
-            this.oneTimeTokenService.saveToken(onTimeToken, expirationFromOTToken.toString());
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }
     }
 
-
-    private SendZnsPayload buildPayload(String phone, Map<String, Object> templateData, String templateId){
+    private SendZnsPayload buildPayload(String phone, Map<String, Object> templateData, String templateId) {
 
         return SendZnsPayload.builder()
                 .phone(phone)
@@ -266,13 +251,16 @@ public class ZnsNotificationService {
     }
 
     private String createOTTokenAndPushOTTokenInTemplateData(Map<String, Object> templateData, Long secondsToAdd) {
-        // Generation one-time token
-        String onTimeToken = jwtService.generateOneTimeToken(templateData, secondsToAdd);
+        // Tạo token ngắn để đưa vào payload, tránh giới hạn độ dài Zalo
+        String shortToken = UUID.randomUUID().toString();
 
-        templateData.put("on_time_token", onTimeToken);
+        // Lưu token + thời gian hết hạn vào DB
+        this.oneTimeTokenService.saveToken(shortToken, secondsToAdd);
 
-        return onTimeToken;
+        // Đưa token vào template data với đúng key
+        templateData.put("one_time_token", shortToken);
 
+        // Trả về token để dùng nếu cần (hiện không parse JWT nữa)
+        return shortToken;
     }
 }
-
