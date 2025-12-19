@@ -63,6 +63,7 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             customer = customerRepository.findById(dto.getCustomer().getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng!"));
 
+            customer.setFullName(dto.getCustomer().getFullName());
             customer.setAddress(dto.getCustomer().getAddress());
         } else {
 
@@ -220,6 +221,10 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         ServiceTicket serviceTicket = serviceTicketRepository.findDetail(serviceTicketId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("ServiceTicket không tồn tại với id: " + serviceTicketId));
+
+        // Load lazy collections để mapper có thể truy cập serviceTypes/technicians
+        Hibernate.initialize(serviceTicket.getServiceTypes());
+        Hibernate.initialize(serviceTicket.getTechnicians());
 
         return serviceTicketMapper.toResponseDto(serviceTicket);
     }
@@ -399,11 +404,19 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
         // Cho phép chuyển sang CANCELED từ bất kỳ trạng thái nào
         if (newStatus == ServiceTicketStatus.CANCELED) {
             ticket.setStatus(ServiceTicketStatus.CANCELED);
+        } else if (newStatus == ServiceTicketStatus.UNDER_REPAIR) {
+            // Chỉ cho phép khi báo giá đã được khách hàng xác nhận
+            PriceQuotation quotation = ticket.getPriceQuotation();
+            if (quotation == null || quotation.getStatus() != PriceQuotationStatus.CUSTOMER_CONFIRMED) {
+                throw new IllegalStateException(
+                        "Báo giá chưa được khách hàng xác nhận, không thể chuyển sang 'Đang sửa chữa'");
+            }
+            ticket.setStatus(ServiceTicketStatus.UNDER_REPAIR);
         } else if (newStatus == ServiceTicketStatus.WAITING_FOR_DELIVERY) {
             // Chỉ từ CHỜ BÁO GIÁ → CHỜ BÀN GIAO XE
-            if (current != ServiceTicketStatus.WAITING_FOR_QUOTATION) {
+            if (current != ServiceTicketStatus.UNDER_REPAIR) {
                 throw new IllegalStateException(
-                        "Chỉ phiếu ở trạng thái 'Chờ báo giá' mới được chuyển sang 'Chờ bàn giao xe'");
+                        "Chỉ phiếu ở trạng thái 'Đang sửa chữa' mới được chuyển sang 'Chờ bàn giao xe'");
             }
 
             // Phải có báo giá và báo giá đã được khách confirm

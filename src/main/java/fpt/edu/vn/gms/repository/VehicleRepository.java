@@ -27,7 +27,9 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     SELECT new fpt.edu.vn.gms.dto.VehicleInfoDto(
         v.vehicleId,
         v.licensePlate,
+        vm.brand.brandId,
         vm.brand.name,
+        vm.vehicleModelId,
         vm.name,
         v.vin,
         v.year

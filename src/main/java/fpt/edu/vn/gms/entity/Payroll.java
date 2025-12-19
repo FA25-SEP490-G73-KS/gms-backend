@@ -49,7 +49,7 @@ public class Payroll {
     private Integer workingDays;
 
     @Column(name = "net_salary", precision = 18, scale = 2)
-    private BigDecimal netSalary;  // base + allowance - deduction - advance
+    private BigDecimal netSalary;
 
     @Enumerated(EnumType.STRING)
     private PayrollStatus status;

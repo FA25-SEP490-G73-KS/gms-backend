@@ -68,7 +68,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (transaction.getType() == PaymentTransactionType.DEPOSIT) {
           invoice.setDepositReceived(invoice.getDepositReceived().add(amount));
-          invoice.setFinalAmount(invoice.getFinalAmount().subtract(amount));
+
           customerService.updateTotalSpending(customerId, amount);
         } else {
           BigDecimal finalAmount = invoice.getFinalAmount();
@@ -78,6 +78,7 @@ public class TransactionServiceImpl implements TransactionService {
           invoice.setStatus(status);
         }
 
+        invoice.setFinalAmount(invoice.getFinalAmount().subtract(amount));
         invoiceRepository.save(invoice);
       } else if (debt != null) {
         Long customerId = debt.getCustomer().getCustomerId();

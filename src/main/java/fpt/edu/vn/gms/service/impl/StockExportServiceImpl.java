@@ -27,8 +27,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -51,14 +54,52 @@ public class StockExportServiceImpl implements StockExportService {
         PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá ID: " + quotationId));
 
-        // Nếu đã có phiếu xuất kho cho báo giá này, trả về luôn, không tạo mới để tránh rollback
         Optional<StockExport> existingExport = stockExportRepository.findByQuotationId(quotationId);
         if (existingExport.isPresent()) {
-            StockExportDetailResponse existingDetail = stockExportMapper.toDetailDto(existingExport.get());
-            List<StockExportItemResponse> existingItems = existingExport.get().getExportItems().stream()
+            StockExport export = existingExport.get();
+
+            Map<Long, StockExportItem> existingItemsByQuotationItemId = export.getExportItems().stream()
+                    .filter(item -> item.getQuotationItem() != null)
+                    .collect(Collectors.toMap(item -> item.getQuotationItem().getPriceQuotationItemId(),
+                            Function.identity(),
+                            (a, b) -> a));
+
+            boolean changed = false;
+            for (PriceQuotationItem quotationItem : quotation.getItems()) {
+                if (quotationItem.getItemType() != PriceQuotationItemType.PART
+                        || quotationItem.getInventoryStatus() != PriceQuotationItemStatus.AVAILABLE) {
+                    continue;
+                }
+
+                Long quotationItemId = quotationItem.getPriceQuotationItemId();
+                StockExportItem existingItem = existingItemsByQuotationItemId.get(quotationItemId);
+
+                if (existingItem == null) {
+                    StockExportItem newItem = StockExportItem.builder()
+                            .stockExport(export)
+                            .quotationItem(quotationItem)
+                            .part(quotationItem.getPart())
+                            .quantity(quotationItem.getQuantity())
+                            .quantityExported(0.0)
+                            .status(ExportItemStatus.EXPORTING)
+                            .build();
+                    export.getExportItems().add(newItem);
+                    changed = true;
+                } else if (!Objects.equals(existingItem.getQuantity(), quotationItem.getQuantity())) {
+                    existingItem.setQuantity(quotationItem.getQuantity());
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                export = stockExportRepository.save(export);
+            }
+
+            StockExportDetailResponse existingDetail = stockExportMapper.toDetailDto(export);
+            List<StockExportItemResponse> itemDtos = export.getExportItems().stream()
                     .map(stockExportMapper::toItemDto)
                     .toList();
-            existingDetail.setItems(existingItems);
+            existingDetail.setItems(itemDtos);
             return existingDetail;
         }
 
@@ -70,23 +111,18 @@ public class StockExportServiceImpl implements StockExportService {
                 .createdBy(creator != null ? creator.getFullName() : null)
                 .build();
 
-        // Lấy tất cả item là PART. Nếu inventoryStatus == AVAILABLE -> EXPORTING, ngược lại -> WAITING_TO_RECEIPT
+        // Chỉ lấy item PART ở trạng thái AVAILABLE -> EXPORTING
         List<StockExportItem> items = quotation.getItems().stream()
-                .filter(i -> i.getItemType() == PriceQuotationItemType.PART)
-                .map(item -> {
-                    ExportItemStatus status = (item.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE)
-                            ? ExportItemStatus.EXPORTING
-                            : ExportItemStatus.WAITING_TO_RECEIPT;
-
-                    return StockExportItem.builder()
-                            .stockExport(export)
-                            .quotationItem(item)
-                            .part(item.getPart())
-                            .quantity(item.getQuantity())
-                            .quantityExported(0.0)
-                            .status(status)
-                            .build();
-                })
+                .filter(i -> i.getItemType() == PriceQuotationItemType.PART
+                        && i.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE)
+                .map(item -> StockExportItem.builder()
+                        .stockExport(export)
+                        .quotationItem(item)
+                        .part(item.getPart())
+                        .quantity(item.getQuantity())
+                        .quantityExported(0.0)
+                        .status(ExportItemStatus.EXPORTING)
+                        .build())
                 .collect(Collectors.toList());
 
         export.setExportItems(items);
@@ -102,19 +138,22 @@ public class StockExportServiceImpl implements StockExportService {
     }
 
     @Override
-    public Page<StockExportListResponse> getExports(String keyword, String status, String fromDate, String toDate, Pageable pageable) {
+    public Page<StockExportListResponse> getExports(String keyword, String status, String fromDate, String toDate,
+            Pageable pageable) {
         Page<StockExport> page = stockExportRepository.findAll(pageable);
 
         List<StockExport> filtered = page.getContent().stream()
                 .filter(se -> {
-                    if (keyword == null || keyword.isBlank()) return true;
+                    if (keyword == null || keyword.isBlank())
+                        return true;
                     String lower = keyword.toLowerCase();
                     return (se.getCode() != null && se.getCode().toLowerCase().contains(lower))
                             || (se.getQuotation() != null && se.getQuotation().getCode() != null
-                            && se.getQuotation().getCode().toLowerCase().contains(lower));
+                                    && se.getQuotation().getCode().toLowerCase().contains(lower));
                 })
                 .filter(se -> {
-                    if (status == null || status.isBlank()) return true;
+                    if (status == null || status.isBlank())
+                        return true;
                     return se.getStatus().name().equalsIgnoreCase(status);
                 })
                 .filter(se -> filterByDateRange(se, fromDate, toDate))
@@ -134,16 +173,19 @@ public class StockExportServiceImpl implements StockExportService {
         LocalDate createdDate = Optional.ofNullable(export.getCreatedAt())
                 .map(LocalDateTime::toLocalDate)
                 .orElse(null);
-        if (createdDate == null) return false;
+        if (createdDate == null)
+            return false;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         if (fromDate != null && !fromDate.isBlank()) {
             LocalDate from = LocalDate.parse(fromDate, formatter);
-            if (createdDate.isBefore(from)) return false;
+            if (createdDate.isBefore(from))
+                return false;
         }
         if (toDate != null && !toDate.isBlank()) {
             LocalDate to = LocalDate.parse(toDate, formatter);
-            if (createdDate.isAfter(to)) return false;
+            if (createdDate.isAfter(to))
+                return false;
         }
         return true;
     }
@@ -322,12 +364,13 @@ public class StockExportServiceImpl implements StockExportService {
     /**
      * Cập nhật trạng thái tồn kho linh kiện dựa trên tồn khả dụng.
      * available = quantityInStock - reservedQuantity
-     * - available <= 0                 => OUT_OF_STOCK
-     * - 0 < available <= reorderLevel  => LOW_STOCK
-     * - available > reorderLevel       => IN_STOCK
+     * - available <= 0 => OUT_OF_STOCK
+     * - 0 < available <= reorderLevel => LOW_STOCK
+     * - available > reorderLevel => IN_STOCK
      */
     private void updateStockLevelStatus(Part part) {
-        if (part == null) return;
+        if (part == null)
+            return;
 
         double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
         double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);

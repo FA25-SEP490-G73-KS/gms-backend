@@ -51,6 +51,10 @@ public class PriceQuotationItem {
     @Column(name = "exported_quantity")
     private Double exportedQuantity;
 
+    @Column(name = "reserved_quantity", columnDefinition = "DOUBLE DEFAULT 0")
+    @Builder.Default
+    private Double reservedQuantity = 0.0;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)
     private PriceQuotationItemType itemType;

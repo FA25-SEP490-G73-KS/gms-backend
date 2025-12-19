@@ -7,6 +7,7 @@ import org.mapstruct.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.hibernate.Hibernate;
 
 @Mapper(componentModel = "spring", uses = { PriceQuotationMapper.class, CustomerMapper.class, VehicleMapper.class })
 public interface ServiceTicketMapper {
@@ -17,9 +18,11 @@ public interface ServiceTicketMapper {
     @Mapping(target = "serviceType", expression = "java(mapServiceTypeNames(serviceTicket.getServiceTypes()))")
     @Mapping(target = "createdBy", source = "createdBy.fullName")
     @Mapping(target = "technicians", expression = "java(mapTechnicianNames(serviceTicket.getTechnicians()))") // danh
-                                                                                                              // sách// tên
+                                                                                                              // sách//
+                                                                                                              // tên
     @Mapping(target = "customer", source = "customer")
     @Mapping(target = "vehicle", source = "vehicle")
+    @Mapping(target = "status", expression = "java(serviceTicket.getStatus() != null ? serviceTicket.getStatus().getValue() : null)")
     ServiceTicketResponseDto toResponseDto(ServiceTicket serviceTicket);
 
     // ----------- SUPPORT FUNCTION -----------
@@ -34,6 +37,10 @@ public interface ServiceTicketMapper {
     default List<String> mapServiceTypeNames(List<ServiceType> serviceTypes) {
         if (serviceTypes == null)
             return new ArrayList<>();
+        // Tránh LazyInitializationException khi session đã đóng
+        if (!Hibernate.isInitialized(serviceTypes)) {
+            return new ArrayList<>();
+        }
         return serviceTypes.stream()
                 .map(ServiceType::getName)
                 .toList();

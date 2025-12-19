@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,6 +22,7 @@ public class StockReceiptItemDetailResponse {
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
     private String status;
+    private Double quantityInStock;
 
     private List<HistoryRecord> history;
 
@@ -33,8 +35,9 @@ public class StockReceiptItemDetailResponse {
         private BigDecimal totalPrice;
         private String attachmentUrl;
         private String note;
+
+        @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
         private LocalDateTime receivedAt;
         private String receivedBy;
     }
 }
-

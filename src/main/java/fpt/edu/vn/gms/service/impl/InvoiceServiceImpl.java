@@ -1,10 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.enums.DebtStatus;
-import fpt.edu.vn.gms.common.enums.InvoiceStatus;
-import fpt.edu.vn.gms.common.enums.PaymentTransactionType;
+import fpt.edu.vn.gms.common.enums.*;
 import fpt.edu.vn.gms.dto.request.PayInvoiceRequestDto;
-import fpt.edu.vn.gms.common.enums.TransactionMethod;
 import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateTransactionRequestDto;
 import fpt.edu.vn.gms.dto.response.CustomerDebtResponseDto;
@@ -163,6 +160,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                         throw new ResourceNotFoundException(
                                         "Phiếu thanh toán chưa gắn khách hàng / phiếu dịch vụ hợp lệ");
                 }
+                serviceTicket.setStatus(ServiceTicketStatus.COMPLETED);
+                serviceTicketRepo.save(serviceTicket);
 
                 Customer customer = serviceTicket.getCustomer();
 

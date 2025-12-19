@@ -80,7 +80,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setDiscount(serviceTicket.getCustomer().getDiscountPolicy().getDiscountRate());
 
         // Gán 2 chiều
-        serviceTicket.setStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
+        serviceTicket.setStatus(ServiceTicketStatus.QUOTING);
 
         quotation.setServiceTicket(serviceTicket);
         serviceTicket.setPriceQuotation(quotation);
@@ -250,13 +250,24 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotation.setStatus(PriceQuotationStatus.CUSTOMER_CONFIRMED);
         quotation.setUpdatedAt(LocalDateTime.now());
 
-        // Lấy danh sách item theo từng loại tồn kho
+        // Đồng bộ trạng thái phiếu dịch vụ → QUOTE_CONFIRMED
+        ServiceTicket ticket = quotation.getServiceTicket();
+        if (ticket != null) {
+            if (ticket.getStatus() != ServiceTicketStatus.UNDER_REPAIR) {
+                ticket.setStatus(ServiceTicketStatus.QUOTE_CONFIRMED);
+                ticket.setUpdatedAt(LocalDateTime.now());
+                serviceTicketRepository.save(ticket);
+            }
+        }
+
+        // Lấy danh sách item PART theo từng loại tồn kho
         List<PriceQuotationItem> availableParts = new ArrayList<>();
         List<PriceQuotationItem> partsToBuy = new ArrayList<>();
 
         for (PriceQuotationItem item : quotation.getItems()) {
-            if (item.getItemType() != PriceQuotationItemType.PART)
+            if (item.getItemType() != PriceQuotationItemType.PART) {
                 continue;
+            }
 
             if (item.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE) {
                 availableParts.add(item);
@@ -266,14 +277,40 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             }
         }
 
-        for (PriceQuotationItem item : availableParts) {
+        List<PriceQuotationItem> allPartItems = new ArrayList<>();
+        allPartItems.addAll(availableParts);
+        allPartItems.addAll(partsToBuy);
+
+        for (PriceQuotationItem item : allPartItems) {
             Part part = item.getPart();
             if (part == null)
                 continue;
 
-            // Cập nhật số lượng đã giữ
-            double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
-            part.setReservedQuantity(currentReserved + item.getQuantity());
+            // Lấy số lượng đã reserve trước đó (nếu có từ lần confirm trước)
+            double oldReservedQuantity = Optional.ofNullable(item.getReservedQuantity()).orElse(0.0);
+            double newReservedQuantity = item.getQuantity();
+
+            // Rollback số lượng đã reserve trước đó (nếu có)
+            double currentPartReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+            double partReservedAfterRollback = currentPartReserved - oldReservedQuantity;
+
+            // Cập nhật số lượng reserve mới
+            double newPartReserved = partReservedAfterRollback + newReservedQuantity;
+            part.setReservedQuantity(newPartReserved);
+
+            // Lưu lại số lượng đã reserve vào item để track
+            item.setReservedQuantity(newReservedQuantity);
+
+            // Sau khi cập nhật reserved, kiểm tra tồn khả dụng so với reorderLevel
+            double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+            double reorder = Optional.ofNullable(part.getReorderLevel()).orElse(0.0);
+            double available = inStock - newPartReserved;
+
+            // Nếu tồn khả dụng không còn lớn hơn reorderLevel → xem như hết hàng
+            if (available <= reorder) {
+                part.setStatus(StockLevelStatus.OUT_OF_STOCK);
+            }
+
             partRepository.save(part);
         }
 
@@ -486,13 +523,29 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
             throw new RuntimeException("Không thể cập nhật báo giá về DRAFT khi phiếu dịch vụ đã hoàn tất");
         }
 
+        // Rollback reservedQuantity cho tất cả items PART nếu đã được confirm trước đó
+        for (PriceQuotationItem item : quotation.getItems()) {
+            if (item.getItemType() != PriceQuotationItemType.PART || item.getPart() == null) {
+                continue;
+            }
+
+            double reservedQty = Optional.ofNullable(item.getReservedQuantity()).orElse(0.0);
+            if (reservedQty > 0) {
+                Part part = item.getPart();
+                double currentReserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+                part.setReservedQuantity(Math.max(0.0, currentReserved - reservedQty));
+                item.setReservedQuantity(0.0);
+                partRepository.save(part);
+            }
+        }
+
         // Cập nhật trạng thái báo giá về DRAFT
         quotation.setStatus(PriceQuotationStatus.DRAFT);
         quotation.setUpdatedAt(LocalDateTime.now());
 
         // Nếu phiếu dịch vụ đang ở trạng thái chờ bàn giao xe thì đưa về chờ báo giá
         if (ticket.getStatus() == ServiceTicketStatus.WAITING_FOR_DELIVERY) {
-            ticket.setStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
+            ticket.setStatus(ServiceTicketStatus.QUOTING);
         }
 
         serviceTicketRepository.save(ticket);

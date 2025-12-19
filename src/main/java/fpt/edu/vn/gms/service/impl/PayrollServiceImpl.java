@@ -1,6 +1,5 @@
 package fpt.edu.vn.gms.service.impl;
 
-import fpt.edu.vn.gms.common.enums.LedgerVoucherCategory;
 import fpt.edu.vn.gms.common.enums.LedgerVoucherStatus;
 import fpt.edu.vn.gms.common.enums.LedgerVoucherType;
 import fpt.edu.vn.gms.common.enums.PayrollStatus;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -51,9 +51,10 @@ public class PayrollServiceImpl implements PayrollService {
                         Integer workingDays = attendanceRepository.countPresentDays(
                                         emp.getEmployeeId(), month, year);
 
-                        // dailySalary ??? -> bạn phải thêm vào entity Employee
-                        BigDecimal baseSalary = emp.getDailySalary()
-                                        .multiply(BigDecimal.valueOf(workingDays));
+                        // Lương cơ bản (tháng) / 26 * ngày công
+                        BigDecimal baseSalary = emp.getDailySalary(); // giả định lưu lương cơ bản/tháng
+                        BigDecimal basePerDay = baseSalary.divide(BigDecimal.valueOf(26), 2, RoundingMode.HALF_UP);
+                        BigDecimal baseByWorkingDays = basePerDay.multiply(BigDecimal.valueOf(workingDays));
 
                         BigDecimal allowance = allowanceRepository.sumForMonth(
                                         emp.getEmployeeId(), month, year);
@@ -64,7 +65,7 @@ public class PayrollServiceImpl implements PayrollService {
                         // BigDecimal advanceSalary = voucherRepository.sumAdvanceSalary(
                         // emp.getEmployeeId(), month, year);
 
-                        BigDecimal netSalary = baseSalary
+                        BigDecimal netSalary = baseByWorkingDays
                                         .add(allowance)
                                         .subtract(deduction);
                         // .subtract(advanceSalary);
@@ -131,7 +132,7 @@ public class PayrollServiceImpl implements PayrollService {
                                 .amount(payroll.getNetSalary())
                                 .description("Chi lương tháng " + payroll.getMonth() + "/" + payroll.getYear()
                                                 + " cho " + payroll.getEmployee().getFullName())
-                                .status(LedgerVoucherStatus.PENDING)
+                                .status(LedgerVoucherStatus.FINISHED)
                                 .createdBy(employeeRepository.getReferenceById(accountantId))
                                 .build();
 
@@ -180,7 +181,9 @@ public class PayrollServiceImpl implements PayrollService {
                 Integer workingDays = attendanceRepository.countPresentDays(employeeId, month, year);
                 Integer leaveDays = attendanceRepository.countAbsentDays(employeeId, month, year);
 
-                BigDecimal baseSalary = emp.getDailySalary();
+                BigDecimal baseSalary = emp.getDailySalary(); // cơ bản/tháng
+                BigDecimal basePerDay = baseSalary.divide(BigDecimal.valueOf(26), 2, RoundingMode.HALF_UP);
+                BigDecimal baseByWorkingDays = basePerDay.multiply(BigDecimal.valueOf(workingDays));
 
                 BigDecimal totalAllowance = allowanceRepository.sumForMonth(employeeId, month, year);
                 List<Allowance> allowanceList = allowanceRepository.findByEmployeeEmployeeIdAndMonthAndYear(employeeId,
@@ -205,7 +208,7 @@ public class PayrollServiceImpl implements PayrollService {
                 // BigDecimal totalAdvance =
                 // voucherRepository.sumAdvanceSalary(employeeId, month, year);
 
-                BigDecimal netSalary = baseSalary
+                BigDecimal netSalary = baseByWorkingDays
                                 .add(totalAllowance)
                                 .subtract(totalDeduction);
                 // .subtract(totalAdvance);

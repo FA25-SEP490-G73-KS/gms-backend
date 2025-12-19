@@ -5,9 +5,13 @@ import fpt.edu.vn.gms.common.enums.NotificationTemplate;
 import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.enums.Role;
+import fpt.edu.vn.gms.common.enums.StockLevelStatus;
+import fpt.edu.vn.gms.dto.request.PartItemDto;
+import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.response.StockReceiptDetailResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
+import fpt.edu.vn.gms.dto.response.PurchaseSuggestionItemDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
@@ -15,6 +19,7 @@ import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestItemRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
+import fpt.edu.vn.gms.repository.PartRepository;
 import fpt.edu.vn.gms.service.CodeSequenceService;
 import fpt.edu.vn.gms.service.InventoryService;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
@@ -36,6 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +58,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     PurchaseRequestMapper purchaseRequestMapper;
     NotificationService notificationService;
     EmployeeRepository employeeRepository;
+    PartRepository partRepository;
 
     @Transactional
     @Override
@@ -112,6 +119,75 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .reviewStatus(ManagerReviewStatus.PENDING)
                 .reason("Báo giá " + quotation.getCode())
                 .items(new ArrayList<>())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        purchaseRequestRepository.save(pr);
+
+        for (PurchaseRequestItem item : items) {
+            item.setPurchaseRequest(pr);
+            purchaseRequestItemRepository.save(item);
+            pr.getItems().add(item);
+        }
+
+        return pr;
+    }
+
+    @Transactional
+    @Override
+    public PurchaseRequest createRequest(PurchaseRequestCreateDto dto) {
+        if (dto == null || dto.getItems() == null || dto.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Danh sách linh kiện mua hàng không được để trống");
+        }
+
+        List<PurchaseRequestItem> items = new ArrayList<>();
+        BigDecimal totalEstimated = BigDecimal.ZERO;
+
+        for (PartItemDto itemDto : dto.getItems()) {
+            if (itemDto.getPartId() == null) {
+                continue;
+            }
+
+            Part part = partRepository.findById(itemDto.getPartId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy linh kiện ID: " + itemDto.getPartId()));
+
+            double qty = Optional.ofNullable(itemDto.getQuantity()).orElse(0.0);
+            if (qty <= 0) {
+                continue;
+            }
+
+            BigDecimal unitPrice = Optional.ofNullable(part.getPurchasePrice()).orElse(BigDecimal.ZERO);
+            BigDecimal estimatedPrice = unitPrice.multiply(BigDecimal.valueOf(qty));
+
+            PurchaseRequestItem prItem = PurchaseRequestItem.builder()
+                    .purchaseRequest(null)
+                    .quotationItem(null)
+                    .part(part)
+                    .partName(part.getName())
+                    .quantity(qty)
+                    .unit(part.getUnit() != null ? part.getUnit().getName() : null)
+                    .estimatedPurchasePrice(unitPrice)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
+                    .quantityReceived(0.0)
+                    .build();
+
+            items.add(prItem);
+            totalEstimated = totalEstimated.add(estimatedPrice);
+        }
+
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("Không có dòng mua hàng hợp lệ để tạo phiếu yêu cầu mua hàng");
+        }
+
+        PurchaseRequest pr = PurchaseRequest.builder()
+                .code(codeSequenceService.generateCode("PR"))
+                .relatedQuotation(null)
+                .totalEstimatedAmount(totalEstimated)
+                .reviewStatus(ManagerReviewStatus.PENDING)
+                .reason(dto.getReason() != null ? dto.getReason() : "Yêu cầu mua hàng từ kho")
+                .items(new ArrayList<>())
+                .createdBy(dto.getCreatedById())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -217,5 +293,43 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         PurchaseRequest pr = purchaseRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu mua hàng"));
         return purchaseRequestMapper.toDetailDto(pr);
+    }
+
+    @Override
+    public List<PurchaseSuggestionItemDto> getSuggestedPurchaseItems() {
+        // Lấy danh sách linh kiện đang OUT_OF_STOCK hoặc LOW_STOCK
+        List<Part> parts = partRepository.findByStatusIn(
+                List.of(StockLevelStatus.OUT_OF_STOCK, StockLevelStatus.LOW_STOCK));
+
+        List<PurchaseSuggestionItemDto> result = new ArrayList<>();
+
+        for (Part part : parts) {
+            double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+            double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+            double reorder = Optional.ofNullable(part.getReorderLevel()).orElse(0.0);
+
+            double available = inStock - reserved;
+            double needed = reorder - available;
+
+            if (needed <= 0) {
+                continue;
+            }
+
+            PurchaseSuggestionItemDto dto = PurchaseSuggestionItemDto.builder()
+                    .partId(part.getPartId())
+                    .sku(part.getSku())
+                    .partName(part.getName())
+                    .unit(part.getUnit() != null ? part.getUnit().getName() : null)
+                    .quantityInStock(inStock)
+                    .reservedQuantity(reserved)
+                    .reorderLevel(reorder)
+                    .available(available)
+                    .suggestedQuantity(needed)
+                    .build();
+
+            result.add(dto);
+        }
+
+        return result;
     }
 }

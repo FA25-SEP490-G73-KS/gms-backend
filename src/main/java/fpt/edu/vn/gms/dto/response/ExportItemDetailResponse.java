@@ -1,13 +1,17 @@
 package fpt.edu.vn.gms.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ExportItemDetailResponse {
 
     private Long id;
@@ -17,6 +21,7 @@ public class ExportItemDetailResponse {
     private Double exported;
     private Double remaining;
     private String status;
+    private Double quantityInStock;
     private List<ExportItemHistoryDto> history;
 
     @Data

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum StockLevelStatus {
 
-    IN_STOCK("Đủ hàng"),
+    IN_STOCK("Đủ hàng tồn"),
     LOW_STOCK("Sắp hết"),
     OUT_OF_STOCK("Hết hàng");
 

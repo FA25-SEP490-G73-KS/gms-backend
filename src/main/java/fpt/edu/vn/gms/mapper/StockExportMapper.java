@@ -67,6 +67,11 @@ public interface StockExportMapper {
         double exported = Optional.ofNullable(item.getQuantityExported()).orElse(0.0);
         double remaining = required - exported;
 
+        // Lấy số lượng tồn kho hiện tại
+        double quantityInStock = Optional.ofNullable(item.getPart())
+                .map(Part::getQuantityInStock)
+                .orElse(0.0);
+
         List<ExportItemDetailResponse.ExportItemHistoryDto> historyDtos = histories.stream()
                 .map(this::toHistoryDto)
                 .toList();
@@ -79,6 +84,7 @@ public interface StockExportMapper {
                 .exported(exported)
                 .remaining(remaining)
                 .status(item.getStatus().name())
+                .quantityInStock(quantityInStock)
                 .history(historyDtos)
                 .build();
     }
@@ -93,4 +99,3 @@ public interface StockExportMapper {
                 .build();
     }
 }
-

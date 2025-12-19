@@ -59,7 +59,7 @@ public class QuotationItemController {
     @PatchMapping("/{itemId}/confirm")
     public ResponseEntity<ApiResponse<PriceQuotationItemResponseDto>> confirmItem(
             @PathVariable Long itemId,
-            @RequestBody String warehouseNote
+            @RequestBody(required = false) String warehouseNote
     ) {
         PriceQuotationItemResponseDto res = warehouseQuotationService.confirmItemDuringWarehouseReview(itemId, warehouseNote);
 

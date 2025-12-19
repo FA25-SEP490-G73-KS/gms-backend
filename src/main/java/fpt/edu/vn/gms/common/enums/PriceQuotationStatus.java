@@ -15,8 +15,4 @@ public enum PriceQuotationStatus {
     COMPLETED("Hoàn thành");
 
     private final String value;
-
-    private String getValue() {
-        return this.value;
-    }
 }

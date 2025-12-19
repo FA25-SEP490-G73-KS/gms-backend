@@ -47,7 +47,7 @@ public class Appointment {
     @Column(nullable = false)
     private LocalDate appointmentDate;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(
             name = "appointment_service_type",
             joinColumns = @JoinColumn(name = "appointment_id"),

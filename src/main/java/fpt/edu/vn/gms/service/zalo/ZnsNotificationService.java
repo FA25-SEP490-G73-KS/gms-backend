@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -148,13 +149,16 @@ public class ZnsNotificationService {
                 ? ticket.getCustomer().getFullName()
                 : "Quý khách");
 
-        templateData.put("service_ticket_code", ticket.getServiceTicketCode().toString());
+        templateData.put("service_ticket_code", ticket.getServiceTicketCode());
 
-        templateData.put("serviceTicketCode_path", ticket.getServiceTicketCode().toString());
+        templateData.put("serviceTicketCode_path", ticket.getServiceTicketId().toString());
 
         templateData.put("delivery_at", ticket.getDeliveryAt().toString());
 
-        templateData.put("estimate_amount", quotation.getEstimateAmount().toString());
+        // Định dạng tiền Việt Nam: 1.234.567
+        DecimalFormat vnMoneyFormat = new DecimalFormat("#,###");
+        String formattedAmount = vnMoneyFormat.format(quotation.getEstimateAmount()).replace(",", ".");
+        templateData.put("estimate_amount", formattedAmount + " đ");
 
         templateData.put("phone", phone);
 

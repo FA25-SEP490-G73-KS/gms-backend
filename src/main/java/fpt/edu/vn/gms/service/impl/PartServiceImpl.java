@@ -263,10 +263,14 @@ public class PartServiceImpl implements PartService {
         Double qty = part.getQuantityInStock() != null ? part.getQuantityInStock() : 0.0;
         Double threshold = part.getReorderLevel() != null ? part.getReorderLevel() : 0.0;
 
+        Double reserved = part.getReservedQuantity() != null ? part.getReservedQuantity() : 0.0;
+
+        Double newQty = qty - reserved;
+
         StockLevelStatus newStatus;
-        if (qty <= 0) {
+        if (newQty <= 0) {
             newStatus = StockLevelStatus.OUT_OF_STOCK;
-        } else if (qty <= threshold) {
+        } else if (newQty <= threshold) {
             newStatus = StockLevelStatus.LOW_STOCK;
         } else {
             newStatus = StockLevelStatus.IN_STOCK;

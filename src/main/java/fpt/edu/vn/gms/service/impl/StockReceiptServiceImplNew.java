@@ -1,6 +1,9 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.ExportItemStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
+import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
 import fpt.edu.vn.gms.common.enums.StockLevelStatus;
 import fpt.edu.vn.gms.common.enums.StockReceiptStatus;
 import fpt.edu.vn.gms.dto.request.CreateReceiptItemHistoryRequest;
@@ -17,7 +20,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,18 +48,23 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     StockReceiptItemHistoryMapper historyMapper;
     StockExportItemRepository stockExportItemRepository; // thêm repository để cập nhật trạng thái xuất kho
     PartRepository partRepository; // thêm repository để cập nhật tồn kho linh kiện
+    ServiceTicketRepository serviceTicketRepository;
+    PriceQuotationItemRepository priceQuotationItemRepository;
 
     @Override
-    public Page<StockReceiptListResponse> getReceipts(String status, String keyword, String fromDate, String toDate, Long supplierId, Pageable pageable) {
+    public Page<StockReceiptListResponse> getReceipts(String status, String keyword, String fromDate, String toDate,
+            Long supplierId, Pageable pageable) {
         Page<StockReceipt> page = stockReceiptRepository.findAll(pageable);
 
         List<StockReceipt> filtered = page.getContent().stream()
                 .filter(r -> {
-                    if (status == null || status.isBlank()) return true;
+                    if (status == null || status.isBlank())
+                        return true;
                     return r.getStatus() != null && r.getStatus().name().equalsIgnoreCase(status);
                 })
                 .filter(r -> {
-                    if (keyword == null || keyword.isBlank()) return true;
+                    if (keyword == null || keyword.isBlank())
+                        return true;
                     String lower = keyword.toLowerCase();
                     boolean matchCode = r.getCode() != null && r.getCode().toLowerCase().contains(lower);
                     boolean matchPr = r.getPurchaseRequest() != null && r.getPurchaseRequest().getCode() != null
@@ -73,7 +83,8 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     }
 
     private boolean supplierFilter(StockReceipt r, Long supplierId) {
-        if (supplierId == null) return true;
+        if (supplierId == null)
+            return true;
         return r.getSupplier() != null && r.getSupplier().getId().equals(supplierId);
     }
 
@@ -84,16 +95,19 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
         LocalDate createdDate = Optional.ofNullable(r.getCreatedAt())
                 .map(LocalDateTime::toLocalDate)
                 .orElse(null);
-        if (createdDate == null) return false;
+        if (createdDate == null)
+            return false;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         if (fromDate != null && !fromDate.isBlank()) {
             LocalDate from = LocalDate.parse(fromDate, formatter);
-            if (createdDate.isBefore(from)) return false;
+            if (createdDate.isBefore(from))
+                return false;
         }
         if (toDate != null && !toDate.isBlank()) {
             LocalDate to = LocalDate.parse(toDate, formatter);
-            if (createdDate.isAfter(to)) return false;
+            if (createdDate.isAfter(to))
+                return false;
         }
         return true;
     }
@@ -185,7 +199,8 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
 
     @Transactional
     @Override
-    public StockReceiptItemDetailResponse createReceiptItemHistory(Long itemId, CreateReceiptItemHistoryRequest request) {
+    public StockReceiptItemDetailResponse createReceiptItemHistory(Long itemId,
+            CreateReceiptItemHistoryRequest request) {
         StockReceiptItem item = stockReceiptItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng nhập kho"));
 
@@ -230,6 +245,9 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             part.setQuantityInStock(currentStock + request.getQuantity());
             updateStockLevelStatus(part);
             partRepository.save(part);
+
+            // Tự động duyệt các price quotation item sau khi nhập kho
+            autoUpdateQuotationItemsAfterReceipt(part);
         }
 
         // Update status item
@@ -275,6 +293,14 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
         PurchaseRequest pr = purchaseRequestRepository.findById(purchaseRequestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu mua hàng"));
 
+        // Kiểm tra xem đã có StockReceipt cho PurchaseRequest này chưa
+        Optional<StockReceipt> existingReceipt = stockReceiptRepository.findByPurchaseRequest(pr);
+        if (existingReceipt.isPresent()) {
+            // Nếu đã có, trả về receipt hiện tại để tránh duplicate
+            log.info("Đã tồn tại phiếu nhập kho cho yêu cầu mua hàng {}, trả về phiếu hiện có", purchaseRequestId);
+            return getReceiptDetail(existingReceipt.get().getReceiptId());
+        }
+
         if (pr.getItems() == null || pr.getItems().isEmpty()) {
             throw new RuntimeException("Phiếu yêu cầu mua hàng không có item");
         }
@@ -307,7 +333,8 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
                     .requestedQuantity(prItem.getQuantity())
                     .quantityReceived(0.0)
                     .actualUnitPrice(prItem.getEstimatedPurchasePrice())
-                    .actualTotalPrice(prItem.getEstimatedPurchasePrice().multiply(BigDecimal.valueOf(prItem.getQuantity())))
+                    .actualTotalPrice(
+                            prItem.getEstimatedPurchasePrice().multiply(BigDecimal.valueOf(prItem.getQuantity())))
                     .status(StockReceiptStatus.PENDING)
                     .build();
             stockReceiptItemRepository.save(item);
@@ -382,9 +409,9 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
         }
     }
 
-
     private void updateStockLevelStatus(Part part) {
-        if (part == null) return;
+        if (part == null)
+            return;
 
         double inStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
         double reserved = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
@@ -403,6 +430,70 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
 
         if (part.getStatus() != newStatus) {
             part.setStatus(newStatus);
+        }
+    }
+
+    private void autoUpdateQuotationItemsAfterReceipt(Part part) {
+        if (part == null) {
+            return;
+        }
+
+        try {
+            // 1. Tìm các ServiceTicket đang ở trạng thái UNDER_REPAIR, sắp xếp theo
+            // createdAt ASC (oldest first)
+            List<ServiceTicket> tickets = serviceTicketRepository.findByStatus(
+                    ServiceTicketStatus.UNDER_REPAIR,
+                    PageRequest.of(0, Integer.MAX_VALUE, Sort.by("createdAt").ascending())).getContent();
+
+            if (tickets.isEmpty()) {
+                return;
+            }
+
+            // 2. Lấy quantityInStock và reservedQuantity của part
+            double quantityInStock = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0);
+            double reservedQuantity = Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+
+            // 3. Duyệt từng ticket (từ oldest đến newest)
+            for (ServiceTicket ticket : tickets) {
+                PriceQuotation quotation = ticket.getPriceQuotation();
+                if (quotation == null) {
+                    continue;
+                }
+
+                // 4. Duyệt các PriceQuotationItem có partId trùng với part vừa nhập
+                List<PriceQuotationItem> items = priceQuotationItemRepository.findAllByPriceQuotation(quotation);
+
+                for (PriceQuotationItem item : items) {
+                    // Chỉ xử lý item có part trùng với part vừa nhập
+                    if (item.getPart() == null || !item.getPart().getPartId().equals(part.getPartId())) {
+                        continue;
+                    }
+
+                    // Chỉ xử lý item là PART type
+                    if (item.getItemType() != PriceQuotationItemType.PART) {
+                        continue;
+                    }
+
+                    // 5. Kiểm tra điều kiện: quantityInStock > (item.getQuantity() -
+                    // reservedQuantity) && quantityInStock > 0
+                    double itemQuantity = Optional.ofNullable(item.getQuantity()).orElse(0.0);
+                    double requiredAvailable = itemQuantity - reservedQuantity;
+
+                    if (quantityInStock > requiredAvailable && quantityInStock > 0) {
+                        // 6. Cập nhật inventoryStatus = AVAILABLE
+                        if (item.getInventoryStatus() != PriceQuotationItemStatus.AVAILABLE) {
+                            item.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
+                            priceQuotationItemRepository.save(item);
+                            log.info(
+                                    "Đã cập nhật inventoryStatus = AVAILABLE cho PriceQuotationItem {} (partId: {}, ticketId: {})",
+                                    item.getPriceQuotationItemId(), part.getPartId(), ticket.getServiceTicketId());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi tự động cập nhật PriceQuotationItem sau khi nhập kho (partId: {}): {}",
+                    part.getPartId(), e.getMessage(), e);
         }
     }
 }

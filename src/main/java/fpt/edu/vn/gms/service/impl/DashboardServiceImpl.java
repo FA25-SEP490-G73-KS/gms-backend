@@ -51,7 +51,7 @@ public class DashboardServiceImpl implements DashboardService {
         long totalTickets = serviceTicketRepository.countServiceTicketsInMonth(currentMonth.getYear(),
                 currentMonth.getMonthValue());
         long pendingQuotations = priceQuotationRepository.countByStatus(PriceQuotationStatus.WAITING_CUSTOMER_CONFIRM);
-        long vehiclesInService = serviceTicketRepository.countByStatus(ServiceTicketStatus.WAITING_FOR_QUOTATION);
+        long vehiclesInService = serviceTicketRepository.countByStatus(ServiceTicketStatus.QUOTING);
         long appointmentsToday = appointmentRepository.countByAppointmentDate(today);
 
         DashboardResponse.SummaryDto summary = DashboardResponse.SummaryDto.builder()

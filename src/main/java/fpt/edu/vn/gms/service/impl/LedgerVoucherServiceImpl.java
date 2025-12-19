@@ -86,7 +86,7 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
                 .relatedSupplierId(request.getRelatedSupplierId())
                 .description(request.getDescription())
                 .attachmentUrl(attachmentUrl)
-                .status(LedgerVoucherStatus.PENDING)
+                .status(LedgerVoucherStatus.FINISHED)
                 .receiptHistory(history)
                 .build();
 

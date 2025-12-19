@@ -1,8 +1,10 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
+import fpt.edu.vn.gms.dto.response.PurchaseSuggestionItemDto;
 import fpt.edu.vn.gms.entity.PurchaseRequest;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/purchase-requests")
@@ -75,5 +79,20 @@ public class PurchaseRequestControllerNew {
     public ApiResponse<PurchaseRequestDetailDto> getPurchaseRequestDetail(@PathVariable Long id) {
         PurchaseRequestDetailDto dto = purchaseRequestService.getPurchaseRequestDetail(id);
         return ApiResponse.success("Lấy chi tiết yêu cầu mua hàng thành công", dto);
+    }
+
+    @GetMapping("/suggested-items")
+    @Operation(summary = "Danh sách linh kiện đề xuất mua hàng cho kho (mở modal tạo PR)")
+    public ApiResponse<List<PurchaseSuggestionItemDto>> getSuggestedItems() {
+        List<PurchaseSuggestionItemDto> items = purchaseRequestService.getSuggestedPurchaseItems();
+        return ApiResponse.success("Danh sách linh kiện đề xuất mua hàng", items);
+    }
+
+    @PostMapping("/manual")
+    @Operation(summary = "Tạo phiếu yêu cầu mua hàng thủ công từ danh sách linh kiện")
+    public ApiResponse<PurchaseRequestResponseDto> createManual(@RequestBody PurchaseRequestCreateDto requestDto) {
+        PurchaseRequest pr = purchaseRequestService.createRequest(requestDto);
+        PurchaseRequestResponseDto dto = PurchaseRequestResponseDto.fromEntity(pr);
+        return ApiResponse.created("Tạo yêu cầu mua hàng thành công", dto);
     }
 }

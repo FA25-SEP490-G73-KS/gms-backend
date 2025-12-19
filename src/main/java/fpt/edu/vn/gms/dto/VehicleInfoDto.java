@@ -11,7 +11,9 @@ public class VehicleInfoDto {
 
     private Long vehicleId;
     private String licensePlate;
+    private Long brandId;
     private String brandName;
+    private Long modelId;
     private String modelName;
     private String vin;
     private Integer year;

@@ -256,6 +256,7 @@ CREATE TABLE price_quotation_item (
                                       unit VARCHAR(20),
                                       total_price DECIMAL(18,2),
                                       exported_quantity DOUBLE,
+                                      reserved_quantity DOUBLE DEFAULT 0.0,
                                       item_type VARCHAR(50) NOT NULL,
                                       status VARCHAR(50),
                                       warehouse_review_status VARCHAR(50),
@@ -720,12 +721,12 @@ VALUES
 INSERT INTO employee (
     employee_id, full_name, gender, date_of_birth, phone, address, hire_date, account_id, daily_salary, is_active
 ) VALUES
-      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 1, 200000.00, 1),
-      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 2, 200000.00, 1),
-      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 3, 200000.00, 1),
-      (4, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0123456789', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 4, 200000.00, 1),
-      (5, 'Nguyễn Tuấn Anh', 'Nam', '1992-01-20', '0999999999', '789 Đường C, Quận 3', '2024-01-15 08:00:00', null, 200000.00, 1),
-      (6, 'Nguyễn Sơn Lâm', 'Nam', '1992-01-20', '0888888888', '789 Đường C, Quận 3', '2024-01-15 08:00:00', null, 200000.00, 1);
+      (1, 'Nguyễn Văn An', 'Nam', '1985-04-10', '0909123456', '123 Đường A, Quận 1', '2023-05-10 08:00:00', 1, 20000000.00, 1),
+      (2, 'Trần Minh Đức', 'Nam', '1990-07-15', '0912345678', '456 Đường B, Quận 2', '2023-06-01 08:00:00', 2, 20000000.00, 1),
+      (3, 'Phạm Thị Hoa', 'Nữ', '1992-01-20', '0987123456', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 3, 20000000.00, 1),
+      (4, 'Nguyễn Minh Đức', 'Nam', '1992-01-20', '0123456789', '789 Đường C, Quận 3', '2024-01-15 08:00:00', 4, 20000000.00, 1),
+      (5, 'Nguyễn Tuấn Anh', 'Nam', '1992-01-20', '0999999999', '789 Đường C, Quận 3', '2024-01-15 08:00:00', null, 20000000.00, 1),
+      (6, 'Nguyễn Sơn Lâm', 'Nam', '1992-01-20', '0888888888', '789 Đường C, Quận 3', '2024-01-15 08:00:00', null, 20000000.00, 1);
 
 INSERT INTO part_category (name) VALUES
                                      ('Động cơ'),
@@ -854,9 +855,9 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token, created_at)
 VALUES (
-         'pqSEU_OyfJZ9JGnpyZAXECf92NFmByfioJzaBAqnl6dbDb5pcJc6Dwi9KWld1gGMX0fqChynm0Nx41f0XpIpKCyQNqceEeLUwGKbRBKxnd7p5118am_yPFKs87cHAkXxrJe5IhOWp0o501a7k7ZNGk50Uto5Oyytw7CN8Abot6Vg2YujeoNZBimNDGxm3CGDZ0uN9kG2r2sd8Wi7rnFKHh4f56JAARjFc59fHlrAb7APKpXZor7HLA9T3c_5JA9NuZ8M79aSp2BV41yelGVZ7E09AZw-6EadnIaXEQ40m0RJV2Col7ZlBDvV91gTSuyzndrLDk40cZ2d67atsYQh2xSz13Vy7iW7cnyB9wXa-H33IWeDgbhwDF5KJX2YUf8mcqL37DTud2sM1M8IwXt20u8H5WAn8CL1L7GAI9bpyI6aFm',
-         'jnvF2QxE_ZYn54q1gi3wEB8GI06etO9NzNbU9A_oaqRaGYW5uz7jG9bs9I3W_irDadSs0edoZ37kTNP0bgE_C8WA2LVaWzeIXWyQPzMK_XpBEo9kjVNaNEnn43cg_THLotzY1Apnq7opKMHAgV608k5PBaok-vmN_41vJupyknIJUNribBV71-q14ao0aFyEuZeIMBAGtXVh92nQdfwVQD4bKoYfg9HhzJv69gcwhLtf8K8I-flsOuOp0WRrcDHgZpPZ4Sc_fL_J96mwhlQBJDTFV2okvCzgurCW9Vg5wMhXCYC2afwJPT4G80ZCjjbWXG8UK9Q2_sNq9XzSdw7m2i4WG3cCjx5Dz1417R-eq6Nc00iseO3uVTiD22-6l-LQpmWe5OdIyKl7Ga8il9cPPi4fOWCrUIhZWm6fq_y_',
-           '2024-12-13 10:00:00'
+         'wOjnIvj-jaRlWND3dt2oHko5TaETRTbFyTruDDHPkrFFpWq-mNsRLS-2NXsw6yfKlULFCyHAbrJY_IyeprESPTJzMZtD2_16jFH13iq7rdd1-NmEiGtaTBs2AMIG7fqhbx9QB-u4ntdAf7WMt3Bg7-grCdN5IvyVgUKlSPXRw06jgYjBs0Qp4-o45M_w9eXcvBya5kOnf7pcZGS3n26xJEAoVoFIF-9or8z77iOPvNJZXMOcuIpqKiY4JYt40FbAqxzD0FW0qKVw_XmFtbgpGDxIS4sdOV08lDKmJuTzaqUrtGuCaNULVAc1AWEFBO1FleH4H9e0t0EwXsDsdN3F3EJfOscGJgKTbDvaJkDsq4Fbn6GkoNYaPBYF4ZI08vCxf8yIDuDugb20oXvOe6-FFAx7DKEBEOGtSK76zJsSOxT1',
+                    'SQwM9fXYP4Dtf9Gkd6nWGtIWaIwUSHen0_Iy2x1_EZ5QjymymY1517ssioFA0aO18Ap57Cu4GoTjkkG3WnKS0GxIdcUPMcjgSy3ZN9rlPLiXzE5Kj4eOIGllkLQmVaXW4y3B1BbzGnOEkjKnXnqj73IhgpgKCYbU8AYRFOyl2Hfiu_y4v5zmO7hoXstLGmrgGFVzNlzcT7bS_z52vsDPMrpUtbUh4arc59U_Lu9PHtKnqDDwtnnGPsEnysZV7tOBKPNmFC8-PHXojES_vo8JBccuvZF29XC9N-6o2-0kHsfCazPpvHX24qc1n73c6ZDERA-sQ-OV30fJpRHd_miG17p1uHBi3L8qR9l38jSCL2LklCK6md1j6M_PnH-CLtC29jB_1x5NQ3mzu_WsWNTnBpdWyY8mSjh_m5MVVsL4',
+           '2024-12-17 10:00:00'
        );
 
 
