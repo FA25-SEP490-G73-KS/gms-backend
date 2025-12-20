@@ -9,7 +9,6 @@ public class CreateReceiptItemHistoryRequest {
 
     private Double quantity;
     private BigDecimal unitPrice;
-    private String attachmentUrl;
     private String note;
     private String receivedBy;
 }

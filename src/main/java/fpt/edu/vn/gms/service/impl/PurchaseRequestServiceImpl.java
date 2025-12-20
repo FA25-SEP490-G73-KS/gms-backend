@@ -236,7 +236,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                     template.format(pr.getCode()),
                     NotificationType.PURCHASE_REQUEST,
                     pr.getId().toString(),
-                    "/stock-receipt/" + receipt.getId());
+                    "/warehouse/purchase-requests/" + receipt.getId());
         }
 
         return pr;
@@ -274,7 +274,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                     template.format(pr.getCode()),
                     NotificationType.PURCHASE_REQUEST,
                     pr.getId().toString(),
-                    "/purchase-requests/" + pr.getId());
+                    "/warehouse/purchase-requests/" + pr.getId());
         }
 
         return pr;

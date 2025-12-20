@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,6 +51,7 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     PartRepository partRepository; // thêm repository để cập nhật tồn kho linh kiện
     ServiceTicketRepository serviceTicketRepository;
     PriceQuotationItemRepository priceQuotationItemRepository;
+    FileStorageService fileStorageService;
 
     @Override
     public Page<StockReceiptListResponse> getReceipts(String status, String keyword, String fromDate, String toDate,
@@ -200,15 +202,12 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     @Transactional
     @Override
     public StockReceiptItemDetailResponse createReceiptItemHistory(Long itemId,
-            CreateReceiptItemHistoryRequest request) {
+            CreateReceiptItemHistoryRequest request, MultipartFile file) {
         StockReceiptItem item = stockReceiptItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dòng nhập kho"));
 
         if (request.getQuantity() == null || request.getQuantity() <= 0) {
             throw new IllegalArgumentException("Số lượng nhận phải > 0");
-        }
-        if (request.getUnitPrice() == null || request.getUnitPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Đơn giá phải >= 0");
         }
 
         double alreadyReceived = Optional.ofNullable(item.getQuantityReceived()).orElse(0.0);
@@ -218,12 +217,18 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             throw new IllegalArgumentException("Số lượng nhận vượt quá số lượng yêu cầu");
         }
 
+        // Upload file nếu có
+        String attachmentUrl = null;
+        if (file != null && !file.isEmpty()) {
+            attachmentUrl = fileStorageService.upload(file);
+        }
+
         // Tạo history
         StockReceiptItemHistory history = StockReceiptItemHistory.builder()
                 .stockReceiptItem(item)
                 .quantity(request.getQuantity())
                 .unitPrice(request.getUnitPrice())
-                .attachmentUrl(request.getAttachmentUrl())
+                .attachmentUrl(attachmentUrl)
                 .note(request.getNote())
                 .receivedBy(request.getReceivedBy())
                 .build();
@@ -495,5 +500,15 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             log.error("Lỗi khi tự động cập nhật PriceQuotationItem sau khi nhập kho (partId: {}): {}",
                     part.getPartId(), e.getMessage(), e);
         }
+    }
+
+    @Override
+    public StockReceiptItemHistoryDetailResponse getReceiptItemHistoryDetail(Long historyId) {
+        StockReceiptItemHistory history = stockReceiptItemHistoryRepository.findById(historyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch sử nhập kho"));
+
+        return StockReceiptItemHistoryDetailResponse.builder()
+                .attachmentUrl(history.getAttachmentUrl())
+                .build();
     }
 }

@@ -2,13 +2,17 @@ package fpt.edu.vn.gms.dto.response;
 
 import fpt.edu.vn.gms.entity.PurchaseRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class PurchaseRequestResponseDto {
 
     @Schema(example = "1")

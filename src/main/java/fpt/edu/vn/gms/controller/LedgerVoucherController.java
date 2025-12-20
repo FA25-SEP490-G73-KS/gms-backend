@@ -35,6 +35,7 @@ public class LedgerVoucherController {
             @RequestPart("data") String data,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CurrentUser Employee currentUser) throws JsonProcessingException {
+
         ObjectMapper mapper = new ObjectMapper();
         CreateVoucherRequest request = mapper.readValue(data, CreateVoucherRequest.class);
         LedgerVoucherDetailResponse response = ledgerVoucherService.createManualVoucher(request, file, currentUser);
@@ -94,7 +95,7 @@ public class LedgerVoucherController {
             @RequestParam(required = false) Long supplierId,
             @RequestParam(required = false) Long employeeId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<LedgerVoucherListResponse> result = ledgerVoucherService.getVoucherList(

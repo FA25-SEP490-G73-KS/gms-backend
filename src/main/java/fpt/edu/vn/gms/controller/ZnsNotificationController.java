@@ -35,6 +35,7 @@ public class ZnsNotificationController {
     private final PriceQuotationRepository priceQuotationRepository;
     private final ServiceTicketRepository serviceTicketRepository;
 
+    @CrossOrigin(origins = "*")
     @Public
     @PostMapping("/appointment/{appointmentId}/reminder")
     @Operation(summary = "Gửi lời nhắc cuộc hẹn", description = "Gửi thông báo nhắc nhở cuộc hẹn một cách thủ công.")
