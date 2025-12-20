@@ -2,6 +2,7 @@ package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.request.ManualTransactionRequest;
 import fpt.edu.vn.gms.dto.response.ManualTransactionResponse;
+import fpt.edu.vn.gms.entity.Employee;
 
 public interface WarehouseManualTransactionService {
 
@@ -10,6 +11,6 @@ public interface WarehouseManualTransactionService {
      * - type = EXPORT: tạo StockExport + StockExportItem
      * - type = RECEIPT: tạo StockReceipt + StockReceiptItem
      */
-    ManualTransactionResponse createManualTransaction(ManualTransactionRequest request);
+    ManualTransactionResponse createManualTransaction(ManualTransactionRequest request, Employee currentUser);
 }
 

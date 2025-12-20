@@ -33,7 +33,6 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
 
     PartRepository partRepository;
     StockExportRepository stockExportRepository;
-    SupplierRepository supplierRepository;
     PurchaseRequestRepository purchaseRequestRepository;
     DeductionRepository deductionRepository;
     EmployeeRepository employeeRepository;
@@ -44,13 +43,13 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
 
     @Transactional
     @Override
-    public ManualTransactionResponse createManualTransaction(ManualTransactionRequest request) {
+    public ManualTransactionResponse createManualTransaction(ManualTransactionRequest request, Employee currentUser) {
         validateRequest(request);
 
         boolean isExport = "EXPORT".equalsIgnoreCase(request.getType());
         boolean isDraft = Boolean.FALSE;
 
-        return isExport ? handleExport(request, isDraft) : handleReceipt(request, isDraft);
+        return isExport ? handleExport(request, isDraft, currentUser) : handleReceipt(request, isDraft, currentUser);
     }
 
     private void validateStockForExport(Part part, double qty) {
@@ -108,11 +107,11 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
         }
     }
 
-    private ManualTransactionResponse handleExport(ManualTransactionRequest request, boolean isDraft) {
+    private ManualTransactionResponse handleExport(ManualTransactionRequest request, boolean isDraft, Employee creator) {
         StockExport export = StockExport.builder()
                 .code(codeSequenceService.generateCode("EX"))
                 .reason(request.getReason())
-                .createdBy(request.getCreatedBy())
+                .createdBy(creator.getFullName())
                 .status(isDraft ? ExportStatus.DRAFT : ExportStatus.COMPLETED)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -187,7 +186,7 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
                 .build();
     }
 
-    private ManualTransactionResponse handleReceipt(ManualTransactionRequest request, boolean isDraft) {
+    private ManualTransactionResponse handleReceipt(ManualTransactionRequest request, boolean isDraft, Employee creator) {
         // Tạo PurchaseRequest với trạng thái reviewStatus = PENDING
         PurchaseRequest purchaseRequest = PurchaseRequest.builder()
                 .code(codeSequenceService.generateCode("PR"))
@@ -197,7 +196,7 @@ public class WarehouseManualTransactionServiceImpl implements WarehouseManualTra
                 .reviewStatus(ManagerReviewStatus.PENDING)
                 .reason(request.getReason())
                 .items(new ArrayList<>())
-                .createdBy(null)
+                .createdBy(creator.getEmployeeId())
                 .build();
 
         BigDecimal totalEstimated = BigDecimal.ZERO;

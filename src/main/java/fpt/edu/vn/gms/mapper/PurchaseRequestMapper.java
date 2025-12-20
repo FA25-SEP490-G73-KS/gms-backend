@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Mapper(componentModel = "spring")
 public interface PurchaseRequestMapper {
-    
+
     @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "formatDate")
     @Mapping(target = "reviewStatus", source = "reviewStatus", qualifiedByName = "formatStatus")
     PurchaseRequestResponseDto toListDto(PurchaseRequest entity);

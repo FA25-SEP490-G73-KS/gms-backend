@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
 import fpt.edu.vn.gms.common.annotations.Public;
-import fpt.edu.vn.gms.dto.ZnsAppointmentInfo;
 import fpt.edu.vn.gms.dto.ZnsSendSurveyDTO;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.entity.Appointment;
@@ -11,10 +10,7 @@ import fpt.edu.vn.gms.exception.ResourceNotFoundException;
 import fpt.edu.vn.gms.repository.AppointmentRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.ServiceTicketRepository;
-import fpt.edu.vn.gms.service.AppointmentService;
-import fpt.edu.vn.gms.service.auth.JwtService;
 import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
-import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,8 +31,6 @@ import static fpt.edu.vn.gms.utils.AppRoutes.ZNS_NOTIFICATIONS_PREFIX;
 public class ZnsNotificationController {
 
     private final ZnsNotificationService znsNotificationService;
-    private final AppointmentService appointmentService;
-    private final JwtService jwtService;
     private final AppointmentRepository appointmentRepository;
     private final PriceQuotationRepository priceQuotationRepository;
     private final ServiceTicketRepository serviceTicketRepository;

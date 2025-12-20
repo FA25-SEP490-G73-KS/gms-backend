@@ -1,8 +1,10 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.ManualTransactionRequest;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.ManualTransactionResponse;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.WarehouseManualTransactionService;
 import fpt.edu.vn.gms.utils.AppRoutes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,9 +26,10 @@ public class WarehouseManualTransactionController {
     @PostMapping
     @Operation(summary = "Tạo phiếu xuất kho / nhập kho thủ công")
     public ApiResponse<ManualTransactionResponse> createManualTransaction(
-            @RequestBody ManualTransactionRequest request
+            @RequestBody ManualTransactionRequest request,
+            @CurrentUser Employee currentUser
     ) {
-        ManualTransactionResponse response = warehouseManualTransactionService.createManualTransaction(request);
+        ManualTransactionResponse response = warehouseManualTransactionService.createManualTransaction(request, currentUser);
         return ApiResponse.success("Tạo phiếu kho thủ công thành công", response);
     }
 }
