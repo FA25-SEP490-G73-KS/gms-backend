@@ -46,6 +46,7 @@ jobs:
             echo "JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}" >> .env
             echo "JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}" >> .env
             echo "JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}" >> .env
+            echo "JWT_REFRESH_REMEMBER_EXPIRATION=${{ secrets.JWT_REFRESH_REMEMBER_EXPIRATION }}" >> .env
             echo "" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "DB_DATABASE_NAME=${{ secrets.DB_DATABASE_NAME }}" >> .env
