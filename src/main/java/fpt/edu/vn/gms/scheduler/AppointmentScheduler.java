@@ -23,7 +23,6 @@ public class AppointmentScheduler {
     private final AppointmentRepository appointmentRepo;
     private final ZnsNotificationService znsNotificationService;
 
-
     @Scheduled(cron = "0 */5 * * * *")
     public void processPendingAppointments() {
         if (!isWithinWorkingHours()) {
@@ -34,46 +33,50 @@ public class AppointmentScheduler {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        List<Appointment> pendingToday =
-                appointmentRepo.findByStatusAndConfirmedAtIsNullAndAppointmentDate(
-                        AppointmentStatus.PENDING,
-                        today
-                );
+        List<Appointment> pendingToday = appointmentRepo.findByStatusAndConfirmedAtIsNullAndAppointmentDate(
+                AppointmentStatus.PENDING,
+                today);
 
         List<Appointment> toCancel = new ArrayList<>();
         List<Appointment> toUpdate = new ArrayList<>();
 
         for (Appointment appt : pendingToday) {
-            if (appt.getTimeSlot() == null) continue;
+            if (appt.getTimeSlot() == null)
+                continue;
 
             LocalDateTime slotStart = LocalDateTime.of(
                     appt.getAppointmentDate(),
-                    appt.getTimeSlot().getStartTime()
-            );
+                    appt.getTimeSlot().getStartTime());
 
             long minutesBeforeSlot = java.time.Duration.between(now, slotStart).toMinutes();
 
-            /* ===========================
-             *  (1) AUTO REMINDER TRƯỚC 2 TIẾNG
-             * =========================== */
-            if (!appt.isReminderSent()
-                    && minutesBeforeSlot > 30
-                    && minutesBeforeSlot <= 120) {
+            /*
+             * ===========================
+             * (1) AUTO REMINDER TRƯỚC 2 TIẾNG
+             * // * ===========================
+             */
+            // if (!appt.isReminderSent()
+            // && minutesBeforeSlot > 30
+            // && minutesBeforeSlot <= 120) {
 
-                try {
-                    znsNotificationService.sendAppointmentReminder(appt);
-                    appt.setReminderSent(true);
-                    toUpdate.add(appt);
+            // try {
+            // znsNotificationService.sendAppointmentReminder(appt);
+            // appt.setReminderSent(true);
+            // toUpdate.add(appt);
 
-                    log.info("Sent smart reminder for appointment ID: {}", appt.getAppointmentId());
-                } catch (Exception e) {
-                    log.error("Failed to send reminder for appointment ID: {}", appt.getAppointmentId(), e);
-                }
-            }
+            // log.info("Sent smart reminder for appointment ID: {}",
+            // appt.getAppointmentId());
+            // } catch (Exception e) {
+            // log.error("Failed to send reminder for appointment ID: {}",
+            // appt.getAppointmentId(), e);
+            // }
+            // }
 
-            /* ===========================
-             *  (2) AUTO CANCEL TRƯỚC 30 PHÚT (0–30 phút)
-             * =========================== */
+            /*
+             * ===========================
+             * (2) AUTO CANCEL TRƯỚC 30 PHÚT (0–30 phút)
+             * ===========================
+             */
             if (minutesBeforeSlot <= 30 && minutesBeforeSlot >= 0) {
                 appt.setStatus(AppointmentStatus.CANCELLED);
                 toCancel.add(appt);
@@ -115,6 +118,7 @@ public class AppointmentScheduler {
         for (Appointment appointment : appointments) {
             try {
                 znsNotificationService.sendAppointmentReminder(appointment);
+                appointment.setReminderSent(true);
                 log.info("Sent reminder for appointment ID: {}", appointment.getAppointmentId());
             } catch (Exception e) {
                 log.error("Failed to send reminder for appointment ID: {}",

@@ -246,6 +246,12 @@ public class InvoiceServiceImpl implements InvoiceService {
                                         ? InvoiceStatus.PAID_IN_FULL
                                         : InvoiceStatus.UNDERPAID;
 
+                        if (status == InvoiceStatus.PAID_IN_FULL) {
+                                ServiceTicket serviceTicket = invoice.getServiceTicket();
+                                serviceTicket.setStatus(ServiceTicketStatus.COMPLETED);
+                                serviceTicketRepo.save(serviceTicket);
+                        }
+
                         customerService.updateTotalSpending(customerId,
                                         amount.compareTo(finalAmount) < 0 ? amount : finalAmount);
                         invoice.setStatus(status);

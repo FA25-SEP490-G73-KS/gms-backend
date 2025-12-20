@@ -12,7 +12,6 @@ import fpt.edu.vn.gms.mapper.AppointmentMapper;
 import fpt.edu.vn.gms.repository.*;
 import fpt.edu.vn.gms.service.AppointmentService;
 import fpt.edu.vn.gms.service.CodeSequenceService;
-import fpt.edu.vn.gms.service.zalo.OneTimeTokenService;
 import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
 import fpt.edu.vn.gms.utils.PhoneUtils;
 import lombok.AccessLevel;
@@ -115,7 +114,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         // Giới hạn số lần đặt lịch theo ngày
         int countToday = appointmentRepo.countByCustomerAndAppointmentDate(customer, dto.getAppointmentDate());
         if (countToday >= MAX_APPOINTMENTS_PER_DAY) {
-            throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY + " lịch trong ngày " + dto.getAppointmentDate());
+            throw new IllegalArgumentException("Bạn chỉ được đặt tối đa " + MAX_APPOINTMENTS_PER_DAY
+                    + " lịch trong ngày " + dto.getAppointmentDate());
         }
 
         // Kiểm tra xe
@@ -147,6 +147,13 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .map(serviceTypeRepo::getById)
                 .toList();
 
+        // Xác định status dựa trên ngày đặt lịch
+        // Nếu đặt lịch cho hôm nay → CONFIRMED, nếu đặt cho tương lai → PENDING
+        LocalDate today = LocalDate.now();
+        AppointmentStatus status = dto.getAppointmentDate().equals(today)
+                ? AppointmentStatus.CONFIRMED
+                : AppointmentStatus.PENDING;
+
         Appointment appointment = Appointment.builder()
                 .appointmentCode(codeSequenceService.generateCode("LH"))
                 .customer(customer)
@@ -156,7 +163,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDate(dto.getAppointmentDate())
                 .serviceTypes(serviceTypes)
                 .description(dto.getNote())
-                .status(AppointmentStatus.PENDING)
+                .status(status)
+                .isReminderSent(status == AppointmentStatus.CONFIRMED)
                 .build();
 
         Appointment saved = appointmentRepo.save(appointment);
@@ -170,7 +178,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                     saved.getAppointmentId(), e);
             // Don't fail the appointment creation if notification fails
         }
-
 
         return AppointmentMapper.toDto(saved);
     }
@@ -204,8 +211,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                         entry.getKey().getLabel(),
                         entry.getKey().getStartTime(),
                         entry.getKey().getEndTime(),
-                        entry.getValue().size()
-                ))
+                        entry.getValue().size()))
                 .sorted(Comparator.comparing(AppointmentBySlotResponse::getStartTime))
                 .collect(Collectors.toList());
     }
@@ -214,7 +220,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDto getAppointmentById(Long id) {
         Appointment appointment = appointmentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
-
 
         return AppointmentMapper.toDto(appointment);
     }

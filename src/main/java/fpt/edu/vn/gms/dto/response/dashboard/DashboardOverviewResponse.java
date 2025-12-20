@@ -14,10 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DashboardOverviewResponse {
     private int year;
+    private Integer month; // null nếu không filter theo tháng
     private BigDecimal totalRevenue;
     private BigDecimal totalExpense;
     private BigDecimal profit;
     private BigDecimal totalDebt;
     private List<DashboardSeriesPoint> series;
+    private List<ServiceTypeExpenseDto> serviceTypeExpenseDistribution;
 }
-

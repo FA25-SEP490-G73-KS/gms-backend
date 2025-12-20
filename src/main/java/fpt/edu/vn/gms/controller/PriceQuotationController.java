@@ -121,6 +121,7 @@ public class PriceQuotationController {
                 return ResponseEntity.ok(ApiResponse.success("Lấy báo giá thành công!", response));
         }
 
+        @Public
         @PatchMapping("/{id}/status")
         @Operation(summary = "Cập nhật trạng thái báo giá thủ công", description = "Cập nhật trạng thái của một phiếu báo giá một cách thủ công.")
         @ApiResponses(value = {

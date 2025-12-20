@@ -12,7 +12,7 @@ DROP DATABASE IF EXISTS gms;
 -- Create database
 CREATE DATABASE gms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Use database
+# Use database;
 USE gms;
 
 -- ============================================
@@ -691,6 +691,13 @@ CREATE TABLE otp_verification (
                                   created_at DATETIME NOT NULL
 );
 
+CREATE TABLE one_time_token (
+                                id CHAR(36) NOT NULL,
+                                token TEXT,
+                                expires_at VARCHAR(255),
+                                PRIMARY KEY (id)
+);
+
 # ============================================
 # # ADD DATA SAMPLE
 # ============================================
@@ -855,9 +862,9 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token, created_at)
 VALUES (
-         'wOjnIvj-jaRlWND3dt2oHko5TaETRTbFyTruDDHPkrFFpWq-mNsRLS-2NXsw6yfKlULFCyHAbrJY_IyeprESPTJzMZtD2_16jFH13iq7rdd1-NmEiGtaTBs2AMIG7fqhbx9QB-u4ntdAf7WMt3Bg7-grCdN5IvyVgUKlSPXRw06jgYjBs0Qp4-o45M_w9eXcvBya5kOnf7pcZGS3n26xJEAoVoFIF-9or8z77iOPvNJZXMOcuIpqKiY4JYt40FbAqxzD0FW0qKVw_XmFtbgpGDxIS4sdOV08lDKmJuTzaqUrtGuCaNULVAc1AWEFBO1FleH4H9e0t0EwXsDsdN3F3EJfOscGJgKTbDvaJkDsq4Fbn6GkoNYaPBYF4ZI08vCxf8yIDuDugb20oXvOe6-FFAx7DKEBEOGtSK76zJsSOxT1',
-                    'SQwM9fXYP4Dtf9Gkd6nWGtIWaIwUSHen0_Iy2x1_EZ5QjymymY1517ssioFA0aO18Ap57Cu4GoTjkkG3WnKS0GxIdcUPMcjgSy3ZN9rlPLiXzE5Kj4eOIGllkLQmVaXW4y3B1BbzGnOEkjKnXnqj73IhgpgKCYbU8AYRFOyl2Hfiu_y4v5zmO7hoXstLGmrgGFVzNlzcT7bS_z52vsDPMrpUtbUh4arc59U_Lu9PHtKnqDDwtnnGPsEnysZV7tOBKPNmFC8-PHXojES_vo8JBccuvZF29XC9N-6o2-0kHsfCazPpvHX24qc1n73c6ZDERA-sQ-OV30fJpRHd_miG17p1uHBi3L8qR9l38jSCL2LklCK6md1j6M_PnH-CLtC29jB_1x5NQ3mzu_WsWNTnBpdWyY8mSjh_m5MVVsL4',
-           '2024-12-17 10:00:00'
+        'UcrLHDuYuszyPrTCsYpdRtzZKapOCU4sTdeZOTbjzXaaAI0qwpldTpWnA5th5FuC6Z8xPhGHxajtB5uNq1MGVoqUM2hz8v1f9Yj478G6a4bY620pZ2FgP4C7FmwXJV120ryu5CHEZqWnO3uVaqxuDazdFMUnRlWVPIKxCfS0YN5GI404Z06MB7v5L73HReG6D7T5HDb7YcqALpeirWRy1NazA5c88vWRRcOlIPitxZ4rV2KVzMxYCoqZ8KNO4-up9ZbJPkajXWuS6a1s_WI36oKSL7600PuUTJPZSQO-jpL7Cc1cumEn91KzRm-xDg14Rm8LQP16sXzkM1PgWtpJG2nP42d1GDrJPtDjAuPctsWf8nn1qpMiFXTa4KJgKSGkBHzt1lqGmKTVFGCDdHJhOcyXBJ9CBPTyX1lPF-9e',
+                    'ypCwApFqYWJrEJWZD_gE1FOzFICrv_Pef2eO4ZZg-td_I0CLNjFvICuNCZPtbVzHvnig9cQ1aMQiM7eI3iklVvnuG2jTvgXcnMPhIc2Yk3A-45DlVAc72TSqPa8MgOy-eGfzLJ6udJsBFanIEfo94eTGV3KIuAeJhLz3D2R2cnoMVNvF2iQU0urKL7v8-P0MqqbDV6V4cax7I6zeGDA85i97V41Z-fXc_5OjCJpLbcY5UtOXJjx5MV5aD0Tnwkvsx5CB1sZ2rdJ_MHi4EzVH8gTfCWK0wVzSYLaa04pRpbYE71Kp7fxWLQ0Y9Netxf8rht1ARnBRdXcoPoLKAi3GCe5hDaaSoPaLcqfqPIBllqYYRLPw8RIO8O83Lsu_kxOOd3v0CoEVZ4wn24ORSBJmL-nn7dv7y_I27pJfYmC',
+            '2024-12-20 10:00:00'
        );
 
 

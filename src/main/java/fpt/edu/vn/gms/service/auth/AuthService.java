@@ -129,8 +129,29 @@ public class AuthService {
   @Transactional
   public ResetPasswordResponseDto resetPassword(ResetPasswordRequestDto dto) {
 
-    Account account = accountRepository.findByPhone(dto.getPhone())
-        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+    String phone = dto.getPhone() != null ? dto.getPhone().trim() : null;
+    if (phone == null || phone.isEmpty()) {
+      throw new RuntimeException("Số điện thoại không được để trống");
+    }
+
+    log.debug("Đang tìm account với số điện thoại: [{}]", phone);
+
+    // Thử tìm với exact match trước
+    Account account = accountRepository.findByPhone(phone).orElse(null);
+
+    if (account == null) {
+      account = accountRepository.findByPhoneTrimmed(phone).orElse(null);
+    }
+
+    if (account == null) {
+      log.error("Không tìm thấy account với số điện thoại: [{}]", phone);
+      throw new RuntimeException("Số điện thoại không tồn tại trong hệ thống");
+    }
+
+    if (!account.isActive()) {
+      log.warn("Account với số điện thoại {} không active", phone);
+      throw new RuntimeException("Tài khoản đã bị vô hiệu hóa");
+    }
 
     if (dto.getNewPassword() == null || dto.getNewPassword().length() < 8) {
       throw new RuntimeException("Mật khẩu phải có ít nhất 8 ký tự");

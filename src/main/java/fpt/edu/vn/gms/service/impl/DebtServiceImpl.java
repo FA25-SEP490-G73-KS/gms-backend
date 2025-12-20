@@ -202,8 +202,15 @@ public class DebtServiceImpl implements DebtService {
         }
 
         @Override
+        @Transactional
         public TransactionResponseDto payDebt(Long debtId, PayDebtRequestDto request) throws Exception {
+                log.info("Bắt đầu thanh toán công nợ: debtId={}, method={}, price={}",
+                                debtId, request.getMethod(), request.getPrice());
+
                 Debt debt = debtRepository.findById(debtId).orElseThrow(DebtNotFoundException::new);
+                log.info("Tìm thấy debt: id={}, amount={}, paidAmount={}",
+                                debt.getId(), debt.getAmount(), debt.getPaidAmount());
+
                 var transaction = transactionService.createTransaction(
                                 CreateTransactionRequestDto.builder()
                                                 .debt(debt)
@@ -214,19 +221,39 @@ public class DebtServiceImpl implements DebtService {
                                                 .price(request.getPrice())
                                                 .build());
 
-                if (transaction.getMethod() == TransactionMethod.BANK_TRANSFER.getValue()) {
+                log.info("Đã tạo transaction: id={}, method={}, amount={}",
+                                transaction.getId(), transaction.getMethod(), transaction.getAmount());
+
+                // Chỉ return sớm nếu là BANK_TRANSFER (phải đợi callback)
+                if (TransactionMethod.BANK_TRANSFER.getValue().equals(transaction.getMethod())) {
+                        log.info("Thanh toán BANK_TRANSFER, return sớm và đợi callback");
                         return transaction;
                 }
 
+                // Xử lý thanh toán CASH: cập nhật paidAmount ngay
                 Long customerId = debt.getCustomer().getCustomerId();
-                BigDecimal amount = new BigDecimal(transaction.getAmount());
-                BigDecimal paidAmountAfter = debt.getPaidAmount().add(amount);
+
+                // Kiểm tra null và lấy giá trị an toàn
+                Long transactionAmount = transaction.getAmount();
+                if (transactionAmount == null) {
+                        log.error("Transaction amount is null! transactionId={}", transaction.getId());
+                        throw new IllegalStateException("Số tiền giao dịch không hợp lệ");
+                }
+
+                BigDecimal amount = BigDecimal.valueOf(transactionAmount);
+                BigDecimal currentPaidAmount = debt.getPaidAmount() != null
+                                ? debt.getPaidAmount()
+                                : BigDecimal.ZERO;
+                BigDecimal paidAmountAfter = currentPaidAmount.add(amount);
                 boolean isPaidAmountAfterGreaterThanOrEqualToDebtAmount = paidAmountAfter
                                 .compareTo(debt.getAmount()) >= 0;
 
                 DebtStatus status = isPaidAmountAfterGreaterThanOrEqualToDebtAmount
                                 ? DebtStatus.PAID_IN_FULL
                                 : DebtStatus.OUTSTANDING;
+
+                log.info("Cập nhật paidAmount: current={}, amount={}, after={}, status={}",
+                                currentPaidAmount, amount, paidAmountAfter, status);
 
                 debt.setPaidAmount(
                                 isPaidAmountAfterGreaterThanOrEqualToDebtAmount ? debt.getAmount() : paidAmountAfter);
@@ -237,7 +264,11 @@ public class DebtServiceImpl implements DebtService {
                                                 ? paidAmountAfter.subtract(
                                                                 debt.getAmount())
                                                 : amount);
-                debtRepository.save(debt);
+
+                Debt savedDebt = debtRepository.save(debt);
+                log.info("Đã lưu debt: id={}, paidAmount={}, status={}",
+                                savedDebt.getId(), savedDebt.getPaidAmount(), savedDebt.getStatus());
+
                 return transaction;
 
         }
@@ -272,21 +303,29 @@ public class DebtServiceImpl implements DebtService {
 
                 Long debtId = debt != null ? debt.getId() : null;
 
-                // 3. Lấy lịch sử theo SỐ ĐIỆN THOẠI và debtId tương ứng
+                // 3. Lấy lịch sử theo SỐ ĐIỆN THOẠI và debtId tương ứng (chỉ lấy giao dịch đã
+                // active)
                 List<Transaction> transactions = (debtId == null)
                                 ? List.of()
-                                : transactionRepository.findAllByCustomerPhoneAndDebt_Id(customerPhone, debtId);
+                                : transactionRepository.findAllByCustomerPhoneAndDebt_IdAndIsActiveTrue(customerPhone,
+                                                debtId);
 
                 // 4. Map về DTO detail (transactions)
                 ServiceTicketDebtDetail detail = serviceTicketDebtDetailMapper.toDebtDetail(serviceTicket,
                                 transactions);
 
-                // 5.1. Gắn thêm thông tin chi tiết công nợ nếu có
+                // 6. Gắn thêm thông tin chi tiết công nợ nếu có
                 if (debt != null) {
                         CustomerDebtResponseDto customerDebtDto = customerDebtMapper.toDto(debt);
                         detail.setCustomerDebt(customerDebtDto);
                 }
 
+                // 7. Gắn thêm thông tin invoice nếu có
+                invoiceRepository.findByServiceTicket_ServiceTicketId(serviceTicketId)
+                                .ifPresent(invoice -> {
+                                        InvoiceDetailResDto invoiceDto = invoiceMapper.toDetailDto(invoice);
+                                        detail.setInvoice(invoiceDto);
+                                });
 
                 return detail;
         }

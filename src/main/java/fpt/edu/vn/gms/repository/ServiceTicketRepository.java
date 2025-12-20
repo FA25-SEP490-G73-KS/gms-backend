@@ -95,6 +95,15 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
             """)
     long countServiceTicketsInMonth(@Param("year") int year, @Param("month") int month);
 
+    // Dashboard: tổng số phiếu dịch vụ theo năm và tháng (optional)
+    @Query("""
+                SELECT COUNT(st)
+                FROM ServiceTicket st
+                WHERE (:year IS NULL OR YEAR(st.createdAt) = :year)
+                  AND (:month IS NULL OR MONTH(st.createdAt) = :month)
+            """)
+    long countServiceTicketsByYearAndMonth(@Param("year") Integer year, @Param("month") Integer month);
+
     // Dashboard: số xe đang sửa (IN_PROGRESS)
     long countByStatus(ServiceTicketStatus status);
 
@@ -106,6 +115,16 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
                 ORDER BY YEAR(st.createdAt), MONTH(st.createdAt)
             """)
     List<Object[]> getTicketsByMonth();
+
+    // Dashboard: thống kê số ServiceTicket group by YEAR, MONTH với filter theo năm
+    @Query("""
+                SELECT YEAR(st.createdAt) as year, MONTH(st.createdAt) as month, COUNT(st) as total
+                FROM ServiceTicket st
+                WHERE (:year IS NULL OR YEAR(st.createdAt) = :year)
+                GROUP BY YEAR(st.createdAt), MONTH(st.createdAt)
+                ORDER BY YEAR(st.createdAt), MONTH(st.createdAt)
+            """)
+    List<Object[]> getTicketsByMonth(@Param("year") Integer year);
 
     Optional<ServiceTicket> findByServiceTicketCode(String serviceTicketCode);
 }

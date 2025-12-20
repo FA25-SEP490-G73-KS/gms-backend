@@ -46,14 +46,22 @@ public class LedgerVoucherServiceImpl implements LedgerVoucherService {
 
     @Override
     @Transactional
-    public LedgerVoucherDetailResponse createManualVoucher(CreateVoucherRequest request) {
+    public LedgerVoucherDetailResponse createManualVoucher(CreateVoucherRequest request, MultipartFile file,
+            Employee creator) {
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Số tiền phải > 0");
         }
 
+        String attachmentUrl = null;
+        if (file != null && !file.isEmpty()) {
+            attachmentUrl = fileStorageService.upload(file);
+        }
+
         LedgerVoucher voucher = mapper.toEntity(request);
         voucher.setCode(generateVoucherCode(request.getType()));
+        voucher.setCreatedBy(creator);
         voucher.setStatus(LedgerVoucherStatus.PENDING);
+        voucher.setAttachmentUrl(attachmentUrl);
 
         LedgerVoucher saved = ledgerVoucherRepository.save(voucher);
         return mapper.toDetailDto(saved);

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum AppointmentStatus {
-    PENDING("Chờ"),
+    PENDING("Chờ xác nhận"),
     CONFIRMED("Đã xác nhận"),
     CANCELLED("Đã hủy"),
     ARRIVED("Đã đến");

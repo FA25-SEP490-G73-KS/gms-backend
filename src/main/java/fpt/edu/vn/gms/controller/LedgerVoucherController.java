@@ -2,17 +2,21 @@ package fpt.edu.vn.gms.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
 import fpt.edu.vn.gms.dto.request.ApproveVoucherRequest;
 import fpt.edu.vn.gms.dto.request.CreateVoucherRequest;
 import fpt.edu.vn.gms.dto.request.UpdateVoucherRequest;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
 import fpt.edu.vn.gms.dto.response.LedgerVoucherDetailResponse;
 import fpt.edu.vn.gms.dto.response.LedgerVoucherListResponse;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.service.LedgerVoucherService;
+import fpt.edu.vn.gms.service.impl.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +28,16 @@ import org.springframework.web.multipart.MultipartFile;
 public class LedgerVoucherController {
 
     private final LedgerVoucherService ledgerVoucherService;
+    private final FileStorageService fileStorageService;
 
-    @PostMapping("/manual")
+    @PostMapping(value = "/manual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<LedgerVoucherDetailResponse>> createManualVoucher(
-            @RequestBody CreateVoucherRequest request) {
-        LedgerVoucherDetailResponse response = ledgerVoucherService.createManualVoucher(request);
+            @RequestPart("data") String data,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @CurrentUser Employee currentUser) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        CreateVoucherRequest request = mapper.readValue(data, CreateVoucherRequest.class);
+        LedgerVoucherDetailResponse response = ledgerVoucherService.createManualVoucher(request, file, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Tạo phiếu thu/chi thủ công thành công", response));
     }
 
@@ -104,5 +113,46 @@ public class LedgerVoucherController {
     public ResponseEntity<ApiResponse<Void>> deleteVoucher(@PathVariable Long id) {
         ledgerVoucherService.deleteVoucher(id);
         return ResponseEntity.ok(ApiResponse.success("Xóa phiếu thu/chi thành công", null));
+    }
+
+    @GetMapping("/{id}/attachment")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadAttachment(@PathVariable Long id) {
+        LedgerVoucherDetailResponse voucher = ledgerVoucherService.getVoucherDetail(id);
+
+        if (voucher.getAttachmentUrl() == null || voucher.getAttachmentUrl().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            org.springframework.core.io.Resource resource = fileStorageService.download(voucher.getAttachmentUrl());
+
+            String contentType = "application/octet-stream";
+            String fileName = voucher.getAttachmentUrl();
+            if (fileName.contains("/")) {
+                fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+            }
+
+            // Xác định content type dựa trên extension
+            String lowerFileName = fileName.toLowerCase();
+            if (lowerFileName.endsWith(".pdf")) {
+                contentType = "application/pdf";
+            } else if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
+                contentType = "image/jpeg";
+            } else if (lowerFileName.endsWith(".png")) {
+                contentType = "image/png";
+            } else if (lowerFileName.endsWith(".doc") || lowerFileName.endsWith(".docx")) {
+                contentType = "application/msword";
+            } else if (lowerFileName.endsWith(".xls") || lowerFileName.endsWith(".xlsx")) {
+                contentType = "application/vnd.ms-excel";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + fileName + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

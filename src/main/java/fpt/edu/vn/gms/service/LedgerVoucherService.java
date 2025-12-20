@@ -5,13 +5,14 @@ import fpt.edu.vn.gms.dto.request.CreateVoucherRequest;
 import fpt.edu.vn.gms.dto.request.UpdateVoucherRequest;
 import fpt.edu.vn.gms.dto.response.LedgerVoucherDetailResponse;
 import fpt.edu.vn.gms.dto.response.LedgerVoucherListResponse;
+import fpt.edu.vn.gms.entity.Employee;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface LedgerVoucherService {
 
-    LedgerVoucherDetailResponse createManualVoucher(CreateVoucherRequest request);
+    LedgerVoucherDetailResponse createManualVoucher(CreateVoucherRequest request, MultipartFile file, Employee currentUser);
 
     LedgerVoucherDetailResponse createPaymentVoucherFromReceiptHistory(Long receiptHistoryId,
             CreateVoucherRequest request, MultipartFile file);

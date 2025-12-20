@@ -5,6 +5,7 @@ import fpt.edu.vn.gms.dto.zalo.SendZnsPayload;
 import fpt.edu.vn.gms.entity.Appointment;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.ServiceTicket;
+import fpt.edu.vn.gms.utils.PhoneUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,12 @@ public class ZnsNotificationService {
 
     @Value("${zalo.survey.template-id:}")
     private String surveyTemplateId;
+
+    @Value(("${zalo.vehicle-receipt.template-id:}"))
+    private String vehicleReceiptTemplateId;
+
+    @Value("${zalo.account-info.template-id:}")
+    private String accountInfoTemplateId;
 
     @Value("${app.frontend-url:https://yourdomain.com}")
     private String frontendUrl;
@@ -239,6 +246,66 @@ public class ZnsNotificationService {
 
         if (!success) {
             throw new Exception("Failed to send survey link");
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
+        }
+    }
+
+    public void sendVehicleReceiptNotification(ServiceTicket serviceTicket) throws Exception {
+        Map<String, Object> templateData = new HashMap<>();
+
+        String fullName = serviceTicket.getCustomer().getFullName();
+        String phone = serviceTicket.getCustomer().getPhone();
+        String licensePlate = serviceTicket.getVehicle().getLicensePlate();
+        String receiptCode = serviceTicket.getServiceTicketCode().toString();
+
+        templateData.put("customer_name", fullName != null ? fullName : "Quý khách");
+        templateData.put("licensePlate", licensePlate);
+        templateData.put("ma_don_hang", receiptCode);
+
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
+
+        SendZnsPayload payload = buildPayload(phone, templateData, vehicleReceiptTemplateId);
+
+        boolean success = znsService.sendZns(payload);
+
+        if (!success) {
+            throw new Exception("Failed to send vehicle receipt notification");
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
+        }
+    }
+
+    /**
+     * Send account information notification (phone and password) to employee
+     * 
+     * @param phone        Số điện thoại ở format Việt Nam (0986475989) - sẽ được
+     *                     hiển thị trong template
+     * @param customerName Tên khách hàng
+     * @param password     Mật khẩu
+     */
+    public void sendAccountInfoNotification(String phone, String customerName, String password) throws Exception {
+        Map<String, Object> templateData = new HashMap<>();
+
+        templateData.put("customer_name", customerName != null ? customerName : "Quý khách");
+        // Giữ số điện thoại ở format Việt Nam (0986475989) để hiển thị trong template
+        // cho người dùng
+        templateData.put("account", phone);
+        templateData.put("password", password);
+
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
+
+        // Normalize số điện thoại sang format quốc tế (84986475989) để gửi qua ZNS API
+        // Zalo chỉ nhận đầu số 84, nhưng trong template vẫn hiển thị format Việt Nam
+        String normalizedPhoneForApi = PhoneUtils.normalize(phone);
+        SendZnsPayload payload = buildPayload(normalizedPhoneForApi, templateData, accountInfoTemplateId);
+
+        boolean success = znsService.sendZns(payload);
+
+        if (!success) {
+            throw new Exception("Failed to send account info notification");
         } else {
             // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }

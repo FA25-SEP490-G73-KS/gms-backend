@@ -13,26 +13,33 @@ import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.repository.AccountRepository;
 import fpt.edu.vn.gms.repository.EmployeeRepository;
 import fpt.edu.vn.gms.service.EmployeeService;
+import fpt.edu.vn.gms.service.zalo.ZnsNotificationService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.security.SecureRandom;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
 
     EmployeeRepository employeeRepository;
     AccountRepository accountRepository;
     PasswordEncoder passwordEncoder;
+    ZnsNotificationService znsNotificationService;
 
     @Override
     public List<EmployeeDto> findAllEmployeeIsTechniciansActive() {
@@ -112,16 +119,24 @@ public class EmployeeServiceImpl implements EmployeeService {
         // Parse role from string
         Role role = Role.valueOf(request.getRole());
 
-        // Create Account with default password 123456
-        Account account = Account.builder()
-                .phone(request.getPhone())
-                .role(role)
-                .password(passwordEncoder.encode("123456"))
-                .active(true)
-                .build();
-
         // Build address from parts
         String address = String.join(", ", request.getDetailAddress(), request.getWard(), request.getCity());
+
+        Account account = null;
+        String randomPassword = null;
+        // Chỉ tạo Account nếu role không phải là TECHNICIAN
+        if (role != Role.TECHNICIAN) {
+            // Generate random password 6 characters
+            randomPassword = generateRandomPassword(6);
+
+            // Create Account with random password
+            account = Account.builder()
+                    .phone(request.getPhone())
+                    .role(role)
+                    .password(passwordEncoder.encode(randomPassword))
+                    .active(true)
+                    .build();
+        }
 
         // Create Employee entity
         Employee employee = Employee.builder()
@@ -136,16 +151,17 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .account(account)
                 .build();
 
-        // Set back-reference for bi-directional mapping if needed
-        account.setEmployee(employee);
-
-        // Persist account first (cascade or manual)
-        accountRepository.save(account);
+        // Set back-reference for bi-directional mapping if account exists
+        if (account != null) {
+            account.setEmployee(employee);
+            // Persist account first (cascade or manual)
+            accountRepository.save(account);
+        }
 
         Employee saved = employeeRepository.save(employee);
 
-        // Map to response DTO
-        return EmployeeResponse.builder()
+        // Map to response DTO trước
+        EmployeeResponse response = EmployeeResponse.builder()
                 .id(saved.getEmployeeId())
                 .fullName(saved.getFullName())
                 .dateOfBirth(saved.getDateOfBirth())
@@ -157,6 +173,49 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .terminationDate(saved.getTerminationDate())
                 .status(saved.isActive() ? "Active" : "Inactive")
                 .build();
+
+        // Gửi thông báo ZNS SAU KHI transaction commit (bên ngoài transaction)
+        // để tránh xung đột khi generate UUID cho OneTimeToken
+        if (account != null && randomPassword != null) {
+            // Giữ số điện thoại ở format Việt Nam (0986475989) để truyền vào method
+            // Method sendAccountInfoNotification sẽ tự normalize khi gửi qua API
+            final String phone = request.getPhone();
+            final String fullName = request.getFullName();
+            final String password = randomPassword;
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        znsNotificationService.sendAccountInfoNotification(phone, fullName, password);
+                        log.info("Đã gửi thông báo thông tin tài khoản qua ZNS cho nhân viên: {}", phone);
+                    } catch (Exception e) {
+                        log.error("Lỗi khi gửi thông báo thông tin tài khoản qua ZNS: {}", e.getMessage(), e);
+                        // Không throw exception để không ảnh hưởng đến việc tạo employee
+                    }
+                }
+            });
+        }
+
+        return response;
+    }
+
+    /**
+     * Generate random password with specified length
+     * 
+     * @param length password length
+     * @return random password string
+     */
+    private String generateRandomPassword(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+
+        return password.toString();
     }
 
     @Override
@@ -228,6 +287,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             }
         }
 
+        System.out.println(request.isActive());
         employee.setActive(request.isActive());
 
         Employee saved = employeeRepository.save(employee);

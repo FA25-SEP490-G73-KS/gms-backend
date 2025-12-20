@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.ZnsAppointmentInfo;
 import fpt.edu.vn.gms.dto.ZnsSendSurveyDTO;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
@@ -40,6 +41,7 @@ public class ZnsNotificationController {
     private final PriceQuotationRepository priceQuotationRepository;
     private final ServiceTicketRepository serviceTicketRepository;
 
+    @Public
     @PostMapping("/appointment/{appointmentId}/reminder")
     @Operation(summary = "Gửi lời nhắc cuộc hẹn", description = "Gửi thông báo nhắc nhở cuộc hẹn một cách thủ công.")
     @ApiResponses(value = {
@@ -60,6 +62,7 @@ public class ZnsNotificationController {
         }
     }
 
+    @Public
     @PostMapping("/appointment/{appointmentId}/notification")
     @Operation(summary = "Gửi thông báo cuộc hẹn", description = "Gửi thông báo xác nhận cuộc hẹn một cách thủ công.")
     @ApiResponses(value = {
@@ -80,6 +83,7 @@ public class ZnsNotificationController {
         }
     }
 
+    @Public
     @PostMapping("/quotation/{quotationId}/send")
     @Operation(summary = "Gửi thông báo báo giá", description = "Gửi thông báo báo giá cho khách hàng qua ZNS.")
     @ApiResponses(value = {
@@ -102,6 +106,7 @@ public class ZnsNotificationController {
         }
     }
 
+    @Public
     @PostMapping("/payment/{ticketId}/invoice")
     @Operation(summary = "Gửi hóa đơn thanh toán", description = "Gửi hóa đơn thanh toán với mã QR qua ZNS.")
     @ApiResponses(value = {
@@ -126,6 +131,7 @@ public class ZnsNotificationController {
         }
     }
 
+    @Public
     @PostMapping("/survey/{ticketId}/send")
     @Operation(summary = "Gửi liên kết khảo sát", description = "Gửi liên kết khảo sát cho khách hàng sau khi thanh toán.")
     @ApiResponses(value = {
@@ -155,4 +161,28 @@ public class ZnsNotificationController {
                     .body(ApiResponse.error(400, "Failed to send survey link: " + e.getMessage()));
         }
     }
+
+    @Public
+    @PostMapping("/vehicle-receipt/{ticketId}/send")
+    @Operation(summary = "Gửi thông báo nhận xe", description = "Gửi thông báo nhận xe cho khách hàng qua ZNS.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Gửi thông báo nhận xe thành công"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Không thể gửi thông báo nhận xe", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Lỗi máy chủ nội bộ", content = @Content(schema = @Schema(hidden = true)))
+    })
+    public ResponseEntity<ApiResponse<String>> sendVehicleReceiptNotification(@PathVariable Long ticketId) {
+        try {
+            ServiceTicket ticket = serviceTicketRepository.findById(ticketId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Service ticket not found"));
+
+            znsNotificationService.sendVehicleReceiptNotification(ticket);
+
+            return ResponseEntity.ok(ApiResponse.success("Vehicle receipt notification sent successfully", "OK"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, "Failed to send vehicle receipt notification: " + e.getMessage()));
+        }
+    }
+
 }

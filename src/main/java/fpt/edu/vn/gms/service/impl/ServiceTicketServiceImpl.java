@@ -102,7 +102,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
             // Có vehicleId và KHÔNG có customerId → update vehicle về customer mới
             if (dto.getCustomer().getCustomerId() == null) {
                 vehicle.setCustomer(customer);
-                vehicleRepository.save(vehicle);
             } else if (vehicle != null && vehicle.getCustomer() != null
                     && !vehicle.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
                 // Trường hợp biển số thuộc khách hàng khác → cập nhật lại chủ xe là customer
@@ -113,25 +112,29 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                 }
 
                 vehicle.setCustomer(customer);
-                vehicleRepository.save(vehicle);
             }
 
-            // Nếu có cả vehicleId + customerId → giữ nguyên, KHÔNG update
+            // Luôn save vehicle sau khi cập nhật các field (vehicleModel, vin, year,
+            // licensePlate)
+            vehicleRepository.save(vehicle);
         } else {
 
             // Không có vehicleId → tìm theo biển số, nếu chưa tồn tại thì tạo mới
             vehicle = vehicleRepository.findByLicensePlate(dto.getVehicle().getLicensePlate())
                     .orElse(null);
 
+            Brand brand = resolveBrand(dto);
+            VehicleModel vehicleModel = resolveVehicleModel(dto, brand);
             if (vehicle != null) {
                 if (vehicle.getCustomer() == null
                         || !vehicle.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
+
+                    vehicle.setVin(dto.getVehicle().getVin());
+                    vehicle.setVehicleModel(vehicleModel);
                     vehicle.setCustomer(customer);
                     vehicleRepository.save(vehicle);
                 }
             } else {
-                Brand brand = resolveBrand(dto);
-                VehicleModel vehicleModel = resolveVehicleModel(dto, brand);
 
                 vehicle = Vehicle.builder()
                         .licensePlate(dto.getVehicle().getLicensePlate())

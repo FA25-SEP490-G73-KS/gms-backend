@@ -23,8 +23,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   List<Transaction> findAllByCustomerPhone(String phone);
 
-  // Thêm method: tìm transaction theo customerPhone và debtId
-  List<Transaction> findAllByCustomerPhoneAndDebt_Id(String phone, Long debtId);
+  // Thêm method: tìm transaction theo customerPhone và debtId (chỉ lấy giao dịch active)
+  List<Transaction> findAllByCustomerPhoneAndDebt_IdAndIsActiveTrue(String phone, Long debtId);
 
   List<Transaction> findByInvoiceId(Long invoiceId);
 
@@ -48,4 +48,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           ORDER BY month
           """)
   List<Object[]> sumRevenueByMonth(@Param("year") Integer year);
+
+  /**
+   * Tính doanh thu theo năm (từ năm đến năm)
+   * @param fromYear Năm bắt đầu (null nếu không filter)
+   * @param toYear Năm kết thúc (null nếu không filter)
+   * @return List [year, totalRevenue]
+   */
+  @Query("""
+          SELECT FUNCTION('year', t.createdAt) AS year,
+                 COALESCE(SUM(t.amount), 0) AS total
+          FROM Transaction t
+          WHERE t.isActive = TRUE
+            AND t.type = fpt.edu.vn.gms.common.enums.PaymentTransactionType.PAYMENT
+            AND (:fromYear IS NULL OR FUNCTION('year', t.createdAt) >= :fromYear)
+            AND (:toYear IS NULL OR FUNCTION('year', t.createdAt) <= :toYear)
+          GROUP BY FUNCTION('year', t.createdAt)
+          ORDER BY year
+          """)
+  List<Object[]> sumRevenueByYearRange(@Param("fromYear") Integer fromYear, @Param("toYear") Integer toYear);
 }

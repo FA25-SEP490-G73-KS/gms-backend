@@ -19,7 +19,9 @@ public class LedgerVoucherListResponse {
     private LedgerVoucherStatus status;
     private BigDecimal amount;
     private Long relatedEmployeeId;
+    private String relatedEmployeeName;
     private Long relatedSupplierId;
+    private String relatedSupplierName;
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime approvedAt;
