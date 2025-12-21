@@ -19,8 +19,8 @@ import java.util.UUID;
 @Setter
 public class OneTimeToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(length = 36)
+    private String id;
 
     @Column(name = "token", columnDefinition = "TEXT")
     @SerializedName("token")
@@ -29,4 +29,11 @@ public class OneTimeToken {
     @Column(name = "expires_at")
     @SerializedName("expires_at")
     public String expiresAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+    }
 }
