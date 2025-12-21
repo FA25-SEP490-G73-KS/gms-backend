@@ -38,8 +38,7 @@ public class AppointmentScheduler {
 
         List<Appointment> pendingToday = appointmentRepo.findByAppointmentDateAndStatusAndReminderSentFalse(
                 today,
-                AppointmentStatus.PENDING,
-                false);
+                AppointmentStatus.PENDING);
 
         List<Appointment> toCancel = new ArrayList<>();
         List<Appointment> toUpdate = new ArrayList<>();
@@ -117,7 +116,7 @@ public class AppointmentScheduler {
 
         // Lấy tất cả lịch hẹn hôm nay, trạng thái PENDING
         List<Appointment> appointments = appointmentRepo.findByAppointmentDateAndStatusAndReminderSentFalse(
-                today, AppointmentStatus.PENDING, false);
+                today, AppointmentStatus.PENDING);
 
         log.info("Found {} appointments scheduled for today ({}), sending reminders...",
                 appointments.size(), today);
