@@ -1,10 +1,14 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.CurrentUser;
+import fpt.edu.vn.gms.dto.request.CreatePurchaseRequestFromQuotationDto;
 import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseSuggestionItemDto;
+import fpt.edu.vn.gms.entity.Employee;
 import fpt.edu.vn.gms.entity.PurchaseRequest;
 import fpt.edu.vn.gms.service.PurchaseRequestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,11 +31,30 @@ public class PurchaseRequestControllerNew {
     private final PurchaseRequestService purchaseRequestService;
 
     @PostMapping("/from-quotation/{quotationId}")
-    @Operation(summary = "Tạo phiếu yêu cầu mua hàng từ báo giá")
+    @Operation(summary = "Tạo phiếu yêu cầu mua hàng từ báo giá (tự động chọn tất cả items)")
     public ApiResponse<PurchaseRequestResponseDto> createFromQuotation(@PathVariable Long quotationId) {
         PurchaseRequest pr = purchaseRequestService.createPurchaseRequestFromQuotation(quotationId);
         PurchaseRequestResponseDto dto = PurchaseRequestResponseDto.fromEntity(pr);
         return ApiResponse.created("Tạo yêu cầu mua hàng thành công", dto);
+    }
+
+    @PostMapping("/from-quotation")
+    @Operation(summary = "Tạo phiếu yêu cầu mua hàng từ báo giá với các items được chọn")
+    public ApiResponse<PurchaseRequestResponseDto> createFromQuotationWithItems(
+            @RequestBody CreatePurchaseRequestFromQuotationDto dto,
+            @CurrentUser Employee currentUser) {
+        PurchaseRequest pr = purchaseRequestService.createFromQuotation(dto, currentUser);
+        PurchaseRequestResponseDto responseDto = PurchaseRequestResponseDto.fromEntity(pr);
+        return ApiResponse.created("Tạo yêu cầu mua hàng thành công", responseDto);
+    }
+
+    @GetMapping("/{id}/quotation-items")
+    @Operation(summary = "Lấy danh sách quotation items liên quan đến purchase request")
+    public ApiResponse<List<PriceQuotationItemResponseDto>> getQuotationItems(
+            @PathVariable Long id) {
+        List<PriceQuotationItemResponseDto> items = purchaseRequestService
+                .getQuotationItemsByPurchaseRequest(id);
+        return ApiResponse.success("Lấy danh sách quotation items thành công", items);
     }
 
     @PutMapping("/{id}/approve")
@@ -55,19 +78,12 @@ public class PurchaseRequestControllerNew {
     @GetMapping
     @Operation(summary = "Danh sách phiếu yêu cầu mua hàng", description = "Lấy danh sách PR có phân trang + filter")
     public ApiResponse<Page<PurchaseRequestResponseDto>> getPurchaseRequests(
-            @Parameter(description = "Từ khóa (mã PR / mã báo giá / tên khách hàng)")
-            @RequestParam(required = false) String keyword,
-            @Parameter(description = "Trạng thái duyệt (Chờ duyệt / Đã duyệt / Từ chối hoặc enum)")
-            @RequestParam(required = false) String status,
-            @Parameter(description = "Ngày tạo từ (yyyy-MM-dd)")
-            @RequestParam(required = false) String fromDate,
-            @Parameter(description = "Ngày tạo đến (yyyy-MM-dd)")
-            @RequestParam(required = false) String toDate,
-            @Parameter(description = "Trang hiện tại", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Số bản ghi mỗi trang", example = "10")
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @Parameter(description = "Từ khóa (mã PR / mã báo giá / tên khách hàng)") @RequestParam(required = false) String keyword,
+            @Parameter(description = "Trạng thái duyệt (Chờ duyệt / Đã duyệt / Từ chối hoặc enum)") @RequestParam(required = false) String status,
+            @Parameter(description = "Ngày tạo từ (yyyy-MM-dd)") @RequestParam(required = false) String fromDate,
+            @Parameter(description = "Ngày tạo đến (yyyy-MM-dd)") @RequestParam(required = false) String toDate,
+            @Parameter(description = "Trang hiện tại", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Số bản ghi mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<PurchaseRequestResponseDto> result = purchaseRequestService
                 .getPurchaseRequests(keyword, status, fromDate, toDate, pageable);

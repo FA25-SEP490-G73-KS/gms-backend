@@ -353,6 +353,16 @@ CREATE TABLE purchase_request_item (
                                        FOREIGN KEY (part_id) REFERENCES part(part_id)
 );
 
+-- PurchaseRequestQuotation Junction Table (Many-to-Many relationship)
+CREATE TABLE purchase_request_quotation (
+                                            purchase_request_id BIGINT NOT NULL,
+                                            price_quotation_id BIGINT NOT NULL,
+                                            created_at DATETIME,
+                                            PRIMARY KEY (purchase_request_id, price_quotation_id),
+                                            FOREIGN KEY (purchase_request_id) REFERENCES purchase_request(purchase_request_id),
+                                            FOREIGN KEY (price_quotation_id) REFERENCES price_quotation(price_quotation_id)
+);
+
 -- StockReceipt Table
 CREATE TABLE stock_receipt (
                                receipt_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -692,7 +702,7 @@ CREATE TABLE otp_verification (
 );
 
 CREATE TABLE one_time_token (
-                                id CHAR(36) NOT NULL,
+                                id VARCHAR(36) NOT NULL,
                                 token TEXT,
                                 expires_at VARCHAR(255),
                                 PRIMARY KEY (id)
@@ -862,9 +872,9 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token, created_at)
 VALUES (
-        'UcrLHDuYuszyPrTCsYpdRtzZKapOCU4sTdeZOTbjzXaaAI0qwpldTpWnA5th5FuC6Z8xPhGHxajtB5uNq1MGVoqUM2hz8v1f9Yj478G6a4bY620pZ2FgP4C7FmwXJV120ryu5CHEZqWnO3uVaqxuDazdFMUnRlWVPIKxCfS0YN5GI404Z06MB7v5L73HReG6D7T5HDb7YcqALpeirWRy1NazA5c88vWRRcOlIPitxZ4rV2KVzMxYCoqZ8KNO4-up9ZbJPkajXWuS6a1s_WI36oKSL7600PuUTJPZSQO-jpL7Cc1cumEn91KzRm-xDg14Rm8LQP16sXzkM1PgWtpJG2nP42d1GDrJPtDjAuPctsWf8nn1qpMiFXTa4KJgKSGkBHzt1lqGmKTVFGCDdHJhOcyXBJ9CBPTyX1lPF-9e',
-                    'ypCwApFqYWJrEJWZD_gE1FOzFICrv_Pef2eO4ZZg-td_I0CLNjFvICuNCZPtbVzHvnig9cQ1aMQiM7eI3iklVvnuG2jTvgXcnMPhIc2Yk3A-45DlVAc72TSqPa8MgOy-eGfzLJ6udJsBFanIEfo94eTGV3KIuAeJhLz3D2R2cnoMVNvF2iQU0urKL7v8-P0MqqbDV6V4cax7I6zeGDA85i97V41Z-fXc_5OjCJpLbcY5UtOXJjx5MV5aD0Tnwkvsx5CB1sZ2rdJ_MHi4EzVH8gTfCWK0wVzSYLaa04pRpbYE71Kp7fxWLQ0Y9Netxf8rht1ARnBRdXcoPoLKAi3GCe5hDaaSoPaLcqfqPIBllqYYRLPw8RIO8O83Lsu_kxOOd3v0CoEVZ4wn24ORSBJmL-nn7dv7y_I27pJfYmC',
-            '2024-12-20 10:00:00'
+          'e35b5m4surYcEsSV1JZdMAK_OXy79R8cesbCQdmHg2QQP6WlJs2G0OKW5HWWNC0isrmLPoGErdB_IIqxE0_J7jvE4La80-5toaC3IZGPxrVYOZ5A6G3hOzu12LGq0lfibG8gAZ9fp0RlDa0FD46j7Pu5Om5vHA8MeXz57M9HloMn7r4R4rYs8SqgGmWpQfejrozO7nqgYpR5JmS0CoFY3_DnFnWR2BWBi7aw84KgrYtYLWvZ8m3NQ_1DC2LFGBDhWXrORLnckcgx6qr5SqI9UvC2L3ToJeSAeYXS1WPjtXAYRG4BRpBaCPjrCJvk4lG0a6Kt9sOVsMl0GpHT7ZtoPE1p4rT49FGVbt5j6308x2FFJ0isRapF0eqL34egTjf2bHPNPszNe2Yu06PZQtcOK8i_JavfPP8qj7y6A-9V',
+                    'pIgPDv9FGYpB89i_ba56BCWadZ-KN195basN7TTp3mJjKR5BtdTh5k0IjNpZ1ma_rmI8Gius4Hps195QrsSLGUH4bYQ-HJDhgcME5EjiCLZJNRibpZWsPfSNlJsS1oqbmc2kRSrq4NxlJBCMhauNQO5sbHUk4IHAk12hLk9hEX3gIBzmor4LC_5ln4olT6e0Y53hQebWO6ojTUXna6fRRwP_n2gkR6Pey0x1Rgih7YwkJeLMfof1Fw8Ayaw01dLMkcJ4J9j4702vHBbulcKOEg1hX7g-JGuhj6AVCfOP47YI9ee-fnWn9hnZZ4wVSrOVgqdsKujEHWcWMTrJW6uP5ODxlb6bRs88dnJOMe4R1nYRUgCUpcucRUK0emxT01rMyo_66Umk5bFs7v09rIKHJdblR5RfAvLIGoi',
+        '2024-12-20 10:00:00'
        );
 
 

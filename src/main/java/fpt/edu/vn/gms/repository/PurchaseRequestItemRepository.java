@@ -1,7 +1,10 @@
 package fpt.edu.vn.gms.repository;
 
+import fpt.edu.vn.gms.entity.PriceQuotationItem;
 import fpt.edu.vn.gms.entity.PurchaseRequestItem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -32,4 +35,7 @@ public interface PurchaseRequestItemRepository extends JpaRepository<PurchaseReq
 //    WHERE pri.purchaseRequest.id = :purchaseRequestId
 //""")
 //    List<PurchaseRequestItemDetailDto> findItemsByPurchaseRequestId(Long purchaseRequestId);
+
+    @Query("SELECT DISTINCT pri.quotationItem FROM PurchaseRequestItem pri WHERE pri.purchaseRequest.id = :purchaseRequestId AND pri.quotationItem IS NOT NULL")
+    List<PriceQuotationItem> findQuotationItemsByPurchaseRequestId(@Param("purchaseRequestId") Long purchaseRequestId);
 }

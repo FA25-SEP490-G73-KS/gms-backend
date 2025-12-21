@@ -16,65 +16,65 @@ import java.util.Optional;
 @Repository
 public interface DebtRepository extends JpaRepository<Debt, Long> {
 
-        @Query("""
-                            SELECT COALESCE(SUM(d.amount - d.paidAmount), 0)
-                            FROM Debt d
-                            WHERE d.customer.customerId = :customerId
-                        """)
-        BigDecimal getTotalDebt(Long customerId);
+  @Query("""
+          SELECT COALESCE(SUM(d.amount - d.paidAmount), 0)
+          FROM Debt d
+          WHERE d.customer.customerId = :customerId
+      """)
+  BigDecimal getTotalDebt(Long customerId);
 
-        @Query("""
-                            SELECT d
-                            FROM Debt d
-                            WHERE d.customer.customerId = :customerId
-                              AND (:status IS NULL OR d.status = :status)
-                              AND (:keyword IS NULL OR LOWER(d.serviceTicket.serviceTicketCode) LIKE LOWER(CONCAT('%', :keyword, '%')))
-                        """)
-        Page<Debt> findByCustomerAndFilter(
-                        @Param("customerId") Long customerId,
-                        @Param("status") DebtStatus status,
-                        @Param("keyword") String keyword,
-                        Pageable pageable);
+  @Query("""
+          SELECT d
+          FROM Debt d
+          WHERE d.customer.customerId = :customerId
+            AND (:status IS NULL OR d.status = :status)
+            AND (:keyword IS NULL OR LOWER(d.serviceTicket.serviceTicketCode) LIKE LOWER(CONCAT('%', :keyword, '%')))
+      """)
+  Page<Debt> findByCustomerAndFilter(
+      @Param("customerId") Long customerId,
+      @Param("status") DebtStatus status,
+      @Param("keyword") String keyword,
+      Pageable pageable);
 
-        Optional<Debt> findByIdAndCustomerCustomerId(Long debtId, Long customerId);
+  Optional<Debt> findByIdAndCustomerCustomerId(Long debtId, Long customerId);
 
-        Optional<Debt> findByServiceTicket_ServiceTicketId(Long serviceTicketId);
+  Optional<Debt> findByServiceTicket_ServiceTicketId(Long serviceTicketId);
 
-        @Query(value = """
-                    SELECT 
-                        d.customer.customerId,
-                        d.customer.fullName,
-                        d.customer.phone,
-                        SUM(d.amount),
-                        SUM(d.paidAmount),
-                        SUM(d.amount - d.paidAmount),
-                        d.dueDate,
-                        CASE WHEN SUM(d.amount) = SUM(d.paidAmount)
-                             THEN 'PAID_IN_FULL'
-                             ELSE 'OUTSTANDING'
-                        END
-                    FROM Debt d
-                    WHERE (:status IS NULL OR d.status = :status)
-                      AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
-                      AND (:toDate IS NULL OR d.dueDate <= :toDate)
-                    GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone, d.dueDate
-                """,
-                countQuery = """
-                    SELECT COUNT(DISTINCT d.customer.customerId)
-                    FROM Debt d
-                    WHERE (:status IS NULL OR d.status = :status)
-                      AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
-                      AND (:toDate IS NULL OR d.dueDate <= :toDate)
-                """)
-        Page<Object[]> findTotalDebtGroupedByCustomer(@Param("status") DebtStatus status,
-                                                      @Param("fromDate") LocalDate fromDate,
-                                                      @Param("toDate") LocalDate toDate,
-                                                      Pageable pageable);
+  @Query(value = """
+          SELECT
+              d.customer.customerId,
+              d.customer.fullName,
+              d.customer.phone,
+              COALESCE(SUM(d.amount), 0),
+              COALESCE(SUM(COALESCE(d.paidAmount, 0)), 0),
+              COALESCE(SUM(d.amount), 0) - COALESCE(SUM(COALESCE(d.paidAmount, 0)), 0),
+              CASE WHEN COALESCE(SUM(d.amount), 0) = COALESCE(SUM(COALESCE(d.paidAmount, 0)), 0)
+                   THEN 'PAID_IN_FULL'
+                   ELSE 'OUTSTANDING'
+              END
+          FROM Debt d
+          WHERE (:status IS NULL OR d.status = :status)
+            AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
+            AND (:toDate IS NULL OR d.dueDate <= :toDate)
+            AND (d.amount - COALESCE(d.paidAmount, 0) > 0)
+          GROUP BY d.customer.customerId, d.customer.fullName, d.customer.phone
+      """, countQuery = """
+          SELECT COUNT(DISTINCT d.customer.customerId)
+          FROM Debt d
+          WHERE (:status IS NULL OR d.status = :status)
+            AND (:fromDate IS NULL OR d.dueDate >= :fromDate)
+            AND (:toDate IS NULL OR d.dueDate <= :toDate)
+            AND (d.amount - COALESCE(d.paidAmount, 0) > 0)
+      """)
+  Page<Object[]> findTotalDebtGroupedByCustomer(@Param("status") DebtStatus status,
+      @Param("fromDate") LocalDate fromDate,
+      @Param("toDate") LocalDate toDate,
+      Pageable pageable);
 
-        @Query("""
-                        SELECT COALESCE(SUM(d.amount - d.paidAmount), 0)
-                        FROM Debt d
-                        WHERE d.status = fpt.edu.vn.gms.common.enums.DebtStatus.OUTSTANDING
-                        """)
-        BigDecimal sumOutstandingDebt();
+  @Query("""
+      SELECT COALESCE(SUM(d.amount - d.paidAmount), 0)
+      FROM Debt d
+      WHERE d.status = fpt.edu.vn.gms.common.enums.DebtStatus.OUTSTANDING
+      """)
+  BigDecimal sumOutstandingDebt();
 }

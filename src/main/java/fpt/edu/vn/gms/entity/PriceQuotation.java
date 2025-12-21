@@ -46,6 +46,9 @@ public class PriceQuotation {
     @OneToOne(mappedBy = "quotation")
     private StockExport stockExport;
 
+    @OneToMany(mappedBy = "priceQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchaseRequestQuotation> purchaseRequests = new ArrayList<>();
+
     @Column(name = "created_by")
     private Long createdBy;
 

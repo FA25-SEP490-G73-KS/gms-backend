@@ -49,7 +49,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     PriceQuotationItemMapper priceQuotationItemMapper;
     PriceQuotationMapper priceQuotationMapper;
 
-
     @Override
     public Page<PriceQuotationResponseDto> getPendingQuotations(int page, int size) {
 
@@ -69,13 +68,10 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
                 dto.setItems(
                         dto.getItems().stream()
-                                .filter(item ->
-                                        item.getItemType() == PriceQuotationItemType.PART &&
-                                                (item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN
-                                                        || item.getInventoryStatus() == PriceQuotationItemStatus.OUT_OF_STOCK)
-                                )
-                                .toList()
-                );
+                                .filter(item -> item.getItemType() == PriceQuotationItemType.PART &&
+                                        (item.getInventoryStatus() == PriceQuotationItemStatus.UNKNOWN
+                                                || item.getInventoryStatus() == PriceQuotationItemStatus.OUT_OF_STOCK))
+                                .toList());
             }
 
             return dto;
@@ -108,9 +104,8 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         item.setWarehouseReviewStatus(WarehouseReviewStatus.CONFIRMED);
 
         // ===== 3. Kiểm tra tồn kho =====
-        double availableQty =
-                Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
-                        - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
+        double availableQty = Optional.ofNullable(part.getQuantityInStock()).orElse(0.0)
+                - Optional.ofNullable(part.getReservedQuantity()).orElse(0.0);
 
         if (availableQty >= item.getQuantity()) {
             item.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
@@ -133,7 +128,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         // ===== 7. Trả về DTO =====
         return priceQuotationItemMapper.toResponseDto(item);
     }
-
 
     @Transactional
     public PriceQuotationItemResponseDto rejectItemDuringWarehouseReview(Long itemId, String warehouseNote) {
@@ -162,7 +156,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         return priceQuotationItemMapper.toResponseDto(item);
     }
 
-
     private void checkAllItemsAndSendNotification(PriceQuotation quotation) {
 
         log.info("Checking all PART items for quotation {}", quotation.getPriceQuotationId());
@@ -172,10 +165,8 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                 .toList();
 
         boolean allChecked = partItems.stream()
-                .allMatch(i ->
-                        i.getWarehouseReviewStatus() == WarehouseReviewStatus.CONFIRMED ||
-                                i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED
-                );
+                .allMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.CONFIRMED ||
+                        i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED);
 
         log.info("All PART items reviewed = {}", allChecked);
 
@@ -187,8 +178,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
 
         // CASE REJECT
-        if (partItems.stream().anyMatch(i ->
-                i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED)) {
+        if (partItems.stream().anyMatch(i -> i.getWarehouseReviewStatus() == WarehouseReviewStatus.REJECTED)) {
 
             log.warn("Quotation {} REJECTED by warehouse", quotation.getPriceQuotationId());
 
@@ -204,8 +194,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
                         template.format(quotation.getPriceQuotationId()),
                         NotificationType.QUOTATION_REJECTED,
                         quotation.getPriceQuotationId().toString(),
-                        "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-                );
+                        "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
             }
 
             return;
@@ -220,14 +209,20 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         if (advisor != null) {
             NotificationTemplate template = NotificationTemplate.PRICE_QUOTATION_APPROVED;
 
+            String quotationCode = quotation.getCode();
+            if (quotationCode == null || quotationCode.isEmpty()) {
+                quotationCode = quotation.getPriceQuotationId().toString();
+            }
+
+            String formattedTitle = String.format(template.getTitle(), quotationCode);
+
             notificationService.createNotification(
                     advisor.getEmployeeId(),
-                    template.getTitle(),
-                    template.format(quotation.getPriceQuotationId()),
+                    formattedTitle,
+                    template.format(quotationCode),
                     NotificationType.QUOTATION_CONFIRMED,
                     quotation.getPriceQuotationId().toString(),
-                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId()
-            );
+                    "/service-tickets/" + quotation.getServiceTicket().getServiceTicketId());
         }
     }
 
@@ -266,7 +261,6 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
         item.setUnitPrice(savedPart.getSellingPrice());
         item.setTotalPrice(savedPart.getSellingPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
 
-
         if (dto.getNote() != null) {
             item.setWarehouseNote(dto.getNote());
         }
@@ -278,8 +272,7 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
 
         item.setInventoryStatus(availableQty >= item.getQuantity()
                 ? PriceQuotationItemStatus.AVAILABLE
-                : PriceQuotationItemStatus.OUT_OF_STOCK
-        );
+                : PriceQuotationItemStatus.OUT_OF_STOCK);
 
         priceQuotationItemRepo.save(item);
 
@@ -366,6 +359,3 @@ public class WarehouseQuotationServiceImpl implements WarehouseQuotationService 
     }
 
 }
-
-
-

@@ -2,10 +2,13 @@ package fpt.edu.vn.gms.service;
 
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface PriceQuotationService {
     ServiceTicketResponseDto createQuotation(Long ticketId);
@@ -35,4 +38,9 @@ public interface PriceQuotationService {
     byte[] exportPdfQuotation(Long quotationId);
 
     PriceQuotationResponseDto updateQuotationToDraft(Long quotationId);
+
+    Page<PriceQuotationResponseDto> getAvailableForPurchaseRequest(String keyword, String fromDate, String toDate,
+            Pageable pageable);
+
+    List<PriceQuotationItemResponseDto> getQuotationItems(Long quotationId);
 }

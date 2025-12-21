@@ -99,8 +99,7 @@ public class DebtServiceImpl implements DebtService {
                 BigDecimal totalPaidAmount = row[4] != null ? (BigDecimal) row[4] : BigDecimal.ZERO;
                 BigDecimal totalRemaining = row[5] != null ? (BigDecimal) row[5] : BigDecimal.ZERO;
 
-                LocalDate dueDate = (LocalDate) row[6];
-                String status = (String) row[7];
+                String status = (String) row[6];
 
                 return new CustomerDebtSummaryDto(
                                 customerId,
@@ -109,7 +108,6 @@ public class DebtServiceImpl implements DebtService {
                                 totalAmount,
                                 totalPaidAmount,
                                 totalRemaining,
-                                dueDate,
                                 status);
         }
 
@@ -145,7 +143,13 @@ public class DebtServiceImpl implements DebtService {
 
                 // Tính tổng "còn lại"
                 BigDecimal totalRemaining = debts.getContent().stream()
-                                .map(Debt::getAmount)
+                                .map(debt -> {
+                                        BigDecimal amount = debt.getAmount() != null ? debt.getAmount()
+                                                        : BigDecimal.ZERO;
+                                        BigDecimal paidAmount = debt.getPaidAmount() != null ? debt.getPaidAmount()
+                                                        : BigDecimal.ZERO;
+                                        return amount.subtract(paidAmount);
+                                })
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // Lấy biển số đầu tiên

@@ -4,17 +4,23 @@ import fpt.edu.vn.gms.common.enums.ManagerReviewStatus;
 import fpt.edu.vn.gms.common.enums.NotificationTemplate;
 import fpt.edu.vn.gms.common.enums.NotificationType;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
+import fpt.edu.vn.gms.common.enums.PriceQuotationStatus;
 import fpt.edu.vn.gms.common.enums.Role;
 import fpt.edu.vn.gms.common.enums.StockLevelStatus;
+import fpt.edu.vn.gms.dto.request.CreatePurchaseRequestFromQuotationDto;
 import fpt.edu.vn.gms.dto.request.PartItemDto;
 import fpt.edu.vn.gms.dto.request.PurchaseRequestCreateDto;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.StockReceiptDetailResponse;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestDetailDto;
 import fpt.edu.vn.gms.dto.response.PurchaseRequestResponseDto;
 import fpt.edu.vn.gms.dto.response.PurchaseSuggestionItemDto;
 import fpt.edu.vn.gms.entity.*;
+import fpt.edu.vn.gms.entity.PurchaseRequestQuotation;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PurchaseRequestMapper;
+import fpt.edu.vn.gms.repository.PriceQuotationItemRepository;
 import fpt.edu.vn.gms.repository.PriceQuotationRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestItemRepository;
 import fpt.edu.vn.gms.repository.PurchaseRequestRepository;
@@ -42,6 +48,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,12 +57,14 @@ import java.util.Optional;
 public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     PriceQuotationRepository priceQuotationRepository;
+    PriceQuotationItemRepository priceQuotationItemRepository;
     PurchaseRequestRepository purchaseRequestRepository;
     PurchaseRequestItemRepository purchaseRequestItemRepository;
     InventoryService inventoryService;
     CodeSequenceService codeSequenceService;
     StockReceiptService stockReceiptService;
     PurchaseRequestMapper purchaseRequestMapper;
+    PriceQuotationItemMapper priceQuotationItemMapper;
     NotificationService notificationService;
     EmployeeRepository employeeRepository;
     PartRepository partRepository;
@@ -331,5 +340,136 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         }
 
         return result;
+    }
+
+    @Transactional
+    @Override
+    public PurchaseRequest createFromQuotation(CreatePurchaseRequestFromQuotationDto dto, Employee currentEmployee) {
+        // 1. Validate quotations
+        if (dto.getQuotationIds() == null || dto.getQuotationIds().isEmpty()) {
+            throw new IllegalArgumentException("Danh sách báo giá không được để trống");
+        }
+
+        List<PriceQuotation> quotations = priceQuotationRepository.findAllById(dto.getQuotationIds());
+        if (quotations.size() != dto.getQuotationIds().size()) {
+            throw new ResourceNotFoundException("Một số báo giá không tồn tại");
+        }
+
+        // Validate tất cả quotations đều ở trạng thái CUSTOMER_CONFIRMED
+        boolean allConfirmed = quotations.stream()
+                .allMatch(q -> q.getStatus() == PriceQuotationStatus.CUSTOMER_CONFIRMED);
+        if (!allConfirmed) {
+            throw new IllegalArgumentException("Tất cả báo giá phải ở trạng thái khách hàng đã xác nhận");
+        }
+
+        // 2. Validate items thuộc các quotations này
+        if (dto.getQuotationItemIds() == null || dto.getQuotationItemIds().isEmpty()) {
+            throw new IllegalArgumentException("Danh sách items không được để trống");
+        }
+
+        List<PriceQuotationItem> selectedItems = priceQuotationItemRepository.findAllById(dto.getQuotationItemIds());
+
+        if (selectedItems.size() != dto.getQuotationItemIds().size()) {
+            throw new IllegalArgumentException("Một số items không tồn tại");
+        }
+
+        // Kiểm tra tất cả items phải thuộc một trong các quotations đã chọn
+        Set<Long> quotationIdsSet = quotations.stream()
+                .map(PriceQuotation::getPriceQuotationId)
+                .collect(Collectors.toSet());
+
+        boolean allItemsBelongToQuotations = selectedItems.stream()
+                .allMatch(item -> quotationIdsSet.contains(item.getPriceQuotation().getPriceQuotationId()));
+
+        if (!allItemsBelongToQuotations) {
+            throw new IllegalArgumentException("Một số items không thuộc các báo giá đã chọn");
+        }
+
+        // 3. Tạo PurchaseRequest
+        String reasonText = dto.getReason() != null ? dto.getReason()
+                : "Từ " + quotations.size() + " báo giá: " + quotations.stream()
+                        .map(PriceQuotation::getCode)
+                        .collect(Collectors.joining(", "));
+
+        PurchaseRequest pr = PurchaseRequest.builder()
+                .reason(reasonText)
+                .code(codeSequenceService.generateCode("PR"))
+                .reviewStatus(ManagerReviewStatus.PENDING)
+                .items(new ArrayList<>())
+                .quotations(new ArrayList<>())
+                .createdBy(currentEmployee.getEmployeeId())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // 4. Tạo PurchaseRequestQuotation relationships
+        List<PurchaseRequestQuotation> prQuotations = quotations.stream()
+                .map(quotation -> PurchaseRequestQuotation.builder()
+                        .purchaseRequest(pr)
+                        .priceQuotation(quotation)
+                        .build())
+                .collect(Collectors.toList());
+        pr.setQuotations(prQuotations);
+
+        // 5. Tạo PurchaseRequestItems từ selectedItems
+        BigDecimal totalEstimated = BigDecimal.ZERO;
+        List<PurchaseRequestItem> prItems = new ArrayList<>();
+
+        for (PriceQuotationItem item : selectedItems) {
+            if (item.getItemType() != PriceQuotationItemType.PART) {
+                continue; // Chỉ lấy items là PART
+            }
+
+            Part part = item.getPart();
+            if (part == null) {
+                continue;
+            }
+
+            BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice()
+                    : (part.getPurchasePrice() != null ? part.getPurchasePrice() : BigDecimal.ZERO);
+
+            BigDecimal estimatedPrice = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+            totalEstimated = totalEstimated.add(estimatedPrice);
+
+            PurchaseRequestItem prItem = PurchaseRequestItem.builder()
+                    .purchaseRequest(pr)
+                    .quotationItem(item) // Mapping với PriceQuotationItem
+                    .part(part)
+                    .partName(item.getItemName() != null ? item.getItemName() : part.getName())
+                    .quantity(item.getQuantity())
+                    .unit(item.getUnit() != null ? item.getUnit()
+                            : (part.getUnit() != null ? part.getUnit().getName() : null))
+                    .estimatedPurchasePrice(unitPrice)
+                    .reviewStatus(ManagerReviewStatus.PENDING)
+                    .quantityReceived(0.0)
+                    .note(dto.getNote())
+                    .build();
+
+            prItems.add(prItem);
+        }
+
+        if (prItems.isEmpty()) {
+            throw new IllegalArgumentException("Không có items hợp lệ để tạo yêu cầu mua hàng");
+        }
+
+        pr.setItems(prItems);
+        pr.setTotalEstimatedAmount(totalEstimated);
+
+        // 6. Save (cascade sẽ tự động save items và quotations)
+        return purchaseRequestRepository.save(pr);
+    }
+
+    @Override
+    public List<PriceQuotationItemResponseDto> getQuotationItemsByPurchaseRequest(Long purchaseRequestId) {
+        PurchaseRequest pr = purchaseRequestRepository.findById(purchaseRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy yêu cầu mua hàng với ID: " + purchaseRequestId));
+
+        // Sử dụng relationship hiện có qua PurchaseRequestItem
+        List<PriceQuotationItem> quotationItems = purchaseRequestItemRepository
+                .findQuotationItemsByPurchaseRequestId(purchaseRequestId);
+
+        return quotationItems.stream()
+                .map(priceQuotationItemMapper::toResponseDto)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.dto.response;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +19,5 @@ public class CustomerDebtSummaryDto {
   private BigDecimal totalAmount;
   private BigDecimal totalPaidAmount;
   private BigDecimal totalRemaining;
-  private LocalDate dueDate;
   private String status;
 }

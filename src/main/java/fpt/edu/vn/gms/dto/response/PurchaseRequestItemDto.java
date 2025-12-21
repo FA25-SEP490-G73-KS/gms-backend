@@ -29,5 +29,7 @@ public class PurchaseRequestItemDto {
 
     @Schema(example = "1500000")
     private Long total;
-}
 
+    @Schema(example = "BG-2025-00001")
+    private String quotationCode; // Mã báo giá nguồn
+}

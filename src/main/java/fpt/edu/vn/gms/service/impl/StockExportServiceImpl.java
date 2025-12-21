@@ -43,6 +43,7 @@ public class StockExportServiceImpl implements StockExportService {
     StockExportItemRepository stockExportItemRepository;
     StockExportItemHistoryRepository stockExportItemHistoryRepository;
     PriceQuotationRepository priceQuotationRepository;
+    PriceQuotationItemRepository priceQuotationItemRepository;
     PartRepository partRepository;
     EmployeeRepository employeeRepository;
     CodeSequenceService codeSequenceService;
@@ -96,6 +97,12 @@ public class StockExportServiceImpl implements StockExportService {
             }
 
             StockExportDetailResponse existingDetail = stockExportMapper.toDetailDto(export);
+            // Set serviceTicketStatus
+            if (export.getQuotation() != null
+                    && export.getQuotation().getServiceTicket() != null
+                    && export.getQuotation().getServiceTicket().getStatus() != null) {
+                existingDetail.setServiceTicketStatus(export.getQuotation().getServiceTicket().getStatus().name());
+            }
             List<StockExportItemResponse> itemDtos = export.getExportItems().stream()
                     .map(stockExportMapper::toItemDto)
                     .toList();
@@ -130,6 +137,12 @@ public class StockExportServiceImpl implements StockExportService {
         StockExport saved = stockExportRepository.save(export);
 
         StockExportDetailResponse detail = stockExportMapper.toDetailDto(saved);
+        // Set serviceTicketStatus
+        if (saved.getQuotation() != null
+                && saved.getQuotation().getServiceTicket() != null
+                && saved.getQuotation().getServiceTicket().getStatus() != null) {
+            detail.setServiceTicketStatus(saved.getQuotation().getServiceTicket().getStatus().name());
+        }
         List<StockExportItemResponse> itemDtos = saved.getExportItems().stream()
                 .map(stockExportMapper::toItemDto)
                 .toList();
@@ -196,6 +209,12 @@ public class StockExportServiceImpl implements StockExportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu xuất kho"));
 
         StockExportDetailResponse detail = stockExportMapper.toDetailDto(export);
+        // Set serviceTicketStatus
+        if (export.getQuotation() != null
+                && export.getQuotation().getServiceTicket() != null
+                && export.getQuotation().getServiceTicket().getStatus() != null) {
+            detail.setServiceTicketStatus(export.getQuotation().getServiceTicket().getStatus().name());
+        }
         List<StockExportItemResponse> itemDtos = export.getExportItems().stream()
                 .map(stockExportMapper::toItemDto)
                 .toList();
@@ -266,7 +285,7 @@ public class StockExportServiceImpl implements StockExportService {
         // Cập nhật dòng xuất
         double newExported = alreadyExported + request.getQuantity();
         item.setQuantityExported(newExported);
-        item.setReceiver(employee); // hoặc tìm theo request.getReceiverId()
+        item.setReceiver(employee);
         item.setExportedAt(LocalDateTime.now());
         item.setNote(request.getNote());
 
@@ -277,6 +296,14 @@ public class StockExportServiceImpl implements StockExportService {
         }
 
         stockExportItemRepository.save(item);
+
+        // Cập nhật exportedQuantity của PriceQuotationItem tương ứng
+        if (item.getQuotationItem() != null) {
+            PriceQuotationItem quotationItem = item.getQuotationItem();
+            double currentExported = Optional.ofNullable(quotationItem.getExportedQuantity()).orElse(0.0);
+            quotationItem.setExportedQuantity(currentExported + request.getQuantity());
+            priceQuotationItemRepository.save(quotationItem);
+        }
 
         // Lưu history
         StockExportItemHistory history = StockExportItemHistory.builder()

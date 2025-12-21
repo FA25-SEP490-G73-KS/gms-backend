@@ -27,7 +27,10 @@ public class PurchaseRequest {
 
     @OneToOne
     @JoinColumn(name = "quotation_id")
-    private PriceQuotation relatedQuotation;
+    private PriceQuotation relatedQuotation; // Giữ lại để backward compatibility
+
+    @OneToMany(mappedBy = "purchaseRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchaseRequestQuotation> quotations = new ArrayList<>();
 
     @OneToOne(mappedBy = "purchaseRequest")
     private StockReceipt stockReceipt;

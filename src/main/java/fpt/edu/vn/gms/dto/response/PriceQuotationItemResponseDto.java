@@ -24,6 +24,7 @@ public class PriceQuotationItemResponseDto {
     private String unit;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
+    private Double exportedQuantity;
     private PriceQuotationItemType itemType;
     private PriceQuotationItemStatus inventoryStatus;
     private WarehouseReviewStatus warehouseReviewStatus;

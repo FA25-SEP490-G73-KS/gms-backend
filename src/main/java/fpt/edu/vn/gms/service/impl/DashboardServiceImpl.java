@@ -269,7 +269,7 @@ public class DashboardServiceImpl implements DashboardService {
                 return rows.stream()
                                 .collect(Collectors.toMap(
                                                 r -> ((Number) r[0]).intValue(),
-                                                r -> nvl((BigDecimal) r[1]),
+                                                r -> nvl(convertToBigDecimal(r[1])),
                                                 BigDecimal::add));
         }
 

@@ -1,6 +1,7 @@
 package fpt.edu.vn.gms.service.impl;
 
 import fpt.edu.vn.gms.common.enums.ExportItemStatus;
+import fpt.edu.vn.gms.common.enums.ExportStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemStatus;
 import fpt.edu.vn.gms.common.enums.PriceQuotationItemType;
 import fpt.edu.vn.gms.common.enums.ServiceTicketStatus;
@@ -31,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,6 +50,7 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     CodeSequenceService codeSequenceService;
     StockReceiptItemHistoryMapper historyMapper;
     StockExportItemRepository stockExportItemRepository; // thêm repository để cập nhật trạng thái xuất kho
+    StockExportRepository stockExportRepository; // thêm repository để tạo/cập nhật StockExport
     PartRepository partRepository; // thêm repository để cập nhật tồn kho linh kiện
     ServiceTicketRepository serviceTicketRepository;
     PriceQuotationItemRepository priceQuotationItemRepository;
@@ -251,7 +254,91 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             updateStockLevelStatus(part);
             partRepository.save(part);
 
-            // Tự động duyệt các price quotation item sau khi nhập kho
+            // Cập nhật PriceQuotationItem tương ứng từ PurchaseRequestItem
+            if (prItem.getQuotationItem() != null) {
+                PriceQuotationItem quotationItem = prItem.getQuotationItem();
+
+                // Cập nhật inventoryStatus dựa trên số lượng tồn kho hiện tại
+                double itemQuantity = Optional.ofNullable(quotationItem.getQuantity()).orElse(0.0);
+                double reservedQty = Optional.ofNullable(quotationItem.getReservedQuantity()).orElse(0.0);
+                double availableStock = part.getQuantityInStock() - part.getReservedQuantity();
+
+                PriceQuotationItemStatus oldStatus = quotationItem.getInventoryStatus();
+
+                // Nếu số lượng tồn kho khả dụng >= số lượng cần của quotation item
+                if (availableStock >= (itemQuantity - reservedQty) && availableStock >= 0) {
+                    quotationItem.setInventoryStatus(PriceQuotationItemStatus.AVAILABLE);
+                } else if (availableStock < 0) {
+                    quotationItem.setInventoryStatus(PriceQuotationItemStatus.OUT_OF_STOCK);
+                }
+
+                priceQuotationItemRepository.save(quotationItem);
+
+                // Nếu inventoryStatus chuyển thành AVAILABLE, tạo hoặc cập nhật StockExport
+                if (quotationItem.getInventoryStatus() == PriceQuotationItemStatus.AVAILABLE
+                        && oldStatus != PriceQuotationItemStatus.AVAILABLE) {
+                    PriceQuotation quotation = quotationItem.getPriceQuotation();
+                    if (quotation != null) {
+                        // Tìm StockExport của quotation này
+                        Optional<StockExport> existingExport = stockExportRepository.findByQuotationId(
+                                quotation.getPriceQuotationId());
+
+                        StockExport stockExport;
+                        if (existingExport.isPresent()) {
+                            stockExport = existingExport.get();
+
+                            // Kiểm tra xem đã có StockExportItem cho quotationItem này chưa
+                            boolean itemExists = stockExport.getExportItems().stream()
+                                    .anyMatch(exportItem -> exportItem.getQuotationItem() != null
+                                            && exportItem.getQuotationItem().getPriceQuotationItemId()
+                                                    .equals(quotationItem.getPriceQuotationItemId()));
+
+                            // Nếu chưa có thì tạo mới StockExportItem
+                            if (!itemExists && quotationItem.getPart() != null) {
+                                StockExportItem exportItem = StockExportItem.builder()
+                                        .stockExport(stockExport)
+                                        .quotationItem(quotationItem)
+                                        .part(quotationItem.getPart())
+                                        .quantity(quotationItem.getQuantity())
+                                        .quantityExported(0.0)
+                                        .status(ExportItemStatus.EXPORTING)
+                                        .build();
+                                stockExport.getExportItems().add(exportItem);
+                                stockExportRepository.save(stockExport);
+                            }
+                        } else {
+                            // Tạo StockExport mới
+                            stockExport = StockExport.builder()
+                                    .code(codeSequenceService.generateCode("XK"))
+                                    .quotation(quotation)
+                                    .reason("Tự động tạo khi nhập kho")
+                                    .status(ExportStatus.WAITING_TO_EXECUTE)
+                                    .createdBy(request.getReceivedBy())
+                                    .build();
+
+                            // Tạo StockExportItem cho quotationItem này
+                            if (quotationItem.getPart() != null) {
+                                StockExportItem exportItem = StockExportItem.builder()
+                                        .stockExport(stockExport)
+                                        .quotationItem(quotationItem)
+                                        .part(quotationItem.getPart())
+                                        .quantity(quotationItem.getQuantity())
+                                        .quantityExported(0.0)
+                                        .status(ExportItemStatus.EXPORTING)
+                                        .build();
+                                List<StockExportItem> exportItems = new ArrayList<>();
+                                exportItems.add(exportItem);
+                                stockExport.setExportItems(exportItems);
+                            }
+
+                            stockExportRepository.save(stockExport);
+                        }
+                    }
+                }
+            }
+
+            // Tự động duyệt các price quotation item sau khi nhập kho (cho các tickets
+            // khác)
             autoUpdateQuotationItemsAfterReceipt(part);
         }
 

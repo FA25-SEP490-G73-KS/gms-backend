@@ -23,6 +23,7 @@ public class StockExportDetailResponse {
     private Long quotationId;
     private String quotationCode;
     private Long serviceTicketId;
+    private String serviceTicketStatus;
     private String customerName;
 
     private String createdBy;

@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -95,16 +96,30 @@ public class InvoiceServiceImpl implements InvoiceService {
                                 .subtract(depositAmount)
                                 .add(previousDebt);
 
-                // Tạo payment
-                invoiceRepo.save(Invoice.builder()
-                                .code(codeSequenceService.generateCode("HD"))
-                                .serviceTicket(serviceTicket)
-                                .quotation(priceQuotation)
-                                .depositReceived(depositAmount)
-                                .finalAmount(amountPaid)
-                                .createdBy("hệ thống")
-                                .createdAt(LocalDateTime.now())
-                                .build());
+                // Kiểm tra xem đã có invoice cho quotation này chưa
+                Optional<Invoice> existingInvoice = invoiceRepo.findByQuotation_PriceQuotationId(quotationId);
+
+                if (existingInvoice.isPresent()) {
+                        // Cập nhật invoice hiện có
+                        Invoice invoice = existingInvoice.get();
+                        invoice.setServiceTicket(serviceTicket);
+                        invoice.setQuotation(priceQuotation);
+                        invoice.setDepositReceived(depositAmount);
+                        invoice.setFinalAmount(amountPaid);
+                        // Giữ nguyên code và createdAt
+                        invoiceRepo.save(invoice);
+                } else {
+                        // Tạo invoice mới
+                        invoiceRepo.save(Invoice.builder()
+                                        .code(codeSequenceService.generateCode("HD"))
+                                        .serviceTicket(serviceTicket)
+                                        .quotation(priceQuotation)
+                                        .depositReceived(depositAmount)
+                                        .finalAmount(amountPaid)
+                                        .createdBy("hệ thống")
+                                        .createdAt(LocalDateTime.now())
+                                        .build());
+                }
 
         }
 

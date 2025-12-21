@@ -5,10 +5,12 @@ import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationItemRequestDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.NotificationResponseDto;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.*;
 import fpt.edu.vn.gms.exception.ResourceNotFoundException;
+import fpt.edu.vn.gms.mapper.PriceQuotationItemMapper;
 import fpt.edu.vn.gms.mapper.PriceQuotationMapper;
 import fpt.edu.vn.gms.mapper.ServiceTicketMapper;
 import fpt.edu.vn.gms.repository.*;
@@ -53,6 +55,8 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
     PriceQuotationMapper priceQuotationMapper;
     ServiceTicketMapper serviceTicketMapper;
     StockExportService stockExportService;
+    PriceQuotationItemMapper priceQuotationItemMapper;
+    PriceQuotationItemRepository priceQuotationItemRepository;
 
     @Override
     public Page<PriceQuotationResponseDto> findAllQuotations(Pageable pageable) {
@@ -181,6 +185,7 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         item.setUnitPrice(unitPrice);
 
         item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(quantity)));
+
         item.setWarehouseNote(null);
 
         // Xử lý riêng cho PART
@@ -330,6 +335,9 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         Employee advisor = quotation.getServiceTicket().getCreatedBy();
 
         String quotationCode = quotation.getCode();
+        if (quotationCode == null || quotationCode.isEmpty()) {
+            quotationCode = quotation.getPriceQuotationId().toString(); // Fallback to ID if code is null
+        }
 
         String formattedTitle = String.format(template.getTitle(), quotationCode);
 
@@ -552,5 +560,56 @@ public class PriceQuotationServiceImpl implements PriceQuotationService {
         quotationRepository.save(quotation);
 
         return priceQuotationMapper.toResponseDto(quotation);
+    }
+
+    @Override
+    public Page<PriceQuotationResponseDto> getAvailableForPurchaseRequest(String keyword, String fromDate,
+            String toDate, Pageable pageable) {
+        PriceQuotationStatus status = PriceQuotationStatus.CUSTOMER_CONFIRMED;
+        PriceQuotationItemStatus outOfStockStatus = PriceQuotationItemStatus.OUT_OF_STOCK;
+
+        // Parse dates if provided
+        LocalDateTime fromDateTime = null;
+        LocalDateTime toDateTime = null;
+
+        if (fromDate != null && !fromDate.isEmpty()) {
+            try {
+                fromDateTime = LocalDateTime.parse(fromDate + "T00:00:00");
+            } catch (Exception e) {
+                log.warn("Invalid fromDate format: {}", fromDate);
+            }
+        }
+
+        if (toDate != null && !toDate.isEmpty()) {
+            try {
+                toDateTime = LocalDateTime.parse(toDate + "T23:59:59");
+            } catch (Exception e) {
+                log.warn("Invalid toDate format: {}", toDate);
+            }
+        }
+
+        // Query quotations với status CUSTOMER_CONFIRMED và có ít nhất 1 item
+        // OUT_OF_STOCK
+        Page<PriceQuotation> quotations = priceQuotationRepository.findAvailableForPurchaseRequest(
+                status,
+                outOfStockStatus,
+                keyword,
+                fromDateTime,
+                toDateTime,
+                pageable);
+
+        return quotations.map(priceQuotationMapper::toResponseDto);
+    }
+
+    @Override
+    public List<PriceQuotationItemResponseDto> getQuotationItems(Long quotationId) {
+        PriceQuotation quotation = priceQuotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy báo giá với ID: " + quotationId));
+
+        // Chỉ lấy items có inventoryStatus = OUT_OF_STOCK
+        return quotation.getItems().stream()
+                .filter(item -> item.getInventoryStatus() == PriceQuotationItemStatus.OUT_OF_STOCK)
+                .map(priceQuotationItemMapper::toResponseDto)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

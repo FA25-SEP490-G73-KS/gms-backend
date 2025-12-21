@@ -31,6 +31,7 @@ public interface StockExportMapper {
     @Mapping(target = "quotationId", source = "quotation.priceQuotationId")
     @Mapping(target = "quotationCode", source = "quotation.code")
     @Mapping(target = "serviceTicketId", source = "quotation.serviceTicket.serviceTicketId")
+    @Mapping(target = "serviceTicketStatus", ignore = true)
     @Mapping(target = "customerName", source = "quotation.serviceTicket.customer.fullName")
     @Mapping(target = "createdBy", source = "createdBy")
     @Mapping(target = "approvedBy", source = "approvedBy")

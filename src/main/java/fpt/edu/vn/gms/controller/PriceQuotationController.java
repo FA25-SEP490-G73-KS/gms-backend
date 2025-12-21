@@ -4,6 +4,7 @@ import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.request.ChangeQuotationStatusReqDto;
 import fpt.edu.vn.gms.dto.request.PriceQuotationRequestDto;
 import fpt.edu.vn.gms.dto.response.ApiResponse;
+import fpt.edu.vn.gms.dto.response.PriceQuotationItemResponseDto;
 import fpt.edu.vn.gms.dto.response.PriceQuotationResponseDto;
 import fpt.edu.vn.gms.dto.response.ServiceTicketResponseDto;
 import fpt.edu.vn.gms.entity.PriceQuotation;
@@ -21,6 +22,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
 import java.util.Map;
 
 import static fpt.edu.vn.gms.utils.AppRoutes.PRICE_QUOTATIONS_PREFIX;
@@ -344,5 +348,27 @@ public class PriceQuotationController {
         public ResponseEntity<ApiResponse<PriceQuotationResponseDto>> updateToDraft(@PathVariable Long id) {
                 PriceQuotationResponseDto responseDto = priceQuotationService.updateQuotationToDraft(id);
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật báo giá về DRAFT thành công", responseDto));
+        }
+
+        @GetMapping("/available-for-purchase-request")
+        @Operation(summary = "Lấy danh sách báo giá đã được kho duyệt để tạo yêu cầu mua hàng")
+        public ResponseEntity<ApiResponse<Page<PriceQuotationResponseDto>>> getAvailableForPurchaseRequest(
+                        @RequestParam(required = false) String keyword,
+                        @RequestParam(required = false) String fromDate,
+                        @RequestParam(required = false) String toDate,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<PriceQuotationResponseDto> result = priceQuotationService
+                                .getAvailableForPurchaseRequest(keyword, fromDate, toDate, pageable);
+                return ResponseEntity.ok(ApiResponse.success("Lấy danh sách báo giá thành công", result));
+        }
+
+        @GetMapping("/{id}/items")
+        @Operation(summary = "Lấy danh sách items của báo giá")
+        public ResponseEntity<ApiResponse<List<PriceQuotationItemResponseDto>>> getQuotationItems(
+                        @PathVariable Long id) {
+                List<PriceQuotationItemResponseDto> items = priceQuotationService.getQuotationItems(id);
+                return ResponseEntity.ok(ApiResponse.success("Lấy danh sách items thành công", items));
         }
 }

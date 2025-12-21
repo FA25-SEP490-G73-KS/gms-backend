@@ -25,4 +25,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     // Tìm hóa đơn theo serviceTicketId (mỗi service ticket thường chỉ có 1 invoice)
     Optional<Invoice> findByServiceTicket_ServiceTicketId(Long serviceTicketId);
+
+    // Tìm hóa đơn theo quotationId
+    Optional<Invoice> findByQuotation_PriceQuotationId(Long quotationId);
 }
