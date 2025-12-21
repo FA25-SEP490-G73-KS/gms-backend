@@ -24,10 +24,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Page<Appointment> getByStatus(AppointmentStatus status, Pageable pageable);
 
     @Query("""
-    SELECT COUNT(a)
-    FROM Appointment a
-    WHERE DATE(a.appointmentDate) = :date
-""")
+                SELECT COUNT(a)
+                FROM Appointment a
+                WHERE DATE(a.appointmentDate) = :date
+            """)
     long countByDate(@Param("date") LocalDate date);
 
     int countByAppointmentDateAndTimeSlot(LocalDate appointmentDate, TimeSlot timeSlot);
@@ -36,15 +36,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByAppointmentDateAndStatus(LocalDate appointmentDate, AppointmentStatus status);
 
+    @Query("SELECT a FROM Appointment a WHERE a.appointmentDate = :appointmentDate " +
+            "AND a.status = :status AND a.isReminderSent = false")
     List<Appointment> findByAppointmentDateAndStatusAndReminderSentFalse(
-            LocalDate appointmentDate,
-            AppointmentStatus status
-    );
+            @Param("appointmentDate") LocalDate appointmentDate,
+            @Param("status") AppointmentStatus status);
 
     List<Appointment> findByStatusAndConfirmedAtIsNullAndAppointmentDate(
             AppointmentStatus status,
-            LocalDate date
-    );
+            LocalDate date);
 
     long countByAppointmentDate(LocalDate appointmentDate);
 
