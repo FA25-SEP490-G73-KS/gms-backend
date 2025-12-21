@@ -30,6 +30,10 @@ public class StockReceiptItem {
     @JoinColumn(name = "purchase_request_item_id")
     private PurchaseRequestItem purchaseRequestItem;
 
+    @ManyToOne
+    @JoinColumn(name = "part_id")
+    private Part part;
+
     @Column(name = "requested_quantity")
     private Double requestedQuantity;
 

@@ -176,11 +176,20 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
     }
 
     private StockReceiptItemResponse toItemDto(StockReceiptItem item) {
-        Part part = item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPart() : null;
+        // Lấy part từ item.getPart() trước, nếu null thì lấy từ purchaseRequestItem
+        Part part = item.getPart() != null
+                ? item.getPart()
+                : (item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPart() : null);
+
+        // Lấy partName từ part hoặc từ purchaseRequestItem
+        String partName = part != null
+                ? part.getName()
+                : (item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPartName() : null);
+
         return StockReceiptItemResponse.builder()
                 .id(item.getId())
                 .partCode(part != null ? part.getSku() : null)
-                .partName(item.getPurchaseRequestItem() != null ? item.getPurchaseRequestItem().getPartName() : null)
+                .partName(partName)
                 .requestedQty(item.getRequestedQuantity())
                 .receivedQty(item.getQuantityReceived())
                 .unitPrice(item.getActualUnitPrice())
@@ -422,6 +431,7 @@ public class StockReceiptServiceImplNew implements StockReceiptService {
             StockReceiptItem item = StockReceiptItem.builder()
                     .stockReceipt(receipt)
                     .purchaseRequestItem(prItem)
+                    .part(prItem.getPart()) // Thêm relationship với Part
                     .requestedQuantity(prItem.getQuantity())
                     .quantityReceived(0.0)
                     .actualUnitPrice(prItem.getEstimatedPurchasePrice())

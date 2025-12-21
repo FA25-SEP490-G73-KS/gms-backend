@@ -306,7 +306,6 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     @Override
     public List<PurchaseSuggestionItemDto> getSuggestedPurchaseItems() {
-        // Lấy danh sách linh kiện đang OUT_OF_STOCK hoặc LOW_STOCK
         List<Part> parts = partRepository.findByStatusIn(
                 List.of(StockLevelStatus.OUT_OF_STOCK, StockLevelStatus.LOW_STOCK));
 
@@ -320,8 +319,14 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
             double available = inStock - reserved;
             double needed = reorder - available;
 
-            if (needed <= 0) {
+            // OUT_OF_STOCK luôn hiển thị, LOW_STOCK chỉ hiển thị khi needed > 0
+            if (part.getStatus() != StockLevelStatus.OUT_OF_STOCK && needed <= 0) {
                 continue;
+            }
+
+            // Nếu OUT_OF_STOCK và needed <= 0 (do reorderLevel = 0), set needed = 1 hoặc giá trị mặc định
+            if (part.getStatus() == StockLevelStatus.OUT_OF_STOCK && needed <= 0) {
+                needed = Math.max(1.0, Math.abs(available) + 1);
             }
 
             PurchaseSuggestionItemDto dto = PurchaseSuggestionItemDto.builder()
