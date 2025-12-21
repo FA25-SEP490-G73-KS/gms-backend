@@ -106,7 +106,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     && !vehicle.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
                 // Trường hợp biển số thuộc khách hàng khác → cập nhật lại chủ xe là customer
                 // hiện tại
-
                 if (!dto.getForceAssignVehicle()) {
                     throw new RuntimeException("Biển số thuộc khách hàng khác");
                 }
@@ -135,7 +134,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     vehicleRepository.save(vehicle);
                 }
             } else {
-
                 vehicle = Vehicle.builder()
                         .licensePlate(dto.getVehicle().getLicensePlate())
                         .vehicleModel(vehicleModel)

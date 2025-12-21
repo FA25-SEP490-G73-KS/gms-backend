@@ -36,6 +36,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByAppointmentDateAndStatus(LocalDate appointmentDate, AppointmentStatus status);
 
+    List<Appointment> findByAppointmentDateAndStatusAndReminderSentFalse(LocalDate appointmentDate, AppointmentStatus status, boolean reminderSent);
+
     List<Appointment> findByStatusAndConfirmedAtIsNullAndAppointmentDate(
             AppointmentStatus status,
             LocalDate date
