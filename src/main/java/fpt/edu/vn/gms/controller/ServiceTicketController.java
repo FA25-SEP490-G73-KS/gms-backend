@@ -57,6 +57,27 @@ public class ServiceTicketController {
                                 .body(ApiResponse.created("Service Ticket Created", created));
         }
 
+        @Public
+        @GetMapping("/{serviceTicketId}/quotation")
+        @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo ID phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá bằng ID phiếu dịch vụ")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true)))
+        })
+        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getServiceTicketByIdForQuotation(
+                        @PathVariable("serviceTicketId") Long serviceTicketId) {
+
+                try {
+                        ServiceTicketResponseDto serviceTicket = serviceTicketService
+                                        .getServiceTicketById(serviceTicketId);
+                        return ResponseEntity.ok(
+                                        ApiResponse.success("Lấy phiếu dịch vụ thành công", serviceTicket));
+                } catch (ResourceNotFoundException e) {
+                        return ResponseEntity.status(404)
+                                        .body(ApiResponse.error(404, e.getMessage()));
+                }
+        }
+
         @GetMapping("/{id}")
         @Operation(summary = "Lấy phiếu dịch vụ theo ID", description = "Lấy thông tin chi tiết của một phiếu dịch vụ bằng ID.")
         @ApiResponses(value = {
@@ -225,45 +246,24 @@ public class ServiceTicketController {
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái phiếu dịch vụ thành công", updated));
         }
 
-        @Public
-        @GetMapping("/{serviceTicketCode}/quotation")
-        @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo mã phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá từ link Zalo")
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true)))
-        })
-        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getServiceTicketByCode(
-                        @PathVariable("serviceTicketCode") String serviceTicketCode) {
-
-                try {
-                        ServiceTicketResponseDto serviceTicket = serviceTicketService
-                                        .getByServiceTicketCode(serviceTicketCode);
-                        return ResponseEntity.ok(
-                                        ApiResponse.success("Lấy phiếu dịch vụ thành công", serviceTicket));
-                } catch (ResourceNotFoundException e) {
-                        return ResponseEntity.status(404)
-                                        .body(ApiResponse.error(404, e.getMessage()));
-                }
-        }
-
-        @Public
-        @GetMapping("/{serviceTicketId}/quotation")
-        @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo ID phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá bằng ID phiếu dịch vụ")
-        @ApiResponses({
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
-                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true)))
-        })
-        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getServiceTicketByIdForQuotation(
-                        @PathVariable("serviceTicketId") Long serviceTicketId) {
-
-                try {
-                        ServiceTicketResponseDto serviceTicket = serviceTicketService
-                                        .getServiceTicketById(serviceTicketId);
-                        return ResponseEntity.ok(
-                                        ApiResponse.success("Lấy phiếu dịch vụ thành công", serviceTicket));
-                } catch (ResourceNotFoundException e) {
-                        return ResponseEntity.status(404)
-                                        .body(ApiResponse.error(404, e.getMessage()));
-                }
-        }
+//        @Public
+//        @GetMapping("/{serviceTicketCode}/quotation")
+//        @Operation(summary = "Lấy phiếu dịch vụ và báo giá theo mã phiếu dịch vụ", description = "Khách hàng xem chi tiết phiếu dịch vụ và báo giá từ link Zalo")
+//        @ApiResponses({
+//                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lấy phiếu dịch vụ thành công"),
+//                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Không tìm thấy phiếu dịch vụ", content = @Content(schema = @Schema(hidden = true)))
+//        })
+//        public ResponseEntity<ApiResponse<ServiceTicketResponseDto>> getServiceTicketByCode(
+//                        @PathVariable("serviceTicketCode") String serviceTicketCode) {
+//
+//                try {
+//                        ServiceTicketResponseDto serviceTicket = serviceTicketService
+//                                        .getByServiceTicketCode(serviceTicketCode);
+//                        return ResponseEntity.ok(
+//                                        ApiResponse.success("Lấy phiếu dịch vụ thành công", serviceTicket));
+//                } catch (ResourceNotFoundException e) {
+//                        return ResponseEntity.status(404)
+//                                        .body(ApiResponse.error(404, e.getMessage()));
+//                }
+//        }
 }
