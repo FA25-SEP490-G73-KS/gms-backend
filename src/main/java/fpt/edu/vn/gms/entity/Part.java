@@ -40,10 +40,10 @@ public class Part {
     @JoinColumn(name = "market")
     private Market market;
 
-    @Column(name = "purchase_price", precision = 12, scale = 2)
+    @Column(name = "purchase_price", precision = 16, scale = 2)
     private BigDecimal purchasePrice;
 
-    @Column(name = "selling_price", precision = 12, scale = 2)
+    @Column(name = "selling_price", precision = 16, scale = 2)
     private BigDecimal sellingPrice;
 
     @Column(name = "discount_rate", precision = 5, scale = 2)

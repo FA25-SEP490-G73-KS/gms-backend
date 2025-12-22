@@ -77,7 +77,6 @@ public class ServiceTicketServiceImpl implements ServiceTicketService {
                     .fullName(dto.getCustomer().getFullName())
                     .phone(customerPhone)
                     .address(dto.getCustomer().getAddress())
-                    .customerType(dto.getCustomer().getCustomerType())
                     .discountPolicy(defaultPolicy)
                     .isActive(true)
                     .build();

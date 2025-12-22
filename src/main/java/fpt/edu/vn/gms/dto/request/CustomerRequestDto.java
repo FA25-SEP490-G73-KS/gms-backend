@@ -1,7 +1,6 @@
 package fpt.edu.vn.gms.dto.request;
 
 import fpt.edu.vn.gms.common.enums.CustomerLoyaltyLevel;
-import fpt.edu.vn.gms.common.enums.CustomerType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +23,7 @@ public class CustomerRequestDto {
      @Schema(description = "Địa chỉ", example = "Hanoi")
      private String address;
 
-     private CustomerType customerType;
-
-     private Long discountPolicyId;
+     // Hạng khách hàng (BRONZE / SLIVER / GOLD) dùng để map sang
+     // DiscountPolicy.loyaltyLevel
+     private CustomerLoyaltyLevel customerLoyaltyLevel;
 }

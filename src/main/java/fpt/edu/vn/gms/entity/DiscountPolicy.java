@@ -26,10 +26,10 @@ public class DiscountPolicy {
     private CustomerLoyaltyLevel loyaltyLevel;
 
     @Column(name = "discount_rate", precision = 5, scale = 2, nullable = false)
-    private BigDecimal discountRate; // % giảm giá, ví dụ 5.00 = 5%
+    private BigDecimal discountRate;
 
     @Column(precision = 18, scale = 2)
-    private BigDecimal requiredSpending; // tổng chi tiêu cần để lên level
+    private BigDecimal requiredSpending;
 
     @Column(name = "description", length = 255)
     private String description;
