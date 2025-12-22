@@ -158,6 +158,7 @@ public class PriceQuotationController {
                                 .body(ApiResponse.success("Successfully!!", response));
         }
 
+        @Public
         @PostMapping("/{id}/confirm")
         @Operation(summary = "Khách hàng xác nhận báo giá", description = "Khách hàng xác nhận phiếu báo giá.")
         @ApiResponses(value = {
@@ -174,6 +175,7 @@ public class PriceQuotationController {
                                 .body(ApiResponse.success("Successfully!!", response));
         }
 
+        @Public
         @PostMapping("/{id}/reject")
         @Operation(summary = "Khách hàng từ chối báo giá", description = "Khách hàng từ chối phiếu báo giá và cung cấp lý do.")
         @ApiResponses(value = {
