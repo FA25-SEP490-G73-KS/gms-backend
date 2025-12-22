@@ -49,10 +49,13 @@ USER spring
 EXPOSE 8080
 ENV SERVER_PORT=8080
 
+# Set timezone to Vietnam (Asia/Ho_Chi_Minh)
+ENV TZ=Asia/Ho_Chi_Minh
+
 # JVM Configuration
 # -XX:MaxRAMPercentage=75.0: Adapts heap size to 75% of the container's available memory
 # -XX:+UseContainerSupport: Ensures JVM recognizes container resource limits
-ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dspring.profiles.active=prod"
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Dspring.profiles.active=prod -Duser.timezone=Asia/Ho_Chi_Minh"
 
 # Start the application using JarLauncher
 # JarLauncher is optimized for handling layered jars (starts faster than standard java -jar)
