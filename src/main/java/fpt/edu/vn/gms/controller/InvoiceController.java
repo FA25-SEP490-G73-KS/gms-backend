@@ -1,5 +1,6 @@
 package fpt.edu.vn.gms.controller;
 
+import fpt.edu.vn.gms.common.annotations.Public;
 import fpt.edu.vn.gms.dto.request.PayInvoiceRequestDto;
 import fpt.edu.vn.gms.dto.response.TransactionResponseDto;
 import fpt.edu.vn.gms.dto.request.CreateDebtFromPaymentReq;
@@ -50,6 +51,7 @@ public class InvoiceController {
                 return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết phiếu thanh toán thành công", result));
         }
 
+        @Public
         @PostMapping
         @Operation(summary = "Tạo phiếu thanh toán", description = "Tạo phiếu thanh toán cho phiếu dịch vụ và báo giá đã cho.")
         @ApiResponses(value = {
