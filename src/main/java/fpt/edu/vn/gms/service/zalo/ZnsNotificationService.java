@@ -3,6 +3,7 @@ package fpt.edu.vn.gms.service.zalo;
 import fpt.edu.vn.gms.dto.ZnsSendSurveyDTO;
 import fpt.edu.vn.gms.dto.zalo.SendZnsPayload;
 import fpt.edu.vn.gms.entity.Appointment;
+import fpt.edu.vn.gms.entity.Debt;
 import fpt.edu.vn.gms.entity.PriceQuotation;
 import fpt.edu.vn.gms.entity.ServiceTicket;
 import fpt.edu.vn.gms.utils.PhoneUtils;
@@ -50,6 +51,9 @@ public class ZnsNotificationService {
 
     @Value("${zalo.account-info.template-id:}")
     private String accountInfoTemplateId;
+
+    @Value("${zalo.debt-notification.template-id:}")
+    private String debtNotificationTemplateId;
 
     @Value("${app.frontend-url:https://yourdomain.com}")
     private String frontendUrl;
@@ -277,14 +281,6 @@ public class ZnsNotificationService {
         }
     }
 
-    /**
-     * Send account information notification (phone and password) to employee
-     * 
-     * @param phone        Số điện thoại ở format Việt Nam (0986475989) - sẽ được
-     *                     hiển thị trong template
-     * @param customerName Tên khách hàng
-     * @param password     Mật khẩu
-     */
     public void sendAccountInfoNotification(String phone, String customerName, String password) throws Exception {
         Map<String, Object> templateData = new HashMap<>();
 
@@ -306,6 +302,50 @@ public class ZnsNotificationService {
 
         if (!success) {
             throw new Exception("Failed to send account info notification");
+        } else {
+            // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
+        }
+    }
+
+    /**
+     * Send debt reminder notification to customer
+     */
+    public void sendDebtNotification(Debt debt) throws Exception {
+        ServiceTicket serviceTicket = debt.getServiceTicket();
+        String phone = serviceTicket.getCustomer().getPhone();
+
+        Map<String, Object> templateData = new HashMap<>();
+
+        // Customer name
+        String customerName = serviceTicket.getCustomer().getFullName();
+        templateData.put("customer_name", customerName != null ? customerName : "Quý khách");
+
+        // Debt amount - format as Vietnamese currency (3.000.000)
+        DecimalFormat vnMoneyFormat = new DecimalFormat("#,###");
+        String formattedDebtAmount = vnMoneyFormat.format(debt.getAmount()).replace(",", ".");
+        templateData.put("debt_mount", formattedDebtAmount);
+
+        // Due date - format as dd-MM-yyyy (27-12-2025)
+        String formattedDueDate = debt.getDueDate()
+                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        templateData.put("due_date", formattedDueDate);
+
+        // Service ticket code
+        templateData.put("service_code", serviceTicket.getServiceTicketCode());
+
+        // License plate
+        templateData.put("licensePlate", serviceTicket.getVehicle().getLicensePlate());
+
+        // Tạo OT token và đưa vào templateData để gửi
+        createOTTokenAndPushOTTokenInTemplateData(templateData, SECONS_OF_ONE_WEEK);
+
+        // Build payload
+        SendZnsPayload payload = buildPayload(phone, templateData, debtNotificationTemplateId);
+
+        boolean success = znsService.sendZns(payload);
+
+        if (!success) {
+            throw new Exception("Failed to send debt notification");
         } else {
             // Token đã được lưu trong createOTTokenAndPushOTTokenInTemplateData
         }

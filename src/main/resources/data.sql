@@ -764,20 +764,186 @@ VALUES
     ('JP'),
     ('US'),
     ('EU'),
+    ('TH'),
+    ('CN'),
+    ('KR'),
+    ('TW'),
+    ('ID'),
+    ('MY'),
+    ('SG'),
     ('OTHER');
 
 INSERT INTO brand (name) VALUES
                              ('Toyota'),
                              ('Honda'),
-                             ('Ford');
+                             ('Ford'),
+                             ('Hyundai'),
+                             ('Mazda'),
+                             ('Mitsubishi'),
+                             ('Nissan'),
+                             ('Suzuki'),
+                             ('VinFast'),
+                             ('Kia'),
+                             ('Peugeot'),
+                             ('Chevrolet'),
+                             ('Isuzu'),
+                             ('Subaru'),
+                             ('Mercedes-Benz'),
+                             ('BMW'),
+                             ('Audi'),
+                             ('Volkswagen'),
+                             ('Lexus'),
+                             ('Porsche');
 
 INSERT INTO vehicle_model (brand_id, name) VALUES
+-- Toyota (1)
                                                (1, 'Vios'),
                                                (1, 'Corolla'),
+                                               (1, 'Camry'),
+                                               (1, 'Fortuner'),
+                                               (1, 'Land Cruiser'),
+                                               (1, 'Innova'),
+                                               (1, 'Hiace'),
+                                               (1, 'RAV4'),
+                                               (1, 'Highlander'),
+                                               (1, 'Yaris'),
+-- Honda (2)
                                                (2, 'Civic'),
                                                (2, 'City'),
+                                               (2, 'CR-V'),
+                                               (2, 'HR-V'),
+                                               (2, 'Accord'),
+                                               (2, 'Pilot'),
+                                               (2, 'Odyssey'),
+                                               (2, 'BR-V'),
+-- Ford (3)
                                                (3, 'Focus'),
-                                               (3, 'Ranger');
+                                               (3, 'Ranger'),
+                                               (3, 'Everest'),
+                                               (3, 'Explorer'),
+                                               (3, 'EcoSport'),
+                                               (3, 'Territory'),
+                                               (3, 'Fiesta'),
+-- Hyundai (4)
+                                               (4, 'Accent'),
+                                               (4, 'Elantra'),
+                                               (4, 'Sonata'),
+                                               (4, 'Tucson'),
+                                               (4, 'Santa Fe'),
+                                               (4, 'Grand i10'),
+                                               (4, 'Creta'),
+                                               (4, 'Palisade'),
+                                               (4, 'Kona'),
+-- Mazda (5)
+                                               (5, 'Mazda2'),
+                                               (5, 'Mazda3'),
+                                               (5, 'Mazda6'),
+                                               (5, 'CX-3'),
+                                               (5, 'CX-5'),
+                                               (5, 'CX-8'),
+                                               (5, 'CX-9'),
+                                               (5, 'BT-50'),
+-- Mitsubishi (6)
+                                               (6, 'Outlander'),
+                                               (6, 'Xpander'),
+                                               (6, 'Triton'),
+                                               (6, 'Pajero'),
+                                               (6, 'Attrage'),
+                                               (6, 'Mirage'),
+                                               (6, 'Montero Sport'),
+-- Nissan (7)
+                                               (7, 'Sunny'),
+                                               (7, 'Almera'),
+                                               (7, 'X-Trail'),
+                                               (7, 'Navara'),
+                                               (7, 'Terra'),
+                                               (7, 'Kicks'),
+                                               (7, 'Sentra'),
+-- Suzuki (8)
+                                               (8, 'Swift'),
+                                               (8, 'Ertiga'),
+                                               (8, 'XL7'),
+                                               (8, 'Ciaz'),
+                                               (8, 'Vitara'),
+                                               (8, 'S-Cross'),
+-- VinFast (9)
+                                               (9, 'Fadil'),
+                                               (9, 'Lux A2.0'),
+                                               (9, 'Lux SA2.0'),
+                                               (9, 'VF e34'),
+                                               (9, 'VF 5'),
+                                               (9, 'VF 8'),
+                                               (9, 'VF 9'),
+-- Kia (10)
+                                               (10, 'Morning'),
+                                               (10, 'Rio'),
+                                               (10, 'Cerato'),
+                                               (10, 'Optima'),
+                                               (10, 'Sorento'),
+                                               (10, 'Sportage'),
+                                               (10, 'Carnival'),
+                                               (10, 'Seltos'),
+-- Peugeot (11)
+                                               (11, '208'),
+                                               (11, '2008'),
+                                               (11, '3008'),
+                                               (11, '5008'),
+                                               (11, 'Partner'),
+                                               (11, 'Traveller'),
+-- Chevrolet (12)
+                                               (12, 'Spark'),
+                                               (12, 'Cruze'),
+                                               (12, 'Malibu'),
+                                               (12, 'Trailblazer'),
+                                               (12, 'Colorado'),
+                                               (12, 'Orlando'),
+-- Isuzu (13)
+                                               (13, 'D-Max'),
+                                               (13, 'MU-X'),
+                                               (13, 'mu-X'),
+-- Subaru (14)
+                                               (14, 'Forester'),
+                                               (14, 'Outback'),
+                                               (14, 'XV'),
+                                               (14, 'Legacy'),
+-- Mercedes-Benz (15)
+                                               (15, 'C-Class'),
+                                               (15, 'E-Class'),
+                                               (15, 'S-Class'),
+                                               (15, 'GLC'),
+                                               (15, 'GLE'),
+                                               (15, 'GLS'),
+-- BMW (16)
+                                               (16, 'Series 3'),
+                                               (16, 'Series 5'),
+                                               (16, 'Series 7'),
+                                               (16, 'X1'),
+                                               (16, 'X3'),
+                                               (16, 'X5'),
+                                               (16, 'X7'),
+-- Audi (17)
+                                               (17, 'A3'),
+                                               (17, 'A4'),
+                                               (17, 'A6'),
+                                               (17, 'Q3'),
+                                               (17, 'Q5'),
+                                               (17, 'Q7'),
+-- Volkswagen (18)
+                                               (18, 'Polo'),
+                                               (18, 'Golf'),
+                                               (18, 'Passat'),
+                                               (18, 'Tiguan'),
+                                               (18, 'Touareg'),
+-- Lexus (19)
+                                               (19, 'ES'),
+                                               (19, 'LS'),
+                                               (19, 'RX'),
+                                               (19, 'NX'),
+                                               (19, 'GX'),
+-- Porsche (20)
+                                               (20, 'Cayenne'),
+                                               (20, 'Macan'),
+                                               (20, 'Panamera');
 
 
 INSERT INTO unit (name)
@@ -822,16 +988,16 @@ INSERT INTO part (
       ('Lọc nhớt động cơ', 10, 2, false, 80000, 120000, 0.00, 50, 0, 10, false, 2,
        'LOCNHODONGCO-COROLLA-JP', 2, 1, 'IN_STOCK'),
 
-      ('Dầu động cơ 10W-40', 10, 1, true, 250000, 320000, 5.00, 100, 5, 20, false, 3,
+      ('Dầu động cơ 10W-40', 10, 1, true, 250000, 320000, 5.00, 100, 0, 20, false, 3,
        'DAUDONGCO10W40-CIVIC-VN', 3, 1, 'IN_STOCK'),
 
-      ('Bugi đánh lửa', 1, 2, false, 40000, 80000, 0.00, 80, 2, 15, false, 4,
+      ('Bugi đánh lửa', 1, 2, false, 40000, 80000, 0.00, 80, 0, 15, false, 4,
        'BUGIDANHLUA-CITY-JP', 4, 1, 'IN_STOCK'),
 
       ('Phanh đĩa trước', 4, 2, false, 300000, 450000, 0.00, 30, 0, 10, false, 5,
        'PHANHDIATRUOC-FOCUS-JP', 5, 1, 'IN_STOCK'),
 
-      ('Ắc quy GS 12V-45Ah', 7, 2, true, 950000, 1200000, 3.00, 20, 1, 5, false, 1,
+      ('Ắc quy GS 12V-45Ah', 7, 2, true, 950000, 1200000, 3.00, 20, 0, 5, false, 1,
        'ACQUYGS12V45AH-VIOS-JP', 6, 1, 'IN_STOCK'),
 
       ('Dây curoa tổng', 1, 2, false, 180000, 250000, 0.00, 40, 0, 10, false, 2,
@@ -853,8 +1019,8 @@ INSERT INTO part (
 INSERT INTO discount_policy (loyalty_level, discount_rate, required_spending, description)
 VALUES
     ('BRONZE', 0.00,   0.00,  'Mức cơ bản'),
-    ('SLIVER', 5.00,  5000.00, 'Chi tiêu trên 5 triệu'),
-    ('GOLD', 10.00, 10000.00, 'Chi tiêu trên 10 triệu');
+    ('SLIVER', 0.00,  5000.00, 'Chi tiêu trên 5 triệu'),
+    ('GOLD', 0.00, 10000.00, 'Chi tiêu trên 10 triệu');
 
 INSERT INTO customer (full_name, phone, address, customer_type, discount_policy_id)
 VALUES
@@ -872,7 +1038,7 @@ VALUES
 
 INSERT INTO zalo_access_token (access_token, refresh_token, created_at)
 VALUES (
-           'DjKAJWoUmqOmtmX62937HZFR3KOAZO8iHQeiRIQKXHz0hXfpUQA6FqdtJ7ronSKB2yftKadNwnmIm5nIUTJl6X_QSN4duFe7Qk1NQGpXr1z8qdrfB9Bg4nADNmPBlkPc6vb_ELwOu4qcZ2Wm0istNr6DUmWvWEP9TQTLFWcGxqv2lcqvEVFCCW7-Stnmok48JzTI1Ilzs7jHzsWN4Fp6OMhZK1idjjvh5lWK75dMjLSdz7it6hJXNtIQL4esk-53TP5n3GQh_mHSgJD4PeU-II6wAXD_iw9WDvvjO6-yhpfGZXXKRPE7BXQwEoukZBft2gCpBJleiKnqz1qEFkAgPMBM8344oRKyIO8yR2oSgGTDoHzqTyI86YJLB75z-USCMRP4SWM8tZiqc5rFN8FvC23BKtr3yEySOGbu-pWBWy91',
+        'DjKAJWoUmqOmtmX62937HZFR3KOAZO8iHQeiRIQKXHz0hXfpUQA6FqdtJ7ronSKB2yftKadNwnmIm5nIUTJl6X_QSN4duFe7Qk1NQGpXr1z8qdrfB9Bg4nADNmPBlkPc6vb_ELwOu4qcZ2Wm0istNr6DUmWvWEP9TQTLFWcGxqv2lcqvEVFCCW7-Stnmok48JzTI1Ilzs7jHzsWN4Fp6OMhZK1idjjvh5lWK75dMjLSdz7it6hJXNtIQL4esk-53TP5n3GQh_mHSgJD4PeU-II6wAXD_iw9WDvvjO6-yhpfGZXXKRPE7BXQwEoukZBft2gCpBJleiKnqz1qEFkAgPMBM8344oRKyIO8yR2oSgGTDoHzqTyI86YJLB75z-USCMRP4SWM8tZiqc5rFN8FvC23BKtr3yEySOGbu-pWBWy91',
         'AlUkFar13ami_QmsIKyAJ2_vgJPBKbyiVOEgBLyrIm15Y9qsKsnd47_HmZHe8WG1O_ZU5NmVDMGH_S5d3H8ySYsWdWKEL7Op5AAtC2L5TGSIzga09rvC2qgojsHuVbLhUelrMsmt1MfgySHVVJy7JrsFh4vlIKOvJVIi760vJcXXwvTR1YjlAc38jWDu0XmUNEwwDKyEM1fgxwOmKpb146Jxu29NIYekKhoF2JPq92Cag-0M7NWJ9H6nvH0tUX1ZF9FJKWHi9dy2Zl5fEr4fKnUwytjxTG1WTyNwH7C47av-jSf1P78yPmEZbcenQauH4fNfDp0dFHSgxDic2r02L6--fZiMItep8FpTG04IFdiHyUr880OhUYttr78nIWj45BpQLoDJ1LmbaTDd0ruRH0MgoZPKXP92IbmFIm',
         '2024-12-20 10:00:00'
        );

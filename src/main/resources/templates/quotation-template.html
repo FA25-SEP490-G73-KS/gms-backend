@@ -3,17 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>BẢNG BÁO GIÁ - HOÀNG TUẤN</title>
+
   <style>
-    /* Sử dụng DejaVu Sans để hỗ trợ Unicode (đã register trong PdfGeneratorServiceImpl) */
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
     body {
-      font-family: "DejaVu Sans", "Arial", sans-serif;
-      font-size: 13px;
-      display: flex;
-      justify-content: center;
+      font-family: "DejaVu Sans", Arial, sans-serif;
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
+      width: 100%;
     }
 
     .page {
-      width: 720px; /* GIỚI HẠN KHỔ A4 */
+      width: 100%;
+      max-width: 750px;
+      margin: 0 auto;
     }
 
     table {
@@ -23,40 +31,13 @@
     }
 
     .bordered {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
       border: 1px solid #000;
     }
 
     .bordered td,
     .bordered th {
-      border: 1px solid #000 !important;
-      padding: 5px;
-    }
-
-    /* Đảm bảo không mất đường kẻ biên phải */
-    .bordered tr > td:last-child,
-    .bordered tr > th:last-child {
-      border-right: 1px solid #000;
-    }
-
-    .header-left {
-      width: 40%;
-      text-align: center;
-      vertical-align: top;
-    }
-
-    .header-right {
-      width: 60%;
-      vertical-align: top;
-    }
-
-    .main-title {
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      margin: 10px 0;
+      border: 1px solid #000;
+      padding: 4px;
     }
 
     th {
@@ -64,40 +45,79 @@
       text-align: center;
     }
 
+    table,
+    tr,
+    td {
+      page-break-inside: avoid;
+    }
+
+    .header-left {
+      width: 35%;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .header-right {
+      width: 65%;
+      vertical-align: top;
+      font-size: 11px;
+    }
+
+    .main-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
     .text-center {
       text-align: center;
+      white-space: nowrap;
     }
+
     .text-right {
       text-align: right;
+      white-space: nowrap;
+    }
+
+    .work-content {
+      white-space: normal;
+    }
+
+    .note-title {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .small {
+      font-size: 11px;
+      line-height: 1.5;
     }
   </style>
 </head>
+
 <body>
 <div class="page">
-  <!-- HEADER -->
+
+  <!-- ===== HEADER ===== -->
   <table>
     <tr>
       <td class="header-left">
         <img
                 src="{{logoPath}}"
-                width="70"
-                style="
-                width: 100px;
-                height: auto;
-                max-height: 45px;
-                display: block;
-                object-fit: contain;
-                margin: 0 auto 4px auto;
-              "
-        /><br />
+                width="240"
+                height="98"
+                style="display:block;margin:0 auto 4px auto;"
+        />
         <b>GARA Ô TÔ HOÀNG TUẤN</b>
       </td>
+
       <td class="header-right">
-        <b style="font-size: 16px">CÔNG TY TNHH CN Ô TÔ HOÀNG TUẤN</b><br />
-        Địa chỉ: Khu Công Nghiệp công ích - TP Thái Bình<br />
-        ĐT: 0968.666.603<br />
-        Số tài khoản: 636620603<br />
-        Tại NH: Agribank CNĐB Công Sở Thái Bình<br />
+        <b style="font-size: 16px;">CÔNG TY TNHH CN Ô TÔ HOÀNG TUẤN</b><br />
+        Địa chỉ: 110 đường Hoàng Nghiêu-phố Đông-phường Đông Tiến-Thanh Hóa<br />
+        ĐT: 0912.603.603<br />
+        Số tài khoản: 0912603603<br />
+        Tại NH: Agribank CN Đông Sơn Thanh Hoá<br />
         Ngày: {{date}}
       </td>
     </tr>
@@ -105,8 +125,14 @@
 
   <div class="main-title">BẢNG BÁO GIÁ</div>
 
-  <!-- THÔNG TIN KHÁCH HÀNG -->
+  <!-- ===== THÔNG TIN KHÁCH HÀNG ===== -->
   <table class="bordered">
+    <colgroup>
+      <col style="width:20%;" />
+      <col style="width:30%;" />
+      <col style="width:20%;" />
+      <col style="width:30%;" />
+    </colgroup>
     <tr>
       <td>Tên khách hàng:</td>
       <td>{{customerName}}</td>
@@ -131,27 +157,25 @@
     </tr>
   </table>
 
-  <!-- BẢNG NỘI DUNG -->
-  <table class="bordered" style="margin-top: 10px">
+  <!-- ===== BẢNG NỘI DUNG ===== -->
+  <table class="bordered" style="margin-top:10px;">
     <tr>
-      <th style="width: 5%">TT</th>
-      <th>Nội dung công việc</th>
-      <th style="width: 12%">Đơn vị</th>
-      <th style="width: 12%">Số lượng</th>
-      <th style="width: 15%">Đơn giá</th>
-      <th style="width: 15%">Thành tiền</th>
+      <th style="width:5%;">TT</th>
+      <th style="width:41%;">Nội dung công việc</th>
+      <th style="width:10%;">Đơn vị</th>
+      <th style="width:10%;">Số lượng</th>
+      <th style="width:17%;">Đơn giá</th>
+      <th style="width:17%;">Thành tiền</th>
     </tr>
 
-    <!-- 12 hàng mẫu (bạn có thể thêm) -->
-    <!-- Tối ưu hiển thị tránh quá dài -->
     {{#items}}
     <tr>
       <td class="text-center">{{index}}</td>
-      <td>{{name}}</td>
-      <td>{{unit}}</td>
-      <td>{{quantity}}</td>
-      <td>{{unitPrice}}</td>
-      <td>{{total}}</td>
+      <td class="work-content">{{name}}</td>
+      <td class="text-center">{{unit}}</td>
+      <td class="text-center">{{quantity}}</td>
+      <td class="text-right">{{unitPrice}}</td>
+      <td class="text-right">{{total}}</td>
     </tr>
     {{/items}}
 
@@ -161,35 +185,70 @@
     </tr>
   </table>
 
-  <!-- BẰNG CHỮ -->
-  <div style="margin-top: 10px">
-    <b>BẰNG CHỮ:</b> {{grandTotalInWords}} &nbsp;&nbsp;&nbsp;
+  <!-- ===== BẰNG CHỮ ===== -->
+  <div style="margin-top:10px;">
+    <b>BẰNG CHỮ:</b> {{grandTotalInWords}}
     <span>(chưa bao gồm thuế VAT)</span>
   </div>
 
-  <!-- GHI CHÚ -->
-  <div class="note-title" style="margin-top: 10px">CÁC LƯU Ý KHÁC</div>
+  <!-- ===== GHI CHÚ ===== -->
+  <div class="note-title">CÁC LƯU Ý KHÁC</div>
   <div class="small">
     - Cung cấp phụ tùng chính hãng.<br />
     - Những phát sinh sẽ được báo giá sau khi thực hiện cụ thể.<br />
     - Báo giá trên chỉ có hiệu lực trong vòng 07 ngày kể từ ngày báo giá.<br />
-    - Khi đặt hàng khách hàng vui lòng đặt tiền trước 50% theo bảng giá trị
-    thanh toán.<br />
-    - Một số phụ tùng đặc biệt vui lòng đặt tiền trước 100% tổng giá trị đơn
-    hàng.
+    - Khi đặt hàng khách hàng vui lòng đặt tiền trước 50% theo bảng giá trị thanh toán.<br />
+    - Một số phụ tùng đặc biệt vui lòng đặt tiền trước 100% tổng giá trị đơn hàng.
   </div>
 
-  <!-- CHỮ KÝ -->
-  <table class="signature-table" style="margin-top: 30px">
+  <!-- ===== CHỮ KÝ ===== -->
+  <!-- ===== CHỮ KÝ ===== -->
+  <table style="margin-top:30px;">
     <tr>
-      <td class="text-center" style="width: 50%">
-        <b>T/M CTY Ô TÔ HOÀNG TUẤN</b><br />
-        <b>Giám Đốc</b><br /><br /><br /><br />
-        <u>Hoàng Anh Đạt</u>
+      <!-- BÊN TRÁI -->
+      <td style="width:50%; text-align:center; vertical-align:top;">
+        <table style="width:100%;">
+          <tr>
+            <td class="text-center">
+              <b>T/M CTY Ô TÔ HOÀNG TUẤN</b><br />
+              <b>Giám Đốc</b>
+            </td>
+          </tr>
+
+          <!-- KHOẢNG TRỐNG KÝ -->
+          <tr>
+            <td style="height:60px;"></td>
+          </tr>
+
+          <tr>
+            <td class="text-center">
+              <u>Hoàng Anh Đạt</u>
+            </td>
+          </tr>
+        </table>
       </td>
-      <td class="text-center" style="width: 50%">
-        <b>Khách hàng chấp thuận</b><br />
-        <span>(Ký, ghi rõ họ tên)</span>
+
+      <!-- BÊN PHẢI -->
+      <td style="width:50%; text-align:center; vertical-align:top;">
+        <table style="width:100%;">
+          <tr>
+            <td class="text-center">
+              <b>Khách hàng chấp thuận</b><br />
+              <span>(Ký, ghi rõ họ tên)</span>
+            </td>
+          </tr>
+
+          <!-- KHOẢNG TRỐNG KÝ (GIỐNG BÊN TRÁI) -->
+          <tr>
+            <td style="height:60px;"></td>
+          </tr>
+
+          <tr>
+            <td class="text-center">
+              &nbsp;
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   </table>
