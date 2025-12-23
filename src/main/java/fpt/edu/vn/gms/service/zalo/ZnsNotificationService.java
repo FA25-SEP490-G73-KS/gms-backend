@@ -161,6 +161,7 @@ public class ZnsNotificationService {
                 : "Quý khách");
 
         templateData.put("service_ticket_code", ticket.getServiceTicketCode());
+        templateData.put("serviceTicket_id", ticket.getServiceTicketId());
 
         templateData.put("serviceTicketCode_path", ticket.getServiceTicketId().toString());
 
